@@ -25,6 +25,9 @@
 		"dev": {
 			"cache": false,
 			"persistent": true
+		},
+		"preview": {
+			"outputs": [".vitepress/dist/**"]
 		}
 	}
 }

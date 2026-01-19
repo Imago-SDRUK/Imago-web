@@ -5,6 +5,7 @@ import typedocSidebar from '../vitepress/md/typedoc-sidebar.json'
 export default defineConfig({
 	srcDir: 'vitepress/md',
 	title: 'Imago Web - Documentation',
+	base: '/Imago-web/',
 	description: 'Imago web documentation',
 	ignoreDeadLinks: true,
 	themeConfig: {
