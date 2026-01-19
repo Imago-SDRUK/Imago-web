@@ -1,0 +1,60 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"entryPoints": [
+		"../apps/data_catalogue/src/**",
+		"../apps/website/src/**",
+		"../packages/ui/dist/*"
+	],
+	"entryPointStrategy": "resolve",
+	"out": "./vitepress/md",
+	"outputs": [
+		{
+			"name": "html",
+			"path": "./html",
+			"options": {
+				"navigation": {
+					"includeCategories": true,
+					"includeGroups": true,
+					"excludeReferences": false,
+					"includeFolders": true
+				}
+			}
+		},
+		{
+			"name": "json",
+			"path": "./docs.json"
+		}
+	],
+	"docsRoot": "./vitepress/md",
+	"exclude": ["**/*.svelte"],
+	"plugin": [
+		"typedoc-plugin-markdown",
+		"typedoc-vitepress-theme",
+		"typedoc-plugin-dt-links",
+		"typedoc-plugin-frontmatter",
+		"typedoc-plugin-remark",
+		"typedoc-plugin-mdn-links"
+	],
+	"tsconfig": "./tsconfig.json",
+	"compilerOptions": {
+		"skipLibCheck": true,
+		"strictNullChecks": false
+	},
+	"useCodeBlocks": true,
+	"disableSources": false,
+	"projectDocuments": ["./docs/*", "./tutorials/*"],
+	"router": "module",
+	"navigation": {
+		"includeCategories": true,
+		"includeGroups": false,
+		"includeFolders": true,
+		"compactFolders": false,
+		"excludeReferences": true
+	},
+	"sidebar": {
+		"autoConfiguration": true,
+		"format": "vitepress",
+		"pretty": true,
+		"collapsed": true
+	}
+}

@@ -10,25 +10,11 @@
 - Imago CKAN client
 - Imago CMS configuration (Directus)
 
-### Development
+### Content
 
-Tools required for development:
-
-- [PNPM](https://pnpm.io/)
-- [NodeJS](https://nodejs.org/en)
-
-For website:
-
-- [Directus](https://directus.io/)
-
-For data catalogue:
-
-- [Postgres](https://www.postgresql.org/)
-- [CKAN](https://ckan.org/)
-- [Ory Keto](https://www.ory.com/keto)
-- [Ory Kratos](https://www.ory.com/kratos)
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/)
+- [Documentation](./docs/docs/index.md)
+- [Developing](./docs/docs/development_setup.md)
+- [Contributing](#contributing)
 
 ## Contributing
 
