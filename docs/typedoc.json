@@ -1,9 +1,9 @@
 {
 	"$schema": "https://typedoc.org/schema.json",
 	"entryPoints": [
-		"../apps/data_catalogue/src/**",
-		"../apps/website/src/**",
-		"../packages/ui/dist/*"
+		"../apps/data_catalogue/src/**/*.ts",
+		"../apps/website/src/**/*.ts",
+		"../packages/ui/dist/**/*.ts"
 	],
 	"entryPointStrategy": "resolve",
 	"out": "./vitepress/md",

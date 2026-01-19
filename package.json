@@ -8,7 +8,8 @@
 		"format": "prettier --write .",
 		"check-types": "turbo run check-types",
 		"login": "turbo login --manual",
-		"gen:icons": "node --experimental-transform-types ./packages/ui/src/lib/icons/script.ts"
+		"gen:icons": "node --experimental-transform-types ./packages/ui/src/lib/icons/script.ts",
+		"docs:build": "turbo build --filter=docs"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.29.8",
