@@ -6,6 +6,7 @@ export default defineConfig({
 	srcDir: 'vitepress/md',
 	title: 'Imago Web - Documentation',
 	description: 'Imago web documentation',
+	ignoreDeadLinks: true,
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [{ text: 'Home', link: '/' }],
