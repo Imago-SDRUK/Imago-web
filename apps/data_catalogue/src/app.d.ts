@@ -1,6 +1,6 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 
-import type { IdentitySession } from '$lib/utils/auth/types'
+import type { Session } from '$lib/server/entities/models/identity'
 import type { CkanClient } from '$lib/utils/ckan'
 
 // for information about these interfaces
@@ -13,7 +13,7 @@ declare global {
 		interface Locals {
 			access: boolean
 			ckan: CkanClient
-			session?: IdentitySession
+			session?: Session
 		}
 		// interface PageData {}
 		// interface PageState {}

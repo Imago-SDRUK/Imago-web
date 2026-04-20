@@ -11,7 +11,7 @@ import {
 } from '@ory/client-fetch'
 import { error } from '@sveltejs/kit'
 import { DateTime } from 'luxon'
-import { jstr } from '@arturoguzman/art-ui'
+import type { Session } from '$lib/server/entities/models/identity'
 
 export const handleOryResponse = async (response: Response) => {
 	const contentType = response.headers.get('content-type')
@@ -108,7 +108,7 @@ export const authorise = async ({
 	subjectSetObject,
 	subjectSetRelation,
 	action
-}: { session?: IdentitySession; action?: () => Promise<void> } & CheckPermissionRequest) => {
+}: { session?: Session; action?: () => Promise<void> } & CheckPermissionRequest) => {
 	if (!session) {
 		if (action) {
 			action()
