@@ -4,7 +4,8 @@
 	let {
 		children,
 		level
-	}: { children: Snippet; level: 'warning' | 'negative' | 'positive' | 'danger' } = $props()
+	}: { children: Snippet; level: 'warning' | 'negative' | 'positive' | 'danger' | 'info' } =
+		$props()
 </script>
 
 <div class="notice-pill" data-level={level}>
@@ -28,5 +29,8 @@
 	}
 	.notice-pill[data-level='danger'] {
 		background-color: var(--danger);
+	}
+	.notice-pill[data-level='info'] {
+		background-color: var(--background-muted);
 	}
 </style>
