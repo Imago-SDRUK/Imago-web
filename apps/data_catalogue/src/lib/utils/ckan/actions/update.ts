@@ -1,9 +1,14 @@
+import type { Dataset } from '$lib/server/entities/models/datasets'
+import type { CkanGroup } from '$lib/types/ckan'
+
 type PackagePatch = [
 	'package_patch',
 	{
 		/** the id or name of the dataset */
 		id: string
-	}
+	},
+	Dataset,
+	Dataset
 ]
 
 type ResourcePatch = [
@@ -19,7 +24,9 @@ type GroupPatch = [
 	{
 		/** the id or name of the group */
 		id: string
-	}
+	},
+	Partial<CkanGroup>,
+	CkanGroup
 ]
 
 type OrganizationPatch = [
@@ -76,7 +83,9 @@ type PackageUpdate = [
 	{
 		/** the name or id of the dataset to update */
 		id: string
-	}
+	},
+	Dataset,
+	Dataset
 ]
 
 type PackageRevise = [
