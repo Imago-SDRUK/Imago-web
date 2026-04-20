@@ -111,5 +111,8 @@ export const answer_question = relations(answers, ({ one }) => ({
 	})
 }))
 
-export type Question = typeof questions.$inferInsert
-export type Answer = typeof answers.$inferInsert
+export type QuestionRequest = typeof questions.$inferInsert
+export type AnswerRequest = typeof answers.$inferInsert
+
+export type Question = typeof questions.$inferSelect
+export type Answer = typeof answers.$inferSelect

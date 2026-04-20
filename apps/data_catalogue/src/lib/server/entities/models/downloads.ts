@@ -40,3 +40,6 @@ export const downloads_relations = relations(downloads, ({ one }) => ({
 		references: [users.id]
 	})
 }))
+
+export type Download = typeof downloads.$inferSelect
+export type DownloadRequest = typeof downloads.$inferInsert
