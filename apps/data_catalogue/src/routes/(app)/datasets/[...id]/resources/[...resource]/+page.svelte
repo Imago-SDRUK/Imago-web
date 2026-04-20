@@ -10,7 +10,7 @@
 	import CellText from '$lib/ui/tables/cell_text.svelte'
 
 	let { data } = $props()
-	let result = $derived(data.data.result)
+	let result = $derived(data.resource)
 
 	const columns: (IColumnConfig & { id: keyof CSVWColumn })[] = [
 		// {
@@ -117,7 +117,7 @@
 			<div class="versions-block">
 				<Subtitle>Available versions</Subtitle>
 				<div class="versions">
-					{#each data.versions as version}
+					{#each data.resource.versions as version}
 						<Button href="{result.url}?version={version.version}" download={result.name}>
 							Version: {version.version}
 							<Icon icon={{ icon: 'file-download', set: 'tabler' }}></Icon>
@@ -125,11 +125,11 @@
 					{/each}
 				</div>
 			</div>
-			{#if data.structural_metadata?.tables}
+			{#if data.resource.structural_metadata}
 				<div class="structural-metadata">
 					<Subtitle size="md">Structural metadata</Subtitle>
 					<div class="tables">
-						{#each data.structural_metadata?.tables as table}
+						{#each data.resource.structural_metadata.tables as table}
 							<div class="table">
 								<Subtitle>{table['dc:title']}</Subtitle>
 								<BaseTable data={table.tableSchema.columns ?? []} {columns} {apiFn}></BaseTable>
