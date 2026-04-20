@@ -9,7 +9,11 @@ export async function runMigration() {
 	}
 	const db = drizzle(String(process.env.DATABASE_URL))
 	log.info('migration will start now')
+	// return await migrate(db, { migrationsFolder: './src/lib/db/migrations' })
 	await migrate(db, { migrationsFolder: '/app/apps/data_catalogue/migrations' })
 		.then(() => log.info('migration completed'))
-		.catch((err) => log.info(`migration failed ${err}`))
+		.catch((err) => {
+			log.info(`migration failed ${err}`)
+			return err
+		})
 }

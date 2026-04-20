@@ -1,5 +1,5 @@
 import { type } from 'arktype'
-import { log } from '$lib/utils/server/logger.js'
+// import { log } from '$lib/utils/server/logger.js'
 import 'dotenv/config'
 
 const Env = type({
@@ -19,7 +19,7 @@ const validated = Env(process.env)
 
 if (validated instanceof type.errors) {
 	if (!process.env.BUILDING) {
-		log.debug(process.env)
+		// log.debug(process.env)
 		throw Error(validated.summary)
 	}
 }
