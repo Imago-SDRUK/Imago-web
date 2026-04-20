@@ -1,5 +1,4 @@
 import { ketoCheck } from '$lib/utils/auth/index.js'
-import { get } from '$lib/utils/ckan/ckan.js'
 import { error } from '@sveltejs/kit'
 
 export const load = async ({ locals, params }) => {

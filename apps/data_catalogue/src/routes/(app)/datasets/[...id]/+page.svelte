@@ -7,7 +7,7 @@
 	import { getDataset, setDataset } from '$lib/context/dataset.svelte.js'
 	import Stream from '$lib/ui/dataset/stream.svelte'
 	let { data } = $props()
-	setDataset(data.result)
+	setDataset(data.dataset)
 	let ctx = getDataset()
 	debug.data = data
 </script>
@@ -96,7 +96,7 @@
 				</div>
 				<div class="right-col">
 					<Product></Product>
-					<Stream activities={data.activities.result}></Stream>
+					<Stream activities={data.activities}></Stream>
 				</div>
 			</div>
 		</BaseSection>
