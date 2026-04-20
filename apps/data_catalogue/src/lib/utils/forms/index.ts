@@ -1,3 +1,8 @@
+import { applyAction } from '$app/forms'
+import { goto, invalidateAll } from '$app/navigation'
+import { notify } from '$lib/stores/notify'
+import type { ActionResult } from '@sveltejs/kit'
+
 const arr_regex = /\[[0-9]+\]/i
 
 export const parseForm = (form: FormData) => {
@@ -131,5 +136,67 @@ export const safeJSONParse = (value: string) => {
 	} catch (err) {
 		console.log(err)
 		return null
+	}
+}
+
+export const formGetNumberOrUndefined = ({ form, field }: { form: FormData; field: string }) => {
+	const value = form.get(field)
+	if (typeof value !== 'string') {
+		return undefined
+	}
+	return Number(value)
+}
+
+type FormPreSubmit = {
+	action: URL
+	formData: FormData
+	formElement: HTMLFormElement
+	controller: AbortController
+	submitter: HTMLElement | null
+	cancel: () => void
+}
+
+type FormResponse = {
+	formData: FormData
+	formElement: HTMLFormElement
+	action: URL
+	result: ActionResult<Record<string, unknown> | undefined, Record<string, unknown> | undefined>
+	update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>
+}
+
+type HandleEnhanceParams = {
+	onsubmit?: (params: FormPreSubmit) => void | Promise<void>
+	onerror?: (params: FormResponse) => void | Promise<void>
+	onfailure?: (params: FormResponse) => void | Promise<void>
+	onsuccess?: (params: FormResponse) => void | Promise<void>
+	onredirect?: (params: FormResponse) => void | Promise<void>
+}
+
+export const handleEnhance = (_params?: HandleEnhanceParams) => (params: FormPreSubmit) => {
+	_params?.onsubmit?.(params)
+	return async ({ formData, formElement, action, result, update }: FormResponse) => {
+		if (result.type === 'error') {
+			await _params?.onerror?.({ formData, formElement, action, result, update })
+			notify.send({ message: result.error.message })
+		}
+		if (result.type === 'failure') {
+			await _params?.onfailure?.({ formData, formElement, action, result, update })
+			if (result.data?.message && typeof result.data.message === 'string') {
+				notify.send({ message: result.data?.message })
+			}
+		}
+		if (result.type === 'success') {
+			await _params?.onsuccess?.({ formData, formElement, action, result, update })
+			if (result.data?.message && typeof result.data.message === 'string') {
+				notify.send({ message: result.data?.message })
+			}
+		}
+		if (result.type === 'redirect') {
+			await _params?.onredirect?.({ formData, formElement, action, result, update })
+			goto(result.location)
+			return
+		}
+		await applyAction(result)
+		await invalidateAll()
 	}
 }
