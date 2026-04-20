@@ -1,4 +1,4 @@
-import type { CkanDatasetRequest } from '$lib/types/ckan'
+import type { DatasetRequest } from '$lib/server/entities/models/datasets'
 
 export const METADATA_KEYS = [
 	{
@@ -73,9 +73,9 @@ export const METADATA_LABELS = {
 	data_quality: 'Data quality'
 }
 
-export const generateExtrasFromPayload = (payload: Partial<CkanDatasetRequest>) => {
+export const generateExtrasFromPayload = (payload?: DatasetRequest['extras']) => {
 	const metadata = structuredClone(METADATA_KEYS)
-	const extras = payload.extras
+	const extras = payload
 	if (extras) {
 		extras
 			.filter((extra) => METADATA_KEYS.find((me) => me.key === extra.key))
