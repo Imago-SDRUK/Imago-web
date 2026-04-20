@@ -3,15 +3,17 @@
 	import { notify } from '$lib/stores/notify.js'
 	import Answer from '$lib/ui/forms/answer.svelte'
 	import { jstr } from '@arturoguzman/art-ui'
-	import { BaseSection, BaseCard, Button, Input, Text, Title } from '@imago/ui'
+	import { BaseSection, BaseCard, Button, Title } from '@imago/ui'
 	let { data } = $props()
-	let tags = [1, 2]
-	let answers = $state(
-		data.questions.map((question) => ({
-			question: String(question.id),
-			answer: ''
-		}))
-	)
+	let answers = $derived.by(() => {
+		let value = $state(
+			data.questions.map((question) => ({
+				question: String(question.id),
+				answer: ''
+			}))
+		)
+		return value
+	})
 </script>
 
 <BaseSection>
