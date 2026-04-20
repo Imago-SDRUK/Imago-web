@@ -1,5 +1,5 @@
+import { groupsGetController } from '$lib/server/interface/adapters/controllers/groups/get.js'
 import { ketoCheck } from '$lib/utils/auth/index.js'
-import { get } from '$lib/utils/ckan/ckan.js'
 import { error } from '@sveltejs/kit'
 
 export const load = async ({ locals }) => {
@@ -13,12 +13,8 @@ export const load = async ({ locals }) => {
 		})
 		allow_create = permissions.allowed
 	}
-	const groups = await locals.ckan.request(
-		get('group_list', {
-			all_fields: true
-		})
-	)
-	if (!groups.success || !Array.isArray(groups.result)) {
+	const [errors, groups] = await groupsGetController({ session: locals.session })
+	if (errors) {
 		error(400, { message: `There's been an issue retreiving the groups`, id: 'err' })
 	}
 	return {

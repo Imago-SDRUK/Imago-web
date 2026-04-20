@@ -63,13 +63,14 @@
 					<Input required={manual_form_required} label="Title">
 						<Text name="title"></Text>
 					</Input>
-					{#if Array.isArray(data.groups.result)}
+					{#if Array.isArray(data.groups)}
 						<Input required={manual_form_required} label="Group">
 							<Select
 								name="group"
-								options={data.groups.result.map((result) => ({
-									label: result.title,
-									value: JSON.stringify({ id: result.id, name: result.name })
+								options={data.groups.map((result) => ({
+									label: result,
+									value: result
+									// value: JSON.stringify({ id: result.id, name: result.name })
 								}))}
 							></Select>
 						</Input>
