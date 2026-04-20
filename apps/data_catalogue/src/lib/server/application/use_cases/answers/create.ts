@@ -1,0 +1,97 @@
+import type { Session } from '$lib/server/entities/models/identity'
+import type { AnswersRepository } from '$lib/server/application/repositories/answers'
+import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import { err, ok } from '$lib/server/entities/errors'
+import { answers } from '$lib/db/schema'
+import { ArkErrors, type } from 'arktype'
+import { createInsertSchema } from 'drizzle-arktype'
+import type { AnswerRequest } from '$lib/server/entities/models/questions'
+import { getAnswerBasePermissions } from '$lib/server/entities/models/policies'
+
+export const answerCreateUseCase = async ({
+	data,
+	answers_repository,
+	session
+}: {
+	data: unknown
+	session: Session
+	answers_repository: AnswersRepository
+}) => {
+	const auth_module = getAuthorisationModule()
+	const [errors, permission] = await auth_module.authorise({
+		actor: session.identity.id,
+		namespace: 'Endpoint',
+		object: '/api/v1/answers',
+		permits: 'GET'
+	})
+	if (errors) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const schema = createInsertSchema(answers)
+	const validated = schema(data)
+	if (validated instanceof type.errors) {
+		return err({ reason: 'Unauthorised', message: validated.summary })
+	}
+
+	const [errs, answer] = await answers_repository.createAnswer({ data: validated })
+	if (errs !== null) {
+		return err(errs)
+	}
+	return ok(answer)
+}
+
+export const answersCreateUseCase = async ({
+	data,
+	answers_repository,
+	session
+}: {
+	data: unknown[]
+	session: Session
+	answers_repository: AnswersRepository
+}) => {
+	const auth_module = getAuthorisationModule()
+	const [errors, permission] = await auth_module.authorise({
+		actor: session.identity.id,
+		namespace: 'Action',
+		object: 'answers',
+		permits: 'read'
+	})
+	if (errors) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const schema = createInsertSchema(answers)
+	const validated = data.map((values) => schema(values))
+	const { data_errors, valid } = validated.reduce(
+		(acc, values) => {
+			if (values instanceof type.errors) {
+				acc.data_errors.push(values)
+				return acc
+			}
+			acc.valid.push(values)
+			return acc
+		},
+		{ data_errors: [], valid: [] } as { data_errors: ArkErrors[]; valid: AnswerRequest[] }
+	)
+	if (data_errors.length > 0) {
+		return err({ reason: 'Unauthorised', message: data_errors[0].summary })
+	}
+	const [errs, user_answers] = await answers_repository.createAnswers({ data: valid })
+	if (errs !== null) {
+		return err(errs)
+	}
+	const permissions = user_answers.flatMap((answer) =>
+		getAnswerBasePermissions({ user_id: session.identity.id, answer })
+	)
+	const [p_errs] = await auth_module.createPermissions({ permissions })
+	if (p_errs !== null) {
+		return err(p_errs)
+	}
+
+	return ok(user_answers)
+}
