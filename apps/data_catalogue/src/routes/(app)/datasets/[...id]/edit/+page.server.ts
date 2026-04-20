@@ -1,32 +1,44 @@
-import { SERVER_ERRORS } from '$lib/globals/server.js'
-import { log } from '$lib/utils/server/logger.js'
-import { authorise } from '$lib/utils/auth/index.js'
-import { create, get, patch, update } from '$lib/utils/ckan/ckan.js'
-import { jstr } from '@arturoguzman/art-ui'
-import slugify from '@sindresorhus/slugify'
+import {
+	datasetAddTagController,
+	datasetGetController,
+	datasetRemoveTagController
+} from '$lib/server/interface/adapters/controllers/datasets/get.js'
+import {
+	tagsGetController,
+	tagsGetVocabulariesController
+} from '$lib/server/interface/adapters/controllers/tags/get.js'
+import { formGetStringOrUndefined } from '$lib/utils/forms/index.js'
+import { datasetUpdateController } from '$lib/server/interface/adapters/controllers/datasets/update.js'
+import { datastoreUpdateController } from '$lib/server/interface/adapters/controllers/datastore/update.js'
+import { resourceUpdateController } from '$lib/server/interface/adapters/controllers/resources/update.js'
 import { error, fail } from '@sveltejs/kit'
 
 export const load = async ({ params, locals }) => {
-	await authorise({
-		namespace: 'Dataset',
-		object: params.id,
-		relation: 'edit',
-		session: locals.session
+	const [dataset_err, dataset] = await datasetGetController({
+		session: locals.session,
+		id: params.id
+	})
+	if (dataset_err !== null) {
+		error(400, { message: dataset_err.reason, id: dataset_err.reason })
+	}
+	if (dataset === null) {
+		error(404, { message: 'Not found', id: 'not-found' })
+	}
+	const [tags_err, tags] = await tagsGetController({
+		session: locals.session,
+		vocabulary_id: 'general'
 	})
 
-	const dataset = await locals.ckan.request(get('package_show', { id: params.id }))
-	const tags = await locals.ckan.request(get('tag_list', { all_fields: true }))
-	if (Array.isArray(dataset.result)) {
-		error(...SERVER_ERRORS[404])
+	if (tags_err !== null) {
+		error(400, { message: tags_err.reason, id: tags_err.reason })
 	}
-	// const client = loadStorageClient()
 	return {
 		dataset,
-		tags
+		tags: tags.items
 	}
 }
 
-type FormField = { name: string; type: 'string' | 'file' | 'boolean' | 'array'; required: boolean }
+// type FormField = { name: string; type: 'string' | 'file' | 'boolean' | 'array'; required: boolean }
 
 const parseForm = (form: FormData) => {
 	const object: Record<PropertyKey, unknown> = {}
@@ -47,83 +59,86 @@ const parseForm = (form: FormData) => {
 }
 
 export const actions = {
-	//TODO: move to endpoint
-	create_tag: async ({ request, locals, params }) => {
+	add_tag: async ({ locals, params, request }) => {
 		const form = await request.formData()
-		const name = String(form.get('display_name'))
-		log.debug(name)
-		const tag = await locals.ckan.request(create('tag_create', { name, vocabulary_id: null }))
-		log.debug(jstr(tag))
+		const tag = formGetStringOrUndefined({ form, field: 'tag' })
+		const [errs, vocabularies] = await tagsGetVocabulariesController()
+		if (errs !== null) {
+			return fail(400, { message: `Error finding the vocabulary general` })
+		}
+		const vocabulary_id = vocabularies.find((v) => v.name === 'general')
+		if (!vocabulary_id) {
+			return fail(400, { message: `Error finding the vocabulary general` })
+		}
+		const [errors] = await datasetAddTagController({
+			session: locals.session,
+			id: params.id,
+			vocabulary_id: vocabulary_id.id,
+			tag: String(tag)
+		})
+		if (errors !== null) {
+			return fail(400, { message: `Error adding the tag ${tag}` })
+		}
+		return { message: `Tag ${tag} added` }
+	},
+	remove_tag: async ({ locals, params, request }) => {
+		const form = await request.formData()
+		const tag = formGetStringOrUndefined({ form, field: 'tag' })
+		const vocabulary_id = 'general'
+		const [errors] = await datasetRemoveTagController({
+			session: locals.session,
+			id: params.id,
+			tag_id: tag,
+			vocabulary_id
+		})
+		if (errors !== null) {
+			return fail(400, { message: errors.reason })
+		}
+		return { message: `Tag ${tag} removed` }
+	},
 
-		return {
-			message: `Tag created`
-		}
-	},
-	save_tags: async ({ request, locals, params }) => {
-		const form = await request.formData()
-		const tags = String(form.get('tags'))
-		const _tags = JSON.parse(tags).map((tag) => ({
-			...tag,
-			name: slugify(tag.display_name),
-			display_name: tag.display_name
-		}))
-		log.debug(_tags)
-		const tag = await locals.ckan.request(
-			patch(
-				'package_patch',
-				{ id: params.id },
-				{
-					tags: _tags,
-					id: params.id
-				}
-			)
-		)
-		log.debug(jstr(tag))
-		return {
-			message: `Tags saved`
-		}
-	},
 	update: async ({ request, locals, params }) => {
 		const form = await request.formData()
-		const parsed = parseForm(form)
-		const dataset = await locals.ckan.request(
-			patch('package_patch', { id: params.id }, { ...parsed, id: params.id })
-		)
-		log.debug(jstr(dataset))
+		const data = parseForm(form)
+		await datasetUpdateController({ data, id: params.id, session: locals.session })
 		return {
 			message: `Dataset successfully updated`
 		}
 	},
 
-	update_resource: async ({ request, fetch }) => {
+	update_resource: async ({ request, params, locals }) => {
 		const form = await request.formData()
 		const parsed = parseForm(form)
-		const resource = await fetch(`/api/v1/resources/${parsed.id}`, {
-			method: 'PATCH',
-			body: JSON.stringify(parsed)
+		await resourceUpdateController({
+			id: params.id,
+			session: locals.session,
+			data: parsed
 		})
-		log.debug(jstr(resource))
 		return {
 			message: `Resource successfully updated`
 		}
 	},
 
-	update_datastore: async ({ request, fetch }) => {
+	update_datastore: async ({ request, locals }) => {
 		const form = await request.formData()
-		const id = form.get('id')
-		const res = await fetch(`/api/v1/resources/${id}/datastore`, {
-			method: 'POST',
-			body: form
+		const id = formGetStringOrUndefined({ form, field: 'id' })
+		const metadata = parseForm(form)
+		await datastoreUpdateController({
+			session: locals.session,
+			metadata,
+			resource_id: id
 		})
-		const data = await res.json()
-		if (res.ok) {
-			log.debug(jstr(data))
-			return {
-				message: data.message
-			}
+		return {
+			message: `Datastore updated`
 		}
-		return fail(res.status, {
-			message: data.message
-		})
+		// if (res.ok) {
+		// 	log.debug(jstr(data))
+		// 	return {
+		// 		message: data.message
+		// 	}
+		// }
+		// return fail(res.status, {
+		// 	message: data.message
+		// })
 	}
 }
