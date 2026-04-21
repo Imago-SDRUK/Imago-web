@@ -29,6 +29,48 @@
       "when": 1765403518616,
       "tag": "0003_melted_lily_hollister",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775816564194,
+      "tag": "0004_natural_reaper",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775820936523,
+      "tag": "0005_ambiguous_northstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1775823579443,
+      "tag": "0006_clumsy_multiple_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1776272801497,
+      "tag": "0007_left_the_renegades",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776327477107,
+      "tag": "0008_redundant_human_torch",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776329094641,
+      "tag": "0009_sparkling_shocker",
+      "breakpoints": true
     }
   ]
 }
