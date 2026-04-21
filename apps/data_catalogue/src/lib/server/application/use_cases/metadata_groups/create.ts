@@ -3,6 +3,7 @@ import type { GroupsService } from '$lib/server/application/services/groups'
 // import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 import { err, ok } from '$lib/server/entities/errors'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import slugify from '@sindresorhus/slugify'
 
 export const metadataGroupCreateUseCase = async ({
 	data,
@@ -29,7 +30,8 @@ export const metadataGroupCreateUseCase = async ({
 
 	const [error_g, group] = await groups_service.createGroup({
 		// TODO: metadata group schema
-		data
+		// data
+		data: { ...data, name: slugify(data.title) }
 	})
 	if (error_g !== null) {
 		return err(error_g)

@@ -37,9 +37,9 @@ export const groupGetUseCase = async ({
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'read'
+		namespace: 'Group',
+		object: id,
+		permits: 'users'
 	})
 	if (errors) {
 		return err(errors)

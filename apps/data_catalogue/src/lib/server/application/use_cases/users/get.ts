@@ -1,3 +1,4 @@
+import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 import type { UsersRepository } from '$lib/server/application/repositories/users'
 import type { IdentityService } from '$lib/server/application/services/identity'
 import { err, ok } from '$lib/server/entities/errors'
@@ -107,6 +108,36 @@ export const userGetMeUseCase = async ({
 		updated_at: user.updated_at,
 		deleted_at: user.deleted_at
 	})
+}
+
+export const userGetGroupsUseCase = async ({
+	user_repository,
+	session
+}: {
+	session: Session
+	user_repository: UsersRepository
+}) => {
+	if (session.identity.id === 'anonymous') {
+		return ok([])
+	}
+	const [errors, permission] = await getAuthorisationModule().authorise({
+		actor: session.identity.id,
+		namespace: 'User',
+		object: session.identity.id,
+		permits: 'members'
+	})
+	if (errors) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [errs, user_groups] = await user_repository.getUserGroups({ id: session.identity.id })
+	if (errs !== null) {
+		return err(errs)
+	}
+
+	return ok(user_groups)
 }
 
 export const usersGetUseCase = async ({

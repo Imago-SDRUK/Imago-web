@@ -7,7 +7,6 @@ import {
 	type PermissionRequest
 } from '$lib/server/entities/models/permissions'
 import { type } from 'arktype'
-import { jstr } from '@arturoguzman/art-ui'
 
 export const permissionUpdateUseCase = async ({
 	data,

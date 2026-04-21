@@ -139,7 +139,8 @@ export const permissionsGetActorsUseCase = async ({
 		...parsed_users.users.map((user) => ({
 			label: String(user.email),
 			actor: user.id
-		}))
+		})),
+		{ label: 'Public', actor: 'anonymous' }
 	]
 	return ok(parsed)
 }

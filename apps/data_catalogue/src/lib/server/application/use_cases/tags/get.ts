@@ -1,7 +1,7 @@
 import type { TagsService } from '$lib/server/application/services/tags'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+// import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 export const tagsGetUseCase = async ({
 	limit = 10,
@@ -18,18 +18,19 @@ export const tagsGetUseCase = async ({
 	vocabulary_id?: string
 	session: Session
 }) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'datasets',
-		permits: 'read',
-		actor: session.identity.id
-	})
-	if (errors) {
-		return err(errors)
-	}
-	if (!permission.allowed) {
-		return err({ reason: 'Unauthorised' })
-	}
+	// NOTE: tags are always public until refactor?
+	// const [errors, permission] = await getAuthorisationModule().authorise({
+	// 	namespace: 'Action',
+	// 	object: 'datasets',
+	// 	permits: 'read',
+	// 	actor: session.identity.id
+	// })
+	// if (errors) {
+	// 	return err(errors)
+	// }
+	// if (!permission.allowed) {
+	// 	return err({ reason: 'Unauthorised' })
+	// }
 	return await tags_service.getTags({
 		limit,
 		offset: offset,

@@ -4,6 +4,7 @@ import type { DownloadRequest } from '$lib/server/entities/models/downloads'
 import type { Session } from '$lib/server/entities/models/identity'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
+// NOTE: maybe make this a sub use case instead?
 export const downloadsCreateUseCase = async ({
 	data,
 	session,
@@ -15,8 +16,8 @@ export const downloadsCreateUseCase = async ({
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'questions',
+		namespace: 'Resource',
+		object: data.resource,
 		permits: 'read'
 	})
 	if (errors) {

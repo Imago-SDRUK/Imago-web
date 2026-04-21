@@ -14,9 +14,9 @@ export const groupDeleteUseCase = async ({
 }) => {
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'create',
+		namespace: 'Group',
+		object: id,
+		permits: 'admins',
 		actor: session.identity.id
 	})
 	if (errors) {

@@ -19,7 +19,7 @@ export const questionCreateUseCase = async ({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'questions',
-		permits: 'read'
+		permits: 'create'
 	})
 	if (errors) {
 		return err(errors)

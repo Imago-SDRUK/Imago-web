@@ -20,9 +20,9 @@ export const answerCreateUseCase = async ({
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
 		actor: session.identity.id,
-		namespace: 'Endpoint',
-		object: '/api/v1/answers',
-		permits: 'GET'
+		namespace: 'Action',
+		object: 'answers',
+		permits: 'create'
 	})
 	if (errors) {
 		return err(errors)
@@ -57,7 +57,7 @@ export const answersCreateUseCase = async ({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'answers',
-		permits: 'read'
+		permits: 'create'
 	})
 	if (errors) {
 		return err(errors)

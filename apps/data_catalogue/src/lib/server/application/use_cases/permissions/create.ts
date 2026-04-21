@@ -19,7 +19,7 @@ export const permissionCreateGetUseCase = async ({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'permissions',
-		permits: 'read'
+		permits: 'create'
 	})
 	if (errors) {
 		return err(errors)

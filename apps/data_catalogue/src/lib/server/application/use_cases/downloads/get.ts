@@ -18,8 +18,8 @@ export const downloadsGetByDatasetUseCase = async ({
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'questions',
+		namespace: 'Resource',
+		object: id,
 		permits: 'read'
 	})
 	if (errors) {

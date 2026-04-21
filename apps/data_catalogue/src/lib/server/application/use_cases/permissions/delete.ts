@@ -19,7 +19,7 @@ export const permissionDeleteUseCase = async ({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'permissions',
-		permits: 'read'
+		permits: 'delete'
 	})
 	if (errors) {
 		return err(errors)

@@ -28,18 +28,19 @@ export const metadataGroupGetUseCase = async ({
 	id: string
 	groups_service: GroupsService
 }) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
-		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'read'
-	})
-	if (errors) {
-		return err(errors)
-	}
-	if (!permission.allowed) {
-		return err({ reason: 'Unauthorised' })
-	}
+	// NOTE: metadata groups should always be public until refactor?
+	// const [errors, permission] = await getAuthorisationModule().authorise({
+	// 	actor: session.identity.id,
+	// 	namespace: 'Action',
+	// 	object: 'groups',
+	// 	permits: 'read'
+	// })
+	// if (errors) {
+	// 	return err(errors)
+	// }
+	// if (!permission.allowed) {
+	// 	return err({ reason: 'Unauthorised' })
+	// }
 	const [sg_errors, service_group] = await groups_service.getGroup({ id })
 	if (sg_errors !== null) {
 		return err(sg_errors)
@@ -54,18 +55,19 @@ export const metadataGroupsGetUseCase = async ({
 	session: Session
 	groups_service: GroupsService
 }) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
-		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'read'
-	})
-	if (errors) {
-		return err(errors)
-	}
-	if (!permission.allowed) {
-		return err({ reason: 'Unauthorised' })
-	}
+	// NOTE: metadata groups should always be public until refactor?
+	// const [errors, permission] = await getAuthorisationModule().authorise({
+	// 	actor: session.identity.id,
+	// 	namespace: 'Action',
+	// 	object: 'datasets',
+	// 	permits: 'read'
+	// })
+	// if (errors) {
+	// 	return err(errors)
+	// }
+	// if (!permission.allowed) {
+	// 	return err({ reason: 'Unauthorised' })
+	// }
 
 	const [sg_errors, service_groups] = await groups_service.getGroups({ page_size: 1000, offset: 0 })
 	if (sg_errors) {

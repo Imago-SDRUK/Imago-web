@@ -75,7 +75,7 @@ export const resourceVersionCreateUseCase = async ({
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		namespace: 'Action',
 		object: 'resources',
-		permits: 'POST',
+		permits: 'create',
 		actor: session.identity.id
 		// action: () => redirect(307, '/auth/login')
 	})

@@ -19,9 +19,12 @@ export const resourceGetUseCase = async ({
 	datastore_service: DatastoreService
 	session: Session
 }) => {
+	if (session.identity.id === 'anonymous') {
+		return err({ reason: 'Unauthorised' })
+	}
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'resources',
+		namespace: 'Resource',
+		object: id,
 		permits: 'read',
 		actor: session.identity.id
 		// action: () => redirect(307, '/auth/login')
@@ -88,8 +91,8 @@ export const resourceVersionGetDownloadUrlUseCase = async ({
 	session: Session
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'resources',
+		namespace: 'ResourceVersion',
+		object: version_id,
 		permits: 'read',
 		actor: session.identity.id
 		// action: () => redirect(307, '/auth/login')

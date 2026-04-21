@@ -17,7 +17,7 @@ export const tagCreateUseCase = async ({
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		namespace: 'Action',
 		object: 'datasets',
-		permits: 'read',
+		permits: 'create',
 		actor: session.identity.id
 	})
 	if (errors) {

@@ -21,7 +21,7 @@ export const datasetGetPublicUseCase = async ({
 		return err(errors)
 	}
 	if (dataset?.private === false) {
-		return ok(dataset)
+		return ok({ data: dataset })
 	}
 	return err({ reason: 'Not Found' })
 }
@@ -35,9 +35,18 @@ export const datasetGetUseCase = async ({
 	dataset_service: DatasetService
 	session: Session
 }) => {
-	const [errors, allowed] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'datasets',
+	//NOTE: id lookup must be perfomed before auth
+	const [dataset_errors, dataset] = await dataset_service.getDataset({ id })
+	if (dataset_errors) {
+		return err(dataset_errors)
+	}
+	if (!dataset) {
+		return err({ reason: 'Not Found' })
+	}
+	const auth_module = getAuthorisationModule()
+	const [errors, allowed] = await auth_module.authorise({
+		namespace: 'Dataset',
+		object: dataset.id,
 		permits: 'read',
 		actor: session.identity.id
 	})
@@ -47,14 +56,12 @@ export const datasetGetUseCase = async ({
 	if (!allowed.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
+	const [errs, permission] = await auth_module.getPermissions({
+		namespace: 'Dataset',
+		object: dataset.id,
+		actor: session.identity.id
+	})
 
-	const [dataset_errors, dataset] = await dataset_service.getDataset({ id })
-	if (dataset_errors) {
-		return err(dataset_errors)
-	}
-	if (!dataset) {
-		return err({ reason: 'Not Found' })
-	}
 	return ok(dataset)
 }
 
@@ -73,18 +80,18 @@ export const datasetsGetPaginatedUseCase = async ({
 	search?: string
 	session: Session
 }) => {
-	const [errors, allowed] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'datasets',
-		permits: 'read',
-		actor: session.identity.id
-	})
-	if (errors !== null) {
-		return err(errors)
-	}
-	if (!allowed.allowed) {
-		return err({ reason: 'Unauthorised' })
-	}
+	// const [errors, allowed] = await getAuthorisationModule().authorise({
+	// 	namespace: 'Action',
+	// 	object: 'datasets',
+	// 	permits: 'read',
+	// 	actor: session.identity.id
+	// })
+	// if (errors !== null) {
+	// 	return err(errors)
+	// }
+	// if (!allowed.allowed) {
+	// 	return err({ reason: 'Unauthorised' })
+	// }
 	const [errs, datasets] = await dataset_service.getDatasets({
 		page_size: page_size,
 		offset: offset,
@@ -97,7 +104,31 @@ export const datasetsGetPaginatedUseCase = async ({
 	if (!datasets) {
 		return err({ reason: 'Not Found' })
 	}
-	return ok(datasets)
+	const auth_module = getAuthorisationModule()
+	const permissions = await Promise.all(
+		datasets.items.map((dataset) =>
+			auth_module
+				.authorise({
+					actor: session.identity.id,
+					namespace: 'Dataset',
+					object: dataset.id,
+					permits: 'read'
+				})
+				.then(([errors, permission]) => {
+					if (errors !== null) {
+						return null
+					}
+					if (permission.allowed) {
+						return dataset.id
+					}
+					return null
+				})
+		)
+	)
+	return ok({
+		...datasets,
+		items: datasets.items.filter((dataset) => permissions.includes(dataset.id))
+	})
 }
 
 export const datasetsGetPaginatedPublicUseCase = async ({
@@ -143,8 +174,8 @@ export const datasetGetActivityUseCase = async ({
 	session: Session
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'datasets',
+		namespace: 'Dataset',
+		object: id,
 		permits: 'read',
 		actor: session.identity.id
 	})
@@ -206,8 +237,8 @@ export const datasetGetPermissionsUseCase = async ({
 	users_repository: UsersRepository
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'datasets',
+		namespace: 'Dataset',
+		object: id,
 		permits: 'share',
 		actor: session.identity.id
 	})
@@ -267,7 +298,8 @@ export const datasetGetPermissionsUseCase = async ({
 		ids:
 			sorted_permissions?.users
 				.map((permission) => permission.subject_id)
-				.filter((x) => x !== undefined) ?? []
+				.filter((x) => x !== undefined)
+				.filter((x) => x !== 'anonymous') ?? []
 	})
 	if (users_err !== null) {
 		return err(users_err)
@@ -321,6 +353,13 @@ export const datasetGetPermissionsUseCase = async ({
 		}
 	})
 	const parsed_users: PermissionActor[] = sorted_permissions?.users.map((_u) => {
+		if (_u.subject_id === 'anonymous') {
+			return {
+				label: 'Public',
+				actor: _u.subject_id,
+				relation: _u.relation
+			}
+		}
 		const user = users_identities.users.find((u) => u.id === _u.subject_id)
 		return {
 			label: String(user?.email),
@@ -331,4 +370,53 @@ export const datasetGetPermissionsUseCase = async ({
 	const parsed: PermissionActor[] = [...(parsed_groups ?? []), ...(parsed_users ?? [])]
 
 	return ok(parsed)
+}
+
+export const datasetGetUserPermissionsUseCase = async ({
+	id,
+	session
+}: {
+	id: string
+	session: Session
+}) => {
+	const auth_module = getAuthorisationModule()
+	const permits = ['read', 'edit', 'delete', 'share']
+	const allowed = await Promise.all(
+		permits.map((permit) =>
+			auth_module
+				.authorise({
+					namespace: 'Dataset',
+					object: id,
+					permits: permit,
+					actor: session.identity.id
+				})
+				.then(([errors, permission]) => {
+					if (errors !== null) {
+						return err(errors)
+					}
+					return ok({ ...permission, permits: permit })
+				})
+		)
+	)
+
+	const parsed = allowed.reduce(
+		(acc, [errors, permission]) => {
+			if (errors !== null) {
+				acc.errors.push(errors)
+				return acc
+			}
+			if (permission.allowed) {
+				acc.permission.push(permission.permits)
+			}
+			return acc
+		},
+		{ errors: [], permission: [] } as {
+			errors: ErrTypes[]
+			permission: string[]
+		}
+	)
+	if (parsed.errors.length > 0) {
+		return err(parsed.errors[0])
+	}
+	return ok(parsed.permission)
 }

@@ -24,9 +24,9 @@ export const groupUpdateUseCase = async ({
 }) => {
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'edit',
+		namespace: 'Group',
+		object: id,
+		permits: 'admins',
 		actor: session.identity.id
 	})
 	if (errors !== null) {
@@ -97,9 +97,9 @@ export const groupAddDatasetUseCase = async ({
 }) => {
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'edit',
+		namespace: 'Group',
+		object: group_id,
+		permits: 'admins',
 		actor: session.identity.id
 	})
 	if (errors !== null) {
@@ -131,9 +131,9 @@ export const groupRemoveDatasetUseCase = async ({
 }) => {
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'edit',
+		namespace: 'Group',
+		object: group_id,
+		permits: 'admins',
 		actor: session.identity.id
 	})
 	if (errors !== null) {
@@ -224,9 +224,9 @@ export const groupAddUserUseCase = async ({
 }) => {
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'edit',
+		namespace: 'Group',
+		object: data.group_id,
+		permits: 'admins',
 		actor: session.identity.id
 	})
 	if (errors !== null) {
@@ -274,9 +274,9 @@ export const groupRemoveUserUseCase = async ({
 }) => {
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
-		namespace: 'Action',
-		object: 'groups',
-		permits: 'edit',
+		namespace: 'Group',
+		object: group_id,
+		permits: 'admins',
 		actor: session.identity.id
 	})
 	if (errors !== null) {

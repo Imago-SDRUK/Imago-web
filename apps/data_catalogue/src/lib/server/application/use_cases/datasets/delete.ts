@@ -14,8 +14,8 @@ export const datasetDeleteUseCase = async ({
 }) => {
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
-		namespace: 'Action',
-		object: 'datasets',
+		namespace: 'Dataset',
+		object: id,
 		permits: 'delete',
 		actor: session.identity.id
 	})

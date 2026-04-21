@@ -16,9 +16,9 @@ export const datastoreCreateUseCase = async ({
 	session: Session
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'resources',
-		permits: 'create',
+		namespace: 'Resource',
+		object: resource_id,
+		permits: 'edit',
 		actor: session.identity.id
 	})
 	if (errors) {

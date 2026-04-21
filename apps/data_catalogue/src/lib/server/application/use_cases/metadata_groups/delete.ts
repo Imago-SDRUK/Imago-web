@@ -16,7 +16,7 @@ export const metadataGroupDeleteUseCase = async ({
 	const [errors, permission] = await auth_module.authorise({
 		namespace: 'Action',
 		object: 'groups',
-		permits: 'create',
+		permits: 'delete',
 		actor: session.identity.id
 	})
 	if (errors) {

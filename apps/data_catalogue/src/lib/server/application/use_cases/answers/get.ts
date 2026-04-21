@@ -14,8 +14,8 @@ export const answerGetUseCase = async ({
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'answers',
+		namespace: 'Answer',
+		object: id,
 		permits: 'read'
 	})
 	if (errors) {

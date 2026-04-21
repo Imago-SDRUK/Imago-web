@@ -16,8 +16,8 @@ export const resourceUpdateUseCase = async ({
 	session: Session
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'resources',
+		namespace: 'Resource',
+		object: resource_id,
 		permits: 'edit',
 		actor: session.identity.id
 		// action: () => redirect(307, '/auth/login')
@@ -49,8 +49,8 @@ export const resourceVersionUpdateUseCase = async ({
 	session: Session
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'resources',
+		namespace: 'ResourceVersion',
+		object: version_id,
 		permits: 'edit',
 		actor: session.identity.id
 		// action: () => redirect(307, '/auth/login')
@@ -79,8 +79,8 @@ export const resourceVersionUpdateFileUseCase = async ({
 	session: Session
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'resources',
+		namespace: 'ResourceVersion',
+		object: version_id,
 		permits: 'edit',
 		actor: session.identity.id
 		// action: () => redirect(307, '/auth/login')
