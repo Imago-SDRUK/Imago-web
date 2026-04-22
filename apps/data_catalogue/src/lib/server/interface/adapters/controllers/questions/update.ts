@@ -1,15 +1,19 @@
 import { err, ok } from '$lib/server/entities/errors'
 import { questionUpdateUseCase } from '$lib/server/application/use_cases/questions/update'
 import { getQuestionsModule } from '$lib/server/modules/questions'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 export const questionsUpdateController = async ({
 	id,
 	data,
-	session
+	session,
+	configuration
 }: {
 	id: string
 	data: unknown
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -20,8 +24,8 @@ export const questionsUpdateController = async ({
 	const [errors, answer] = await questionUpdateUseCase({
 		id,
 		data,
-		session: session,
-		questions_repository: getQuestionsModule()
+		questions_repository: getQuestionsModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
 		return err(errors)

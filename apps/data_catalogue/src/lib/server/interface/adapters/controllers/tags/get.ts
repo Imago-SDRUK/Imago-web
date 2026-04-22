@@ -1,3 +1,4 @@
+import { getServerContext } from '$lib/server/application/context'
 import {
 	tagsGetCountPublicUseCase,
 	tagsGetPublicUseCase,
@@ -5,6 +6,7 @@ import {
 	tagsGetVocabularyPublicUseCase
 } from '$lib/server/application/use_cases/tags/get'
 import { err, ok } from '$lib/server/entities/errors'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getTagsModule } from '$lib/server/modules/tags'
 
 export const tagsGetController = async ({
@@ -12,13 +14,15 @@ export const tagsGetController = async ({
 	limit,
 	search,
 	vocabulary_id,
-	session
+	session,
+	configuration
 }: {
 	offset?: number
 	limit?: number
 	search?: string
 	vocabulary_id?: string
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		const [errors, tags] = await tagsGetPublicUseCase({
@@ -37,9 +41,9 @@ export const tagsGetController = async ({
 		offset,
 		limit,
 		search,
-		session,
 		vocabulary_id,
-		tags_service: getTagsModule()
+		tags_service: getTagsModule(),
+		...getServerContext({ session, configuration })
 	})
 
 	if (errors === null) {

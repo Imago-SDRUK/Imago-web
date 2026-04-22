@@ -12,16 +12,20 @@ import {
 	datasetRemoveTagUseCase
 } from '$lib/server/application/use_cases/datasets/update'
 import { getTagsModule } from '$lib/server/modules/tags'
-import { getGroupsRepositoryModule, getGroupsServiceModule } from '$lib/server/modules/groups'
+import { getGroupsServiceModule } from '$lib/server/modules/groups'
+import { getServerContext } from '$lib/server/application/context'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 
 export const datasetUpdateController = async ({
 	id,
 	session,
-	data
+	data,
+	configuration
 }: {
 	id?: string
 	session?: Session
 	data?: Partial<DatasetRequest>
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -38,9 +42,9 @@ export const datasetUpdateController = async ({
 	}
 	return await datasetUpdateUseCase({
 		id,
-		session,
 		dataset_service: getDatasetModule(),
-		data
+		data,
+		...getServerContext({ session, configuration })
 	})
 }
 
@@ -48,12 +52,15 @@ export const datasetAddTagController = async ({
 	session,
 	id,
 	tag,
-	vocabulary_id = 'general'
+	vocabulary_id = 'general',
+
+	configuration
 }: {
 	id: string
 	tag?: string
 	vocabulary_id?: string
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -73,7 +80,7 @@ export const datasetAddTagController = async ({
 		vocabulary_id: vocabulary_id,
 		tags_service: getTagsModule(),
 		dataset_service: getDatasetModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 }
 
@@ -81,12 +88,15 @@ export const datasetRemoveTagController = async ({
 	session,
 	id,
 	tag_id,
-	vocabulary_id
+	vocabulary_id,
+
+	configuration
 }: {
 	id?: string
 	tag_id?: string
 	vocabulary_id?: string
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -106,18 +116,22 @@ export const datasetRemoveTagController = async ({
 		vocabulary_id,
 		tags_service: getTagsModule(),
 		dataset_service: getDatasetModule(),
-		session
+
+		...getServerContext({ session, configuration })
 	})
 }
 
 export const datasetAddGroupController = async ({
 	session,
 	dataset_id,
-	group_id
+	group_id,
+
+	configuration
 }: {
 	dataset_id?: string
 	group_id?: string
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -133,7 +147,7 @@ export const datasetAddGroupController = async ({
 		dataset_service: getDatasetModule(),
 		groups_service: getGroupsServiceModule(),
 		group_id,
-		session,
+		...getServerContext({ session, configuration }),
 		dataset_id
 	})
 }
@@ -141,11 +155,13 @@ export const datasetAddGroupController = async ({
 export const datasetRemoveGroupController = async ({
 	session,
 	dataset_id,
-	group_id
+	group_id,
+	configuration
 }: {
 	dataset_id?: string
 	group_id?: string
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -160,7 +176,7 @@ export const datasetRemoveGroupController = async ({
 	return await datasetRemoveGroupUseCase({
 		dataset_service: getDatasetModule(),
 		group_id,
-		session,
-		dataset_id
+		dataset_id,
+		...getServerContext({ session, configuration })
 	})
 }

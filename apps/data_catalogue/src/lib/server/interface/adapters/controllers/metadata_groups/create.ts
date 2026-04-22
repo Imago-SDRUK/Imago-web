@@ -1,13 +1,17 @@
 import { getGroupsServiceModule } from '$lib/server/modules/groups'
 import { err } from '$lib/server/entities/errors'
 import { metadataGroupCreateUseCase } from '$lib/server/application/use_cases/metadata_groups/create'
+import { getServerContext } from '$lib/server/application/context'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 
-export const groupCreateController = async ({
+export const metadataGroupCreateController = async ({
 	data,
-	session
+	session,
+	configuration
 }: {
 	data: unknown
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -15,6 +19,6 @@ export const groupCreateController = async ({
 	return await metadataGroupCreateUseCase({
 		data,
 		groups_service: getGroupsServiceModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 }

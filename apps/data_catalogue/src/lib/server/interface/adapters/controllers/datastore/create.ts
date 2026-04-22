@@ -3,15 +3,19 @@ import { getDatastoreModule } from '$lib/server/modules/datastore'
 import { datastoreCreateUseCase } from '$lib/server/application/use_cases/datastore/create'
 import type { CSVW } from '$lib/types/csvw'
 import { err } from '$lib/server/entities/errors'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 export const datastoreCreateController = async ({
 	resource_id,
 	session,
-	metadata
+	metadata,
+	configuration
 }: {
 	resource_id?: string
 	session?: Session
 	metadata?: Record<PropertyKey, unknown> | CSVW
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -50,8 +54,8 @@ export const datastoreCreateController = async ({
 
 	return await datastoreCreateUseCase({
 		resource_id,
-		session,
 		datastore_service: getDatastoreModule(),
-		metadata
+		metadata,
+		...getServerContext({ session, configuration })
 	})
 }

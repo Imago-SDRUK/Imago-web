@@ -8,20 +8,24 @@ import { err, ok } from '$lib/server/entities/errors'
 import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
 import { getIdentityModule } from '$lib/server/modules/identity'
 import { getUserModule } from '$lib/server/modules/user'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 export const permissionsGetController = async ({
 	data,
-	session
+	session,
+	configuration
 }: {
 	data: PermissionQuery
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	const [errors, permissions] = await permissionsGetUseCase({
-		session,
-		data
+		data,
+		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -29,15 +33,21 @@ export const permissionsGetController = async ({
 	return ok(permissions)
 }
 
-export const permissionsGetActorsController = async ({ session }: { session?: Session }) => {
+export const permissionsGetActorsController = async ({
+	session,
+	configuration
+}: {
+	session?: Session
+	configuration: Configuration
+}) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	const [errors, actors] = await permissionsGetActorsUseCase({
-		session,
 		groups_repository: getGroupsRepositoryModule(),
 		users_repository: getUserModule(),
-		identity_service: getIdentityModule()
+		identity_service: getIdentityModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
 		return err(errors)

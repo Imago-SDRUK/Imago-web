@@ -6,19 +6,22 @@ import {
 	// groupsGetPublicUseCase,
 	groupsGetUseCase
 } from '$lib/server/application/use_cases/groups/get'
-import type { GroupService } from '$lib/server/entities/models/groups'
 import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
 import { getIdentityModule } from '$lib/server/modules/identity'
 import type { GroupsRepository } from '$lib/server/application/repositories/groups'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 const presenter = ({ group }: { group: GroupsRepository }) => group
 
 export const groupGetController = async ({
 	session,
-	id
+	id,
+	configuration
 }: {
 	session: App.Locals['session']
 	id?: string
+	configuration: Configuration
 }) => {
 	if (!id) {
 		return err({ reason: 'Invalid Data', message: `You need to provide a group`, id: '' })
@@ -35,8 +38,8 @@ export const groupGetController = async ({
 	}
 	const [errors, group] = await groupGetUseCase({
 		id: id,
-		session: session,
-		groups_repository: getGroupsRepositoryModule()
+		groups_repository: getGroupsRepositoryModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -44,13 +47,19 @@ export const groupGetController = async ({
 	return ok(group)
 }
 
-export const groupsGetController = async ({ session }: { session: App.Locals['session'] }) => {
+export const groupsGetController = async ({
+	session,
+	configuration
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+}) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	const [errors, groups] = await groupsGetUseCase({
-		session: session,
-		groups_repository: getGroupsRepositoryModule()
+		groups_repository: getGroupsRepositoryModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors === null) {
 		return ok(groups)
@@ -60,9 +69,11 @@ export const groupsGetController = async ({ session }: { session: App.Locals['se
 
 export const groupGetUsersController = async ({
 	session,
-	group_id
+	group_id,
+	configuration
 }: {
 	session: App.Locals['session']
+	configuration: Configuration
 	group_id: string
 }) => {
 	if (!session) {
@@ -73,9 +84,9 @@ export const groupGetUsersController = async ({
 	}
 	const [errors, groups] = await groupGetUsersUseCase({
 		group_id,
-		session: session,
 		groups_repository: getGroupsRepositoryModule(),
-		identity_service: getIdentityModule()
+		identity_service: getIdentityModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors === null) {
 		return ok(groups)

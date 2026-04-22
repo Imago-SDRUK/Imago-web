@@ -4,6 +4,7 @@ import {
 	datasetGetPermissionsUseCase,
 	datasetGetPublicUseCase,
 	datasetGetUseCase,
+	datasetGetUserPermissionsUseCase,
 	datasetsCountGetPublicUseCase,
 	datasetsGetPaginatedPublicUseCase,
 	datasetsGetPaginatedUseCase
@@ -14,15 +15,19 @@ import { err, ok } from '$lib/server/entities/errors'
 import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
 import { getIdentityModule } from '$lib/server/modules/identity'
 import { getUserModule } from '$lib/server/modules/user'
+import { getServerContext } from '$lib/server/application/context'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 
 const presenter = ({ dataset }: { dataset: Dataset | null }) => dataset
 
 export const datasetGetController = async ({
 	session,
-	id
+	id,
+	configuration
 }: {
 	session: App.Locals['session']
 	id: string
+	configuration: Configuration
 }) => {
 	if (!session) {
 		const [errors, dataset] = await datasetGetPublicUseCase({
@@ -37,7 +42,7 @@ export const datasetGetController = async ({
 	const [errors, dataset] = await datasetGetUseCase({
 		id: id,
 		dataset_service: getDatasetModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 
 	if (errors !== null) {
@@ -51,13 +56,15 @@ export const datasetsGetController = async ({
 	offset,
 	page_size,
 	search,
-	session
+	session,
+	configuration
 }: {
 	url: URL
 	offset?: number
 	page_size?: number
 	search?: string
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		const [errors, datasets] = await datasetsGetPaginatedPublicUseCase({
@@ -78,7 +85,7 @@ export const datasetsGetController = async ({
 		url,
 		search,
 		dataset_service: getDatasetModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -91,12 +98,14 @@ export const datasetGetActivityController = async ({
 	session,
 	id,
 	offset,
-	page_size
+	page_size,
+	configuration
 }: {
 	id: string
 	offset?: number
 	page_size?: number
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return await datasetGetActivityPublicUseCase({
@@ -111,7 +120,7 @@ export const datasetGetActivityController = async ({
 		offset,
 		page_size,
 		dataset_service: getDatasetModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 }
 
@@ -123,10 +132,12 @@ export const datasetsGetCountController = async () => {
 
 export const datasetGetPermissionsController = async ({
 	session,
-	id
+	id,
+	configuration
 }: {
 	session: App.Locals['session']
 	id: string
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -135,10 +146,31 @@ export const datasetGetPermissionsController = async ({
 		return err({ reason: 'Unauthenticated' })
 	}
 	return await datasetGetPermissionsUseCase({
-		session,
 		id,
 		groups_repository: getGroupsRepositoryModule(),
 		identity_service: getIdentityModule(),
-		users_repository: getUserModule()
+		users_repository: getUserModule(),
+		...getServerContext({ session, configuration })
+	})
+}
+
+export const datasetGetUserPermissionsController = async ({
+	session,
+	id,
+	configuration
+}: {
+	session: App.Locals['session']
+	id: string
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	if (!id) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	return await datasetGetUserPermissionsUseCase({
+		id,
+		...getServerContext({ session, configuration })
 	})
 }

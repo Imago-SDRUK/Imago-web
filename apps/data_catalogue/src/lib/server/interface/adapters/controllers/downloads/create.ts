@@ -1,16 +1,20 @@
 import { downloads } from '$lib/db/schema'
+import { getServerContext } from '$lib/server/application/context'
 import { downloadsCreateUseCase } from '$lib/server/application/use_cases/downloads/create'
 import { err } from '$lib/server/entities/errors'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
 import { type } from 'arktype'
 import { createInsertSchema } from 'drizzle-arktype'
 
 export const downloadCreateController = async ({
 	data,
-	session
+	session,
+	configuration
 }: {
 	data: unknown
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -22,7 +26,7 @@ export const downloadCreateController = async ({
 	}
 	return await downloadsCreateUseCase({
 		data: validated,
-		session,
-		downloads_repository: getDownloadsModule()
+		downloads_repository: getDownloadsModule(),
+		...getServerContext({ session, configuration })
 	})
 }

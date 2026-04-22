@@ -4,22 +4,25 @@ import {
 	answerCreateUseCase,
 	answersCreateUseCase
 } from '$lib/server/application/use_cases/answers/create'
+import { getServerContext } from '$lib/server/application/context'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 
 export const answerCreateController = async ({
 	data,
-	session
+	session,
+	configuration
 }: {
 	data: unknown
 	session: App.Locals['session']
-	id: string
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	const [errors, answer] = await answerCreateUseCase({
 		data,
-		session: session,
-		answers_repository: getAnswersModule()
+		answers_repository: getAnswersModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -29,10 +32,12 @@ export const answerCreateController = async ({
 
 export const answersCreateController = async ({
 	data,
-	session
+	session,
+	configuration
 }: {
 	data: unknown[]
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -42,8 +47,8 @@ export const answersCreateController = async ({
 	}
 	const [errors, answer] = await answersCreateUseCase({
 		data,
-		session: session,
-		answers_repository: getAnswersModule()
+		answers_repository: getAnswersModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
 		return err(errors)

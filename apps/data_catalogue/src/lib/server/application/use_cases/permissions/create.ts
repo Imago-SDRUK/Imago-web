@@ -37,3 +37,7 @@ export const permissionCreateGetUseCase = async ({
 	}
 	return ok(permissions)
 }
+//
+// export const permissionSetAdminGroup = async ({ group_id }: { group_id: string }) => {
+//
+// }

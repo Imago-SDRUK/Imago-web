@@ -1,3 +1,5 @@
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 import { datasetCreateUseCase } from '$lib/server/application/use_cases/datasets/create'
 import { groupAddDatasetUseCase } from '$lib/server/application/use_cases/groups/update'
 import { err, ok } from '$lib/server/entities/errors'
@@ -6,10 +8,12 @@ import { getGroupsRepositoryModule, getGroupsServiceModule } from '$lib/server/m
 
 export const datasetCreateController = async ({
 	data,
-	session
+	session,
+	configuration
 }: {
 	data: unknown
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -19,7 +23,7 @@ export const datasetCreateController = async ({
 		dataset_service: getDatasetModule(),
 		group_repository: getGroupsRepositoryModule(),
 		group_service: getGroupsServiceModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 	if (errs !== null) {
 		return err(errs)
@@ -27,8 +31,8 @@ export const datasetCreateController = async ({
 	const [g_errs] = await groupAddDatasetUseCase({
 		dataset_id: dataset.id,
 		group_id: dataset.groups[0].id,
-		session,
-		groups_repository: getGroupsRepositoryModule()
+		groups_repository: getGroupsRepositoryModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (g_errs !== null) {
 		return err(g_errs)

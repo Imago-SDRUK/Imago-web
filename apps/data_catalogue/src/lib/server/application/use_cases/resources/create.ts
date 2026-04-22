@@ -1,10 +1,10 @@
 import type { ResourceRepository } from '$lib/server/application/repositories/resource'
 import type { ResourceService } from '$lib/server/application/services/resource'
 import type { StorageService } from '$lib/server/application/services/storage'
-import { err, ok } from '$lib/server/entities/errors'
 import type { Session } from '$lib/server/entities/models/identity'
 import type { ResourceServiceRequest } from '$lib/server/entities/models/resources'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import { err, ok } from '$lib/server/entities/errors'
 import { v7 } from 'uuid'
 
 export const resourceCreateUseCase = async ({
@@ -18,12 +18,12 @@ export const resourceCreateUseCase = async ({
 	resource_service: ResourceService
 	session: Session
 }) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+	const auth_service = getAuthorisationModule()
+	const [errors, permission] = await auth_service.authorise({
 		namespace: 'Action',
 		object: 'resources',
 		permits: 'create',
 		actor: session.identity.id
-		// action: () => redirect(307, '/auth/login')
 	})
 	if (errors) {
 		return err(errors)
@@ -56,6 +56,14 @@ export const resourceCreateUseCase = async ({
 	if (errs_resource !== null) {
 		return err(errs_resource)
 	}
+	const [errors_p] = await auth_service.createPermissions({
+		permissions: [
+			{ namespace: 'Resource', object: resource_id, relation: 'datasets', actor: data.package_id }
+		]
+	})
+	if (errors_p) {
+		return err(errors_p)
+	}
 	return ok(result)
 }
 
@@ -72,12 +80,12 @@ export const resourceVersionCreateUseCase = async ({
 	storage_service: StorageService
 	session: Session
 }) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
-		object: 'resources',
-		permits: 'create',
+	const auth_service = getAuthorisationModule()
+	const [errors, permission] = await auth_service.authorise({
+		namespace: 'Resource',
+		object: resource_id,
+		permits: 'edit',
 		actor: session.identity.id
-		// action: () => redirect(307, '/auth/login')
 	})
 	if (errors) {
 		return err(errors)
@@ -108,8 +116,17 @@ export const resourceVersionCreateUseCase = async ({
 	if (errs_version !== null) {
 		return err(errs_version)
 	}
-	return await storage_service
-		.getDownloadUrl({ filename: version_id })
-		.then((res) => ok(res))
-		.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+	const [errors_p] = await auth_service.createPermissions({
+		permissions: [
+			{ namespace: 'ResourceVersion', object: version_id, relation: 'resource', actor: resource_id }
+		]
+	})
+	if (errors_p) {
+		return err(errors_p)
+	}
+	const [errs_s, url] = await storage_service.getDownloadUrl({ filename: version_id })
+	if (errs_s !== null) {
+		return err(errs_s)
+	}
+	return ok(url)
 }

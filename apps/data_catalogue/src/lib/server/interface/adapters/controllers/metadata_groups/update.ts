@@ -1,15 +1,19 @@
 import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
 import { err } from '$lib/server/entities/errors'
 import { groupUpdateUseCase } from '$lib/server/application/use_cases/groups/update'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 export const metadataGroupUpdateController = async ({
 	id,
 	data,
-	session
+	session,
+	configuration
 }: {
 	id?: string
 	data: unknown
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -21,6 +25,6 @@ export const metadataGroupUpdateController = async ({
 		id,
 		data,
 		groups_repository: getGroupsRepositoryModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 }

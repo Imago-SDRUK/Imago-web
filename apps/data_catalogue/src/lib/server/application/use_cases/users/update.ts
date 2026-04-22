@@ -70,7 +70,7 @@ export const userRemoveGroupUseCase = async ({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'users',
-		permits: 'create'
+		permits: 'update'
 	})
 	if (errors) {
 		return err(errors)
@@ -109,10 +109,10 @@ export const userUpdateUseCase = async ({
 	session: Session
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'users',
-		permits: 'create'
+		permits: 'update',
+		actor: session.identity.id
 	})
 	if (errors) {
 		return err(errors)

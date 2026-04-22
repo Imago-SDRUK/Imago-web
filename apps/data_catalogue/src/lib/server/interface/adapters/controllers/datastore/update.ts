@@ -2,15 +2,19 @@ import type { Session } from '$lib/server/entities/models/identity'
 import { datastoreUpdateUseCase } from '$lib/server/application/use_cases/datastore/update'
 import { getDatastoreModule } from '$lib/server/modules/datastore'
 import { err } from '$lib/server/entities/errors'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 export const datastoreUpdateController = async ({
 	resource_id,
 	session,
-	metadata
+	metadata,
+	configuration
 }: {
 	resource_id?: string
 	session?: Session
 	metadata?: Record<PropertyKey, unknown>
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -48,8 +52,8 @@ export const datastoreUpdateController = async ({
 	}
 	return await datastoreUpdateUseCase({
 		resource_id,
-		session,
 		datastore_service: getDatastoreModule(),
-		metadata
+		metadata,
+		...getServerContext({ session, configuration })
 	})
 }

@@ -5,6 +5,7 @@ import { getUserModule } from '$lib/server/modules/user'
 import { log } from '$lib/utils/server/logger'
 import type { Session } from '$lib/server/entities/models/identity'
 import { err } from '$lib/server/entities/errors'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 
 // const presenter = ({ user }: { user: User }) => ({
 // 	id: user.id,
@@ -13,10 +14,12 @@ import { err } from '$lib/server/entities/errors'
 
 export const userCreateController = async ({
 	session,
-	payload
+	payload,
+	configuration
 }: {
 	session: Session
 	payload: unknown
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })

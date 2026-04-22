@@ -7,15 +7,19 @@ import {
 	metadataGroupsGetPublicUseCase,
 	metadataGroupsGetUseCase
 } from '$lib/server/application/use_cases/metadata_groups/get'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 const presenter = ({ group }: { group: GroupService }) => group
 
 export const metadataGroupGetController = async ({
 	session,
-	id
+	id,
+	configuration
 }: {
 	session: App.Locals['session']
 	id?: string
+	configuration: Configuration
 }) => {
 	if (!id) {
 		return err({ reason: 'Invalid Data', message: `You need to provide a group`, id: '' })
@@ -32,8 +36,8 @@ export const metadataGroupGetController = async ({
 	}
 	const [errors, group] = await metadataGroupGetUseCase({
 		id: id,
-		session: session,
-		groups_service: getGroupsServiceModule()
+		groups_service: getGroupsServiceModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -42,9 +46,11 @@ export const metadataGroupGetController = async ({
 }
 
 export const metadataGroupsGetController = async ({
-	session
+	session,
+	configuration
 }: {
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		const [errors, groups] = await metadataGroupsGetPublicUseCase({
@@ -56,8 +62,8 @@ export const metadataGroupsGetController = async ({
 		return err(errors)
 	}
 	const [errors, groups] = await metadataGroupsGetUseCase({
-		session: session,
-		groups_service: getGroupsServiceModule()
+		groups_service: getGroupsServiceModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors === null) {
 		return ok(groups)

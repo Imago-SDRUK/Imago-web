@@ -8,15 +8,19 @@ import {
 } from '$lib/server/application/use_cases/groups/update'
 import type { Session } from '$lib/server/entities/models/identity'
 import type { UsersGroupsRequest } from '$lib/server/entities/models/groups'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 export const groupUpdateController = async ({
 	id,
 	data,
-	session
+	session,
+	configuration
 }: {
 	id?: string
 	data: unknown
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -28,48 +32,58 @@ export const groupUpdateController = async ({
 		id,
 		data,
 		groups_repository: getGroupsRepositoryModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 }
 
-export const groupSyncController = async ({ session }: { session?: Session }) => {
+export const groupSyncController = async ({
+	session,
+	configuration
+}: {
+	session?: Session
+	configuration: Configuration
+}) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	const results = await groupsSyncUseCase({
-		session,
-		group_repository: getGroupsRepositoryModule()
+		group_repository: getGroupsRepositoryModule(),
+		...getServerContext({ session, configuration })
 	})
 }
 
 export const groupAddUserController = async ({
 	relation,
 	session,
-	data
+	data,
+	configuration
 }: {
 	relation: 'admins' | 'users'
 	session?: Session
 	data: Partial<UsersGroupsRequest>
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	return await groupAddUserUseCase({
 		relation,
-		session,
 		data: { ...data, created_by: session.identity.id, updated_by: session.identity.id },
-		groups_repository: getGroupsRepositoryModule()
+		groups_repository: getGroupsRepositoryModule(),
+		...getServerContext({ session, configuration })
 	})
 }
 
 export const groupRemoveUserController = async ({
 	session,
 	user_id,
-	group_id
+	group_id,
+	configuration
 }: {
 	session?: Session
 	user_id?: string
 	group_id?: string
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -82,9 +96,9 @@ export const groupRemoveUserController = async ({
 		return err({ reason: 'Invalid Data', message: `You need to provide a group ID` })
 	}
 	return await groupRemoveUserUseCase({
-		session,
 		user_id,
 		group_id,
-		groups_repository: getGroupsRepositoryModule()
+		groups_repository: getGroupsRepositoryModule(),
+		...getServerContext({ session, configuration })
 	})
 }

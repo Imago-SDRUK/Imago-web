@@ -1,4 +1,3 @@
-import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 import type { UsersRepository } from '$lib/server/application/repositories/users'
 import type { IdentityService } from '$lib/server/application/services/identity'
 import { err, ok } from '$lib/server/entities/errors'
@@ -43,7 +42,6 @@ export const userGetUseCase = async ({
 	if (identity === null) {
 		return err({ reason: 'Unauthorised' })
 	}
-	console.log(identity)
 	return ok({
 		first_name: identity.first_name,
 		last_name: identity.last_name,

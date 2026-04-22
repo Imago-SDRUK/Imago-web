@@ -1,13 +1,17 @@
 import { getGroupsServiceModule } from '$lib/server/modules/groups'
 import { err } from '$lib/server/entities/errors'
 import { metadataGroupDeleteUseCase } from '$lib/server/application/use_cases/metadata_groups/delete'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 export const metadataGroupDeleteController = async ({
 	id,
-	session
+	session,
+	configuration
 }: {
 	id?: string
 	session: App.Locals['session']
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -18,6 +22,6 @@ export const metadataGroupDeleteController = async ({
 	return await metadataGroupDeleteUseCase({
 		id,
 		group_service: getGroupsServiceModule(),
-		session
+		...getServerContext({ session, configuration })
 	})
 }

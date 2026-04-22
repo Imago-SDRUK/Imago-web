@@ -3,25 +3,29 @@ import { getDatastoreModule } from '$lib/server/modules/datastore'
 import { getResourceRepositoryModule } from '$lib/server/modules/resources'
 import { getResourceServiceModule } from '$lib/server/modules/resources_service'
 import { err, ok } from '$lib/server/entities/errors'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
 export const resourceGetController = async ({
 	session,
-	id
+	id,
+	configuration
 }: {
 	session: App.Locals['session']
 	id: string
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	const [errors, resource] = await resourceGetUseCase({
-		session,
 		id,
 		datastore_service: getDatastoreModule(),
 		resource_respository: getResourceRepositoryModule(),
-		resource_service: getResourceServiceModule()
+		resource_service: getResourceServiceModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errors) {
 		return err(errors)

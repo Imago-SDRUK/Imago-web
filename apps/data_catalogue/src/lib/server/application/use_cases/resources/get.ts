@@ -27,7 +27,6 @@ export const resourceGetUseCase = async ({
 		object: id,
 		permits: 'read',
 		actor: session.identity.id
-		// action: () => redirect(307, '/auth/login')
 	})
 	if (errors) {
 		return err(errors)
@@ -95,7 +94,6 @@ export const resourceVersionGetDownloadUrlUseCase = async ({
 		object: version_id,
 		permits: 'read',
 		actor: session.identity.id
-		// action: () => redirect(307, '/auth/login')
 	})
 	if (errors) {
 		return err(errors)
@@ -103,9 +101,12 @@ export const resourceVersionGetDownloadUrlUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
-	// const version = await resource_respository.getResourceVersion({ id, version: version_id })
-	return await storage_service
+	const [errors_s, url] = await storage_service
 		.getDownloadUrl({ filename: version_id })
 		.then((res) => ok(res))
 		.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+	if (errors_s !== null) {
+		return err(errors_s)
+	}
+	return ok(url)
 }

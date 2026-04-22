@@ -5,6 +5,8 @@ import { err, ok } from '$lib/server/entities/errors'
 import { createUpdateSchema } from 'drizzle-arktype'
 import { type } from 'arktype'
 import { userUpdateUseCase } from '$lib/server/application/use_cases/users/update'
+import type { Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 // const presenter = ({ user }: { user: User }) => ({
 // 	id: user.id,
@@ -14,11 +16,13 @@ import { userUpdateUseCase } from '$lib/server/application/use_cases/users/updat
 export const userUpdateController = async ({
 	id,
 	session,
-	payload
+	payload,
+	configuration
 }: {
 	id?: string
 	session?: Session
 	payload: unknown
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -33,9 +37,9 @@ export const userUpdateController = async ({
 	}
 	const [errs, user] = await userUpdateUseCase({
 		data: validated,
-		session,
 		id,
-		user_repository: getUserModule()
+		user_repository: getUserModule(),
+		...getServerContext({ session, configuration })
 	})
 	if (errs !== null) {
 		return err(errs)

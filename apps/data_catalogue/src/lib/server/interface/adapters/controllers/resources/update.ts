@@ -1,5 +1,3 @@
-import { error } from '@sveltejs/kit'
-import { SERVER_ERRORS } from '$lib/globals/server'
 import { getResourceRepositoryModule } from '$lib/server/modules/resources'
 import type { ResourceRequest, ResourceVersionRequest } from '$lib/server/entities/models/resources'
 import {
@@ -10,26 +8,30 @@ import {
 import { resourceVersionCreateUseCase } from '$lib/server/application/use_cases/resources/create'
 import { getStorageModule } from '$lib/server/modules/storage'
 import { err } from '$lib/server/entities/errors'
+import type { configuration, Configuration } from '$lib/server/entities/models/configuration'
+import { getServerContext } from '$lib/server/application/context'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
 export const resourceUpdateController = async ({
 	session,
 	id,
-	data
+	data,
+	configuration
 }: {
 	session: App.Locals['session']
 	id: string
 	data: Partial<ResourceRequest>
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	return await resourceUpdateUseCase({
-		session,
 		resource_id: id,
 		resource_respository: getResourceRepositoryModule(),
-		data
+		data,
+		...getServerContext({ session, configuration })
 	})
 	// return resource
 	// return presenter({ resource })
@@ -38,22 +40,24 @@ export const resourceUpdateController = async ({
 export const resourceAddVersionController = async ({
 	session,
 	id,
-	version
+	version,
+	configuration
 }: {
 	version: string
 	session: App.Locals['session']
 	id: string
 	data: Partial<ResourceRequest>
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	return await resourceVersionCreateUseCase({
-		session,
 		resource_id: id,
 		resource_respository: getResourceRepositoryModule(),
 		storage_service: getStorageModule(),
-		version
+		version,
+		...getServerContext({ session, configuration })
 	})
 	// return upload_url
 	// return presenter({ resource })
@@ -62,20 +66,22 @@ export const resourceAddVersionController = async ({
 export const resourceUpdateVersionFileController = async ({
 	session,
 	version_id,
-	data
+	data,
+	configuration
 }: {
 	session: App.Locals['session']
 	version_id: string
 	data: Partial<ResourceVersionRequest>
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	const upload_url = await resourceVersionUpdateFileUseCase({
-		session,
 		version_id,
 		data,
-		resource_respository: getResourceRepositoryModule()
+		resource_respository: getResourceRepositoryModule(),
+		...getServerContext({ session, configuration })
 	})
 	return upload_url
 }
@@ -83,20 +89,22 @@ export const resourceUpdateVersionFileController = async ({
 export const resourceUpdateVersionController = async ({
 	session,
 	version_id,
-	data
+	data,
+	configuration
 }: {
 	session: App.Locals['session']
 	version_id: string
 	data: Partial<ResourceVersionRequest>
+	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
 	const upload_url = await resourceVersionUpdateUseCase({
-		session,
 		version_id,
 		data,
-		resource_respository: getResourceRepositoryModule()
+		resource_respository: getResourceRepositoryModule(),
+		...getServerContext({ session, configuration })
 	})
 	return upload_url
 }

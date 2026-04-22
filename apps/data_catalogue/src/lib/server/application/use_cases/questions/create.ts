@@ -15,7 +15,8 @@ export const questionCreateUseCase = async ({
 	session: Session
 	questions_repository: QuestionsRepository
 }) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+	const auth_service = getAuthorisationModule()
+	const [errors, permission] = await auth_service.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'questions',
@@ -33,9 +34,28 @@ export const questionCreateUseCase = async ({
 		return err({ reason: 'Unauthorised', message: validated.summary })
 	}
 
-	const [errs, answer] = await questions_repository.createQuestion({ data: validated })
+	const [errs, question] = await questions_repository.createQuestion({ data: validated })
 	if (errs !== null) {
 		return err(errs)
 	}
-	return ok(answer)
+	const [errs_p] = await auth_service.createPermissions({
+		permissions: [
+			{
+				namespace: 'Question',
+				object: question.id,
+				relation: 'owners',
+				actor: session.identity.id
+			},
+			{
+				namespace: 'Question',
+				object: question.id,
+				relation: 'owners',
+				actor: { namespace: 'Group', relation: 'admins', object: 'admin' }
+			}
+		]
+	})
+	if (errs_p) {
+		return err(errs_p)
+	}
+	return ok(question)
 }

@@ -1,7 +1,7 @@
 import type { ResourceRepository } from '$lib/server/application/repositories/resource'
-import { err, ok } from '$lib/server/entities/errors'
 import type { Session } from '$lib/server/entities/models/identity'
 import type { ResourceRequest, ResourceVersionRequest } from '$lib/server/entities/models/resources'
+import { err, ok } from '$lib/server/entities/errors'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 export const resourceUpdateUseCase = async ({
@@ -20,7 +20,6 @@ export const resourceUpdateUseCase = async ({
 		object: resource_id,
 		permits: 'edit',
 		actor: session.identity.id
-		// action: () => redirect(307, '/auth/login')
 	})
 	if (errors) {
 		return err(errors)
@@ -28,13 +27,17 @@ export const resourceUpdateUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
-	return await resource_respository
+	const [errs, resource] = await resource_respository
 		.updateResource({
 			data,
 			id: resource_id
 		})
 		.then((res) => ok(res))
 		.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+	if (errs !== null) {
+		return err(errs)
+	}
+	return ok(resource)
 }
 
 export const resourceVersionUpdateUseCase = async ({
@@ -53,7 +56,6 @@ export const resourceVersionUpdateUseCase = async ({
 		object: version_id,
 		permits: 'edit',
 		actor: session.identity.id
-		// action: () => redirect(307, '/auth/login')
 	})
 	if (errors) {
 		return err(errors)
@@ -61,10 +63,14 @@ export const resourceVersionUpdateUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
-	return await resource_respository
+	const [errs, resource_version] = await resource_respository
 		.updateVersion({ id: version_id, data })
 		.then((res) => ok(res))
 		.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+	if (errs !== null) {
+		return err(errs)
+	}
+	return ok(resource_version)
 }
 
 export const resourceVersionUpdateFileUseCase = async ({
@@ -83,7 +89,6 @@ export const resourceVersionUpdateFileUseCase = async ({
 		object: version_id,
 		permits: 'edit',
 		actor: session.identity.id
-		// action: () => redirect(307, '/auth/login')
 	})
 	if (errors) {
 		return err(errors)
@@ -91,8 +96,13 @@ export const resourceVersionUpdateFileUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
-	return await resource_respository
-		.updateVersion({ id: version_id, data })
-		.then((res) => ok(res))
-		.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+
+	const [errs, resource_version] = await resource_respository.updateVersion({
+		id: version_id,
+		data
+	})
+	if (errs !== null) {
+		return err(errs)
+	}
+	return ok(resource_version)
 }
