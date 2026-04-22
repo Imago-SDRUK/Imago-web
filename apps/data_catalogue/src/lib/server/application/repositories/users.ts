@@ -30,7 +30,11 @@ export type UsersRepository = {
 	}) => Promise<
 		[ErrTypes, null] | [null, { items: User[]; total: number; offset: number; limit: number }]
 	>
-	getUserGroups: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, UsersGroups[]]>
+	getUserGroups: ({
+		id
+	}: {
+		id: string
+	}) => Promise<[ErrTypes, null] | [null, { group: string; group_id: string; user_id: string }[]]>
 	addUserToGroup: ({
 		data
 	}: {
@@ -39,6 +43,9 @@ export type UsersRepository = {
 	removeUserGroup: ({
 		data
 	}: {
-		data: UsersGroupsRequest
+		data: {
+			user_id: string
+			group_id: string
+		}
 	}) => Promise<[ErrTypes, null] | [null, UsersGroups]>
 }

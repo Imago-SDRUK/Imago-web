@@ -3,7 +3,7 @@ import { db } from '$lib/db'
 import { users, type UserRequest } from '$lib/server/entities/models/users'
 import { log } from '$lib/utils/server/logger'
 import { and, count, eq, inArray, sql } from 'drizzle-orm'
-import { users_groups } from '$lib/db/schema'
+import { groups, users_groups } from '$lib/db/schema'
 import { err, ok } from '$lib/server/entities/errors'
 
 const createUser: UsersRepository['createUser'] = async ({ data }: { data: UserRequest }) => {
@@ -74,8 +74,16 @@ const updateUser: UsersRepository['updateUser'] = async ({ data, id }) => {
 
 const getUserGroups: UsersRepository['getUserGroups'] = async ({ id }) => {
 	try {
-		const user = await db.select().from(users_groups).where(eq(users_groups.user_id, id))
-		return ok(user)
+		const user_groups = await db
+			.select({
+				group: groups.title,
+				group_id: users_groups.group_id,
+				user_id: users_groups.user_id
+			})
+			.from(users_groups)
+			.where(eq(users_groups.user_id, id))
+			.innerJoin(groups, eq(users_groups.group_id, groups.id))
+		return ok(user_groups)
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
