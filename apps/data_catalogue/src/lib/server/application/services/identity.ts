@@ -1,8 +1,14 @@
 import type { ErrTypes } from '$lib/server/entities/errors'
 import type { Session } from '$lib/server/entities/models/identity'
+import type { CreateIdentityBody, Identity } from '@ory/client-fetch'
 
 export type IdentityService = {
 	// generateUserId: () => string;
+	createSuperUser: ({
+		data
+	}: {
+		data: CreateIdentityBody
+	}) => Promise<[ErrTypes, null] | [null, Identity]>
 	validateSession: ({
 		cookie,
 		token

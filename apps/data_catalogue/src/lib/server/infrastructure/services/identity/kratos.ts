@@ -2,10 +2,20 @@ import { env } from '$env/dynamic/private'
 import type { AuthenticationService } from '$lib/server/application/services/authentication'
 import type { IdentityService } from '$lib/server/application/services/identity'
 import { err, ok } from '$lib/server/entities/errors'
-import { kratosRead } from '$lib/utils/auth'
+import { kratosRead, kratosWrite } from '$lib/utils/auth'
 import type { IdentitySession } from '$lib/utils/auth/types'
 import { log } from '$lib/utils/server/logger'
 import { DateTime } from 'luxon'
+
+const createSuperUser: IdentityService['createSuperUser'] = async ({ data }) => {
+	try {
+		const identity = await kratosWrite.createIdentity({ createIdentityBody: data })
+		return ok(identity)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', errors: _err })
+	}
+}
+
 const validateSession: AuthenticationService['validateSession'] = async ({
 	cookie,
 	token
@@ -117,5 +127,6 @@ const getIdentities: IdentityService['getIdentities'] = async ({
 export const infrastructureServiceIdentityKratos: IdentityService = {
 	validateSession,
 	getIdentity,
-	getIdentities
+	getIdentities,
+	createSuperUser
 }

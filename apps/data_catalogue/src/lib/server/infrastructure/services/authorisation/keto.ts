@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { RelationshipApi, Configuration, PermissionApi } from '@ory/client-fetch'
 import { err, ok } from '$lib/server/entities/errors'
-import type { Relationship } from '$lib/server/entities/models/permissions'
+import type { Permission, Relationship } from '$lib/server/entities/models/permissions'
 
 export const ketoWrite = new RelationshipApi(
 	new Configuration({
@@ -39,6 +39,51 @@ export const handleKetoError = async (err: { response: Response }) => {
 //
 // Set in OPL
 
+const permissionToKeto = ({ namespace, object, permits, actor }: Permission) => {
+	if (typeof actor === 'string') {
+		return {
+			namespace,
+			object,
+			relation: permits,
+			subjectId: actor
+		}
+	}
+	return {
+		namespace,
+		object,
+		relation: permits,
+		subjectSetNamespace: actor.namespace,
+		subjectSetObject: actor.object,
+		subjectSetRelation: actor.relation
+	}
+}
+
+const permissionToKetoUnderscore = ({
+	namespace,
+	object,
+	permits,
+	actor
+}: Permission): Relationship => {
+	if (typeof actor === 'string') {
+		return {
+			namespace,
+			object: String(object),
+			relation: String(permits),
+			subject_id: actor
+		}
+	}
+	return {
+		namespace,
+		object: String(object),
+		relation: String(permits),
+		subject_set: {
+			namespace: actor.namespace,
+			object: actor.object,
+			relation: actor.relation
+		}
+	}
+}
+
 const authorise: AuthorisationService['authorise'] = async ({
 	namespace,
 	object,
@@ -52,33 +97,28 @@ const authorise: AuthorisationService['authorise'] = async ({
 		permits,
 		actor
 	})
-	if (typeof actor === 'string') {
-		return await ketoCheck
-			.checkPermission({
-				namespace,
-				object,
-				relation: permits,
-				subjectId: actor
-			})
-			.then((res) => ok(res))
-			.catch((_err) => {
-				return err({ reason: 'Unexpected', error: _err })
-			})
-	}
-
 	return await ketoCheck
-		.checkPermission({
-			namespace,
-			object,
-			relation: permits,
-			subjectSetNamespace: actor.namespace,
-			subjectSetObject: actor.object,
-			subjectSetRelation: actor.relation
-		})
+		.checkPermission(permissionToKeto({ namespace, object, permits, actor }))
 		.then((res) => ok(res))
 		.catch((_err) => {
 			return err({ reason: 'Unexpected', error: _err })
 		})
+}
+
+const batchAuthorise: AuthorisationService['batchAuthorise'] = async ({ permissions }) => {
+	try {
+		log.trace({
+			message: `Evaluating`,
+			permissions
+		})
+		const payload = permissions.map(permissionToKetoUnderscore)
+		const result = await ketoCheck.batchCheckPermission({
+			batchCheckPermissionBody: { tuples: payload }
+		})
+		return ok(result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
 }
 
 const createPermission: AuthorisationService['createPermission'] = async ({
@@ -239,6 +279,7 @@ const getPermissions: AuthorisationService['getPermissions'] = async ({
 
 export const authorisationServiceInfrastructureKeto: AuthorisationService = {
 	authorise,
+	batchAuthorise,
 	createPermission,
 	// updatePermission,
 	deletePermission,
