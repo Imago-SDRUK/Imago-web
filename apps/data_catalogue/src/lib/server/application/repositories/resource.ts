@@ -1,3 +1,4 @@
+import type { ErrTypes } from '$lib/server/entities/errors'
 import type {
 	Resource,
 	ResourceRequest,
@@ -6,26 +7,49 @@ import type {
 } from '$lib/server/entities/models/resources'
 
 export type ResourceRepository = {
-	getResource: ({ id }: { id: string }) => Promise<Resource>
-	getResources: ({ limit, offset }: { limit: number; offset: number }) => Promise<Resource[]>
-	createResource: ({ data }: { data: ResourceRequest }) => Promise<Resource>
-	deleteResource: ({ id }: { id: string }) => Promise<void>
-	getResourceVersion: ({ id }: { id: string; version: string }) => Promise<ResourceVersion>
-	getResourceVersions: ({ id }: { id: string }) => Promise<ResourceVersion[]>
-	createResourceVersion: ({ data }: { data: ResourceVersionRequest }) => Promise<ResourceVersion>
-	deleteResourceVersion: ({ id }: { id: string }) => Promise<void>
+	getResource: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, Resource]>
+	getResources: ({
+		limit,
+		offset
+	}: {
+		limit: number
+		offset: number
+	}) => Promise<[ErrTypes, null] | [null, Resource[]]>
+	createResource: ({
+		data
+	}: {
+		data: ResourceRequest
+	}) => Promise<[ErrTypes, null] | [null, Resource]>
+	deleteResource: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, null]>
+	getResourceVersion: ({
+		id
+	}: {
+		id: string
+		version: string
+	}) => Promise<[ErrTypes, null] | [null, ResourceVersion]>
+	getResourceVersions: ({
+		id
+	}: {
+		id: string
+	}) => Promise<[ErrTypes, null] | [null, ResourceVersion[]]>
+	createResourceVersion: ({
+		data
+	}: {
+		data: ResourceVersionRequest
+	}) => Promise<[ErrTypes, null] | [null, ResourceVersion]>
+	deleteResourceVersion: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, null]>
 	updateResource: ({
 		data,
 		id
 	}: {
 		data: Partial<ResourceRequest>
 		id: string
-	}) => Promise<Resource>
+	}) => Promise<[ErrTypes, null] | [null, Resource]>
 	updateVersion: ({
 		data,
 		id
 	}: {
 		data: Partial<ResourceVersionRequest>
 		id: string
-	}) => Promise<ResourceVersion>
+	}) => Promise<[ErrTypes, null] | [null, ResourceVersion]>
 }

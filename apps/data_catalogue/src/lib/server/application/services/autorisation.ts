@@ -18,6 +18,11 @@ export type AuthorisationService = {
 	}: Permission & {
 		action?: () => Promise<void>
 	}) => Promise<[ErrTypes, null] | [null, { allowed: boolean }]>
+	batchAuthorise: ({
+		permissions
+	}: {
+		permissions: Permission[]
+	}) => Promise<[ErrTypes, null] | [null, { results: { allowed: boolean; error?: string }[] }]>
 
 	createPermission: ({
 		namespace,
