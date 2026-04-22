@@ -22,3 +22,4 @@ export {
 	groups,
 	users_to_groups_relations
 } from '../../server/entities/models/groups'
+export { configuration } from '../../server/entities/models/configuration'
