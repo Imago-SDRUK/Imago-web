@@ -5,6 +5,7 @@ import { getResourceServiceModule } from '$lib/server/modules/resources_service'
 import { err, ok } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
+import { log } from '$lib/utils/server/logger'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -28,8 +29,8 @@ export const resourceGetController = async ({
 		...getServerContext({ session, configuration })
 	})
 	if (errors) {
+		log.error({ controller: 'resourceGetController', errors })
 		return err(errors)
 	}
 	return ok(resource)
-	// return presenter({ resource })
 }

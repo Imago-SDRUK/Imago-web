@@ -2,6 +2,7 @@ import { resourceGetController } from '$lib/server/interface/adapters/controller
 import { error, redirect } from '@sveltejs/kit'
 export const load = async ({ locals, params }) => {
 	const [errors, resource] = await resourceGetController({
+		configuration: locals.configuration,
 		session: locals.session,
 		id: params.resource
 	})
@@ -9,7 +10,7 @@ export const load = async ({ locals, params }) => {
 		if (errors.reason === 'Unauthenticated') {
 			return redirect(307, `/auth/login`)
 		}
-		return error(400, { message: '', id: '' })
+		return error(400, { message: errors.reason, id: errors.reason })
 	}
 	return { resource }
 }

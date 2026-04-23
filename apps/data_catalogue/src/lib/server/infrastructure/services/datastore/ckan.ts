@@ -2,6 +2,7 @@ import { env } from '$env/dynamic/private'
 import { SERVER_ERRORS } from '$lib/globals/server'
 import type { DatasetService } from '$lib/server/application/services/dataset'
 import type { DatastoreService } from '$lib/server/application/services/datastore'
+import { err, ok } from '$lib/server/entities/errors'
 import type { CSVW, CSVWColumn, CSVWTable } from '$lib/server/entities/models/datastore'
 import type { CkanDatastore, CkanDatastoreCreate, CkanDatastoreField } from '$lib/types/ckan'
 import { create, createCkanClient, get } from '$lib/utils/ckan/ckan'
@@ -136,42 +137,51 @@ const createDataset: DatasetService['createDataset'] = async () => {
 }
 
 const getStructuralMetadata: DatastoreService['getStructuralMetadata'] = async ({ id }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const res = await ckan.request(get('datastore_info', { resource_id: id }))
-	if (res.success) {
-		return datastoreToCsvw(res.result)
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
+		})
+		const res = await ckan.request(get('datastore_info', { resource_id: id }))
+		if (res.success) {
+			return ok(datastoreToCsvw(res.result))
+		}
+		return err({ reason: 'Unexpected', errors: res })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', errors: _err })
 	}
-	error(500, { message: 'Error retreiving structural metadata', id: 'err' })
 }
 
 const setStructuralMetadata: DatastoreService['setStructuralMetadata'] = async ({
 	metadata,
 	id
 }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-
-	const record = csvwToDatastore({
-		id: id,
-		csvw: metadata,
-		force: true
-		// delete_fields: true
-	})
-	return await Promise.all(
-		record.map(async (table) => {
-			return ckan.request(create('datastore_create', table)).then((res) => {
-				if (res.success) {
-					return datastoreToCsvw(res.result)
-				}
-				error(...SERVER_ERRORS[500])
-			})
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
-	)
+
+		const record = csvwToDatastore({
+			id: id,
+			csvw: metadata,
+			force: true
+			// delete_fields: true
+		})
+		const result = await Promise.all(
+			record.map(async (table) => {
+				return ckan.request(create('datastore_create', table)).then((res) => {
+					if (res.success) {
+						return datastoreToCsvw(res.result)
+					}
+					error(...SERVER_ERRORS[500])
+				})
+			})
+		)
+		return ok(result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', errors: _err })
+	}
 }
 
 // TODO: evaluate update process as there is no easy way to update previous data without overriding the whole row
@@ -179,27 +189,32 @@ const updateStructuralMetadata: DatastoreService['updateStructuralMetadata'] = a
 	metadata,
 	id
 }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-
-	const record = csvwToDatastore({
-		id: id,
-		csvw: metadata,
-		force: true,
-		delete_fields: true
-	})
-	return await Promise.all(
-		record.map(async (table) => {
-			return ckan.request(create('datastore_create', table)).then((res) => {
-				if (res.success) {
-					return datastoreToCsvw(res.result)
-				}
-				error(...SERVER_ERRORS[500])
-			})
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
-	)
+
+		const record = csvwToDatastore({
+			id: id,
+			csvw: metadata,
+			force: true,
+			delete_fields: true
+		})
+		const result = await Promise.all(
+			record.map(async (table) => {
+				return ckan.request(create('datastore_create', table)).then((res) => {
+					if (res.success) {
+						return datastoreToCsvw(res.result)
+					}
+					error(...SERVER_ERRORS[500])
+				})
+			})
+		)
+		return ok(result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', errors: _err })
+	}
 }
 
 export const infrastructureServiceDatastoreCkan: DatastoreService = {

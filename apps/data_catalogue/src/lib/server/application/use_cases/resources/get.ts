@@ -3,9 +3,10 @@ import type { DatastoreService } from '$lib/server/application/services/datastor
 import type { ResourceService } from '$lib/server/application/services/resource'
 import type { StorageService } from '$lib/server/application/services/storage'
 import type { Session } from '$lib/server/entities/models/identity'
-import { err, ok } from '$lib/server/entities/errors'
+import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import type { AppContext } from '$lib/server/application/context'
+import type { ResourceVersion } from '$lib/server/entities/models/resources'
 
 export const resourceGetUseCase = async ({
 	id,
@@ -20,9 +21,9 @@ export const resourceGetUseCase = async ({
 	datastore_service: DatastoreService
 	session: Session
 }) => {
-	if (session.identity.id === 'anonymous') {
-		return err({ reason: 'Unauthorised' })
-	}
+	// if (session.identity.id === 'anonymous') {
+	// 	return err({ reason: 'Unauthenticated' })
+	// }
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		namespace: 'Resource',
 		object: id,
@@ -48,35 +49,45 @@ export const resourceGetUseCase = async ({
 			resource_respository.getResourceVersions({ id }),
 			datastore_service.getStructuralMetadata({ id })
 		])
-		return ok({
-			...resource_metadata,
-			resource_respository: resource,
-			versions,
-			structural_metadata: datastore
-		})
+		if (resource[0] === null && versions[0] === null && datastore[0] === null) {
+			return ok({
+				...resource_metadata,
+				resource_respository: resource[1],
+				versions: versions[1],
+				structural_metadata: datastore[1]
+			})
+		}
+		if (resource[0] !== null) {
+			return err(resource[0])
+		}
+		if (versions[0] !== null) {
+			return err(versions[0])
+		}
+		if (datastore[0] !== null) {
+			return err(datastore[0])
+		}
+		return err({ reason: 'Unexpected' })
 	}
 	const [resource, versions] = await Promise.all([
-		resource_respository
-			.getResource({ id })
-			.then((res) => ok(res))
-			.catch((_err) => err({ reason: 'Unexpected', error: _err })),
-		resource_respository
-			.getResourceVersions({ id })
-			.then((res) => ok(res))
-			.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+		resource_respository.getResource({ id }),
+		resource_respository.getResourceVersions({ id })
 	])
+
+	if (resource[0] === null && versions[0] === null) {
+		return ok({
+			...resource_metadata,
+			resource_respository: resource[1],
+			versions: versions[1],
+			structural_metadata: null
+		})
+	}
 	if (resource[0] !== null) {
 		return err(resource[0])
 	}
 	if (versions[0] !== null) {
 		return err(versions[0])
 	}
-	return ok({
-		...resource_metadata,
-		resource_respository: resource[1],
-		versions: versions[1],
-		structural_metadata: null
-	})
+	return err({ reason: 'Unexpected' })
 }
 
 export const resourceVersionGetDownloadUrlUseCase = async ({

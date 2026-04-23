@@ -97,7 +97,6 @@ const getResourceVersions: ResourceRepository['getResourceVersions'] = async ({ 
 			.from(resource_versions)
 			.where(eq(resource_versions.resource, id))
 			.orderBy(desc(resource_versions.created_at))
-			.catch(handleDBError('No version exists for this resource'))
 		return ok(versions)
 	} catch (_err) {
 		return err({ reason: 'Unexpected', errors: _err })
