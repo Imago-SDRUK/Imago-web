@@ -1,22 +1,23 @@
-import type { Session } from '$lib/server/entities/models/identity'
 import type { AnswersRepository } from '$lib/server/application/repositories/answers'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
+import type { AppContext } from '$lib/server/application/context'
 
 export const answerGetUseCase = async ({
 	id,
 	answers_repository,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
-	session: Session
 	id: string
 	answers_repository: AnswersRepository
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Answer',
 		object: id,
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)

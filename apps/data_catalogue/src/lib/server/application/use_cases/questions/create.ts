@@ -1,26 +1,26 @@
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
 import { questions } from '$lib/server/entities/models/questions'
 import { type } from 'arktype'
 import { createInsertSchema } from 'drizzle-arktype'
 import type { QuestionsRepository } from '$lib/server/application/repositories/questions'
+import type { AppContext } from '$lib/server/application/context'
 
 export const questionCreateUseCase = async ({
 	data,
 	session,
-	questions_repository
+	questions_repository,
+	authorisation_module,
+	configuration
 }: {
 	data: unknown
-	session: Session
 	questions_repository: QuestionsRepository
-}) => {
-	const auth_service = getAuthorisationModule()
-	const [errors, permission] = await auth_service.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'questions',
-		permits: 'create'
+		permits: 'create',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -38,7 +38,7 @@ export const questionCreateUseCase = async ({
 	if (errs !== null) {
 		return err(errs)
 	}
-	const [errs_p] = await auth_service.createPermissions({
+	const [errs_p] = await authorisation_module.createPermissions({
 		permissions: [
 			{
 				namespace: 'Question',
@@ -50,7 +50,7 @@ export const questionCreateUseCase = async ({
 				namespace: 'Question',
 				object: question.id,
 				relation: 'owners',
-				actor: { namespace: 'Group', relation: 'admins', object: 'admin' }
+				actor: { namespace: 'Group', relation: 'members', object: 'admin' }
 			}
 		]
 	})

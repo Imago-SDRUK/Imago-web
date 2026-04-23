@@ -1,23 +1,25 @@
-import type { Session } from '$lib/server/entities/models/identity'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
 import type { QuestionsRepository } from '$lib/server/application/repositories/questions'
+import type { AppContext } from '$lib/server/application/context'
 
 export const questionDeleteUseCase = async ({
 	id,
 	session,
-	questions_repository
+	questions_repository,
+	authorisation_module,
+	configuration
 }: {
-	session: Session
 	id: string
 	questions_repository: QuestionsRepository
-}) => {
+} & AppContext) => {
 	const auth_service = getAuthorisationModule()
-	const [errors, permission] = await auth_service.authorise({
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Question',
 		object: id,
-		permits: 'delete'
+		permits: 'delete',
+		configuration
 	})
 	if (errors) {
 		return err(errors)

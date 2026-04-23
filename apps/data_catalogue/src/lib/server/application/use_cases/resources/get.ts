@@ -5,6 +5,7 @@ import type { StorageService } from '$lib/server/application/services/storage'
 import type { Session } from '$lib/server/entities/models/identity'
 import { err, ok } from '$lib/server/entities/errors'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import type { AppContext } from '$lib/server/application/context'
 
 export const resourceGetUseCase = async ({
 	id,
@@ -81,19 +82,21 @@ export const resourceGetUseCase = async ({
 export const resourceVersionGetDownloadUrlUseCase = async ({
 	version_id,
 	storage_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	version_id: string
 	resource_respository: ResourceRepository
 	storage_service: StorageService
-	session: Session
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'ResourceVersion',
 		object: version_id,
 		permits: 'read',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors) {
 		return err(errors)

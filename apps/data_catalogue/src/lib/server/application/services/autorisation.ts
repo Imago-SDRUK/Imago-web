@@ -1,4 +1,5 @@
 import type { ErrTypes } from '$lib/server/entities/errors'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 import type {
 	Permission,
 	PermissionDelete,
@@ -14,10 +15,10 @@ export type AuthorisationService = {
 		object,
 		permits,
 		actor,
-		action
-	}: Permission & {
-		action?: () => Promise<void>
-	}) => Promise<[ErrTypes, null] | [null, { allowed: boolean }]>
+		configuration
+	}: Permission & { configuration?: Configuration }) => Promise<
+		[ErrTypes, null] | [null, { allowed: boolean }]
+	>
 	batchAuthorise: ({
 		permissions
 	}: {

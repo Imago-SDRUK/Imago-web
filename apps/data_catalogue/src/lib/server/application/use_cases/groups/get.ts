@@ -1,9 +1,7 @@
+import type { AppContext } from '$lib/server/application/context'
 import type { GroupsRepository } from '$lib/server/application/repositories/groups'
-// import type { GroupsService } from '$lib/server/application/services/groups'
 import type { IdentityService } from '$lib/server/application/services/identity'
 import { err, ok } from '$lib/server/entities/errors'
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 export const groupGetPublicUseCase = async ({
 	id,
@@ -26,20 +24,20 @@ export const groupGetPublicUseCase = async ({
 
 export const groupGetUseCase = async ({
 	id,
-	// groups_service,
 	session,
-	groups_repository
+	groups_repository,
+	configuration,
+	authorisation_module
 }: {
-	session: Session
 	id: string
 	groups_repository: GroupsRepository
-	// groups_service: GroupsService
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Group',
 		object: id,
-		permits: 'users'
+		permits: 'users',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -47,10 +45,6 @@ export const groupGetUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
-	// const [sg_errors, service_group] = await groups_service.getGroup({ id })
-	// if (sg_errors !== null) {
-	// 	return err(sg_errors)
-	// }
 	const [rg_errors, group] = await groups_repository.getGroup({ id })
 	if (rg_errors !== null) {
 		// HACK: remove exception once groups are migrated
@@ -58,26 +52,23 @@ export const groupGetUseCase = async ({
 			return err(rg_errors)
 		}
 	}
-	// if (!service_group) {
-	// 	return err({ reason: 'Not Found' })
-	// }
 	return ok(group)
 }
 
 export const groupsGetUseCase = async ({
-	// groups_service,
 	session,
-	groups_repository
+	groups_repository,
+	authorisation_module,
+	configuration
 }: {
-	session: Session
-	// groups_service: GroupsService
 	groups_repository: GroupsRepository
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'groups',
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -86,17 +77,10 @@ export const groupsGetUseCase = async ({
 		return err({ reason: 'Unauthorised' })
 	}
 
-	// const [sg_errors, service_groups] = await groups_service.getGroups({ page_size: 1000, offset: 0 })
 	const [rg_errors, groups] = await groups_repository.getGroups({
 		limit: 1000,
 		offset: 0
 	})
-	// if (sg_errors) {
-	// 	return err(sg_errors)
-	// }
-	// if (!service_groups) {
-	// 	return err({ reason: 'Not Found' })
-	// }
 	if (rg_errors !== null) {
 		return err(rg_errors)
 	}
@@ -104,41 +88,24 @@ export const groupsGetUseCase = async ({
 	return ok(groups)
 }
 
-// export const groupsGetPublicUseCase = async (
-// 	{
-// 		// groups_service
-// 	}: {
-// 		// groups_service: GroupsService
-// 	}
-// ) => {
-// 	// const [errs, groups] = await groups_service.getGroups({ page_size: 1000, offset: 0 })
-// 	// if (errs !== null) {
-// 	// 	return err(errs)
-// 	// }
-// 	// if (!groups) {
-// 	// 	return err({ reason: 'Not Found' })
-// 	// }
-// 	//
-// 	// // TODO: add get user groups logic
-// 	// return ok(groups)
-// }
-
 export const groupGetUsersUseCase = async ({
 	session,
 	groups_repository,
 	group_id,
-	identity_service
+	identity_service,
+	configuration,
+	authorisation_module
 }: {
-	session: Session
 	group_id: string
 	groups_repository: GroupsRepository
 	identity_service: IdentityService
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'groups',
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)

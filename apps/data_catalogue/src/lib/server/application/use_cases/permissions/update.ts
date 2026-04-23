@@ -1,5 +1,3 @@
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
 import {
 	PermissionRequestSchema,
@@ -7,23 +5,25 @@ import {
 	type PermissionRequest
 } from '$lib/server/entities/models/permissions'
 import { type } from 'arktype'
+import type { AppContext } from '$lib/server/application/context'
 
 export const permissionUpdateUseCase = async ({
 	data,
-	session
+	session,
+	authorisation_module,
+	configuration
 }: {
 	data: {
 		previous: Permission
 		new: PermissionRequest
 	}
-	session: Session
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'permissions',
-		permits: 'edit'
+		permits: 'edit',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -51,12 +51,12 @@ export const permissionUpdateUseCase = async ({
 	if (previous_schema.actor !== new_schema.actor) {
 		return err({ reason: 'Invalid Data', message: `Permission must be of the same actor` })
 	}
-	const [errs_d] = await auth_module.deletePermission(previous_schema)
+	const [errs_d] = await authorisation_module.deletePermission(previous_schema)
 	if (errs_d) {
 		return err({ reason: 'Unexpected' })
 	}
 
-	const [errs, permissions] = await auth_module.createPermission(new_schema)
+	const [errs, permissions] = await authorisation_module.createPermission(new_schema)
 	if (errs !== null) {
 		return err(errs)
 	}

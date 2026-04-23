@@ -1,27 +1,28 @@
-import type { Session } from '$lib/server/entities/models/identity'
 import type { QuestionsRepository } from '$lib/server/application/repositories/questions'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
 import { questions } from '$lib/server/entities/models/questions'
 import { type } from 'arktype'
 import { createUpdateSchema } from 'drizzle-arktype'
+import type { AppContext } from '$lib/server/application/context'
 
 export const questionUpdateUseCase = async ({
 	id,
 	data,
 	session,
-	questions_repository
+	questions_repository,
+	authorisation_module,
+	configuration
 }: {
 	id: string
 	data: unknown
-	session: Session
 	questions_repository: QuestionsRepository
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Question',
 		object: id,
-		permits: 'edit'
+		permits: 'edit',
+		configuration
 	})
 	if (errors) {
 		return err(errors)

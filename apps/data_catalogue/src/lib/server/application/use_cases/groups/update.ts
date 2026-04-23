@@ -8,6 +8,7 @@ import { groups, users_groups } from '$lib/db/schema'
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-arktype'
 import slugify from '@sindresorhus/slugify'
 import type { UsersGroupsRequest } from '$lib/server/entities/models/groups'
+import type { AppContext } from '$lib/server/application/context'
 
 export const groupUpdateUseCase = async ({
 	id,
@@ -212,22 +213,21 @@ export const groupsSyncUseCase = async ({
 }
 
 export const groupAddUserUseCase = async ({
-	relation,
 	data,
 	session,
-	groups_repository
+	groups_repository,
+	configuration,
+	authorisation_module
 }: {
-	relation: 'admins' | 'users'
 	data: Partial<UsersGroupsRequest>
-	session: Session
 	groups_repository: GroupsRepository
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Group',
-		object: data.group_id,
-		permits: 'admins',
-		actor: session.identity.id
+		object: configuration.admin_group ?? undefined,
+		permits: 'members',
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -246,11 +246,11 @@ export const groupAddUserUseCase = async ({
 	if (gr_err !== null) {
 		return err(gr_err)
 	}
-	const [p_err, perm] = await auth_module.createPermission({
+	const [p_err, perm] = await authorisation_module.createPermission({
 		namespace: 'Group',
-		actor: validated.user_id,
 		object: validated.group_id,
-		relation: relation
+		relation: 'members',
+		actor: validated.user_id
 	})
 	if (p_err !== null) {
 		return err(p_err)
@@ -265,19 +265,20 @@ export const groupRemoveUserUseCase = async ({
 	user_id,
 	group_id,
 	session,
-	groups_repository
+	groups_repository,
+	configuration,
+	authorisation_module
 }: {
 	user_id: string
 	group_id: string
-	session: Session
 	groups_repository: GroupsRepository
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Group',
-		object: group_id,
-		permits: 'admins',
-		actor: session.identity.id
+		object: configuration.admin_group ?? undefined,
+		permits: 'members',
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -298,7 +299,7 @@ export const groupRemoveUserUseCase = async ({
 	if (gr_err !== null) {
 		return err(gr_err)
 	}
-	const [p_err, perm] = await auth_module.deletePermission({
+	const [p_err, perm] = await authorisation_module.deletePermission({
 		namespace: 'Group',
 		actor: validated.user_id,
 		object: validated.group_id

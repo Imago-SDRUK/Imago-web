@@ -3,7 +3,7 @@ import type { Configuration } from '$lib/server/entities/models/configuration'
 import type { Session } from '$lib/server/entities/models/identity'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
-type Context = {
+export type AppContext = {
 	session: Session
 	configuration: Configuration
 	authorisation_module: AuthorisationService
@@ -15,7 +15,7 @@ export const getServerContext = ({
 }: {
 	session: Session
 	configuration: Configuration
-}): Context => {
+}): AppContext => {
 	return {
 		session,
 		configuration,

@@ -1,7 +1,6 @@
+import type { AppContext } from '$lib/server/application/context'
 import type { GroupsService } from '$lib/server/application/services/groups'
 import { err, ok } from '$lib/server/entities/errors'
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 export const metadataGroupGetPublicUseCase = async ({
 	id,
@@ -11,7 +10,7 @@ export const metadataGroupGetPublicUseCase = async ({
 	id: string
 	// groups_repository: GroupsRepository
 	groups_service: GroupsService
-}) => {
+} & AppContext) => {
 	const [errors, service_group] = await groups_service.getGroup({ id })
 	if (errors !== null) {
 		return err(errors)
@@ -21,13 +20,11 @@ export const metadataGroupGetPublicUseCase = async ({
 
 export const metadataGroupGetUseCase = async ({
 	id,
-	groups_service,
-	session
+	groups_service
 }: {
-	session: Session
 	id: string
 	groups_service: GroupsService
-}) => {
+} & AppContext) => {
 	// NOTE: metadata groups should always be public until refactor?
 	// const [errors, permission] = await getAuthorisationModule().authorise({
 	// 	actor: session.identity.id,
@@ -52,9 +49,8 @@ export const metadataGroupsGetUseCase = async ({
 	groups_service,
 	session
 }: {
-	session: Session
 	groups_service: GroupsService
-}) => {
+} & AppContext) => {
 	// NOTE: metadata groups should always be public until refactor?
 	// const [errors, permission] = await getAuthorisationModule().authorise({
 	// 	actor: session.identity.id,
@@ -84,7 +80,7 @@ export const metadataGroupsGetPublicUseCase = async ({
 	groups_service
 }: {
 	groups_service: GroupsService
-}) => {
+} & AppContext) => {
 	const [errs, groups] = await groups_service.getGroups({ page_size: 1000, offset: 0 })
 	if (errs !== null) {
 		return err(errs)

@@ -1,34 +1,34 @@
-import type { Session } from '$lib/server/entities/models/identity'
 import type { DatasetService } from '$lib/server/application/services/dataset'
+import type { GroupsService } from '$lib/server/application/services/groups'
+import type { GroupsRepository } from '$lib/server/application/repositories/groups'
+import type { AppContext } from '$lib/server/application/context'
 import { type } from 'arktype'
 import { generateExtrasFromPayload } from '$lib/globals/datasets'
 import { err, ok } from '$lib/server/entities/errors'
 import { DatasetSchema } from '$lib/server/entities/models/datasets'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { getDatasetBasePermissions } from '$lib/utils/auth/permissions/translation'
 import slugify from '@sindresorhus/slugify'
-import type { GroupsService } from '$lib/server/application/services/groups'
-import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 
 export const datasetCreateUseCase = async ({
 	data,
 	dataset_service,
 	group_repository,
 	// group_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	data: unknown
 	dataset_service: DatasetService
 	group_service: GroupsService
 	group_repository: GroupsRepository
-	session: Session
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
 		object: 'datasets',
 		permits: 'create',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -64,7 +64,7 @@ export const datasetCreateUseCase = async ({
 		group: group_r
 	})
 	const new_permissions = await Promise.all(
-		dataset_permissions.map((permission) => auth_module.createPermission(permission))
+		dataset_permissions.map((permission) => authorisation_module.createPermission(permission))
 	)
 	const permissions_errors = new_permissions.flatMap(([err]) => {
 		if (err !== null) {

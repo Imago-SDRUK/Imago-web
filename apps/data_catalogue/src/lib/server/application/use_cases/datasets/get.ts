@@ -1,10 +1,10 @@
+import type { AppContext } from '$lib/server/application/context'
 import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 import type { UsersRepository } from '$lib/server/application/repositories/users'
 import type { DatasetService } from '$lib/server/application/services/dataset'
 import type { IdentityService } from '$lib/server/application/services/identity'
 import { permissionsGetUseCase } from '$lib/server/application/use_cases/permissions/get'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
-import type { Session } from '$lib/server/entities/models/identity'
 import type { PermissionActor, Relationship } from '$lib/server/entities/models/permissions'
 import type { User } from '$lib/server/entities/models/users'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
@@ -29,12 +29,13 @@ export const datasetGetPublicUseCase = async ({
 export const datasetGetUseCase = async ({
 	id,
 	dataset_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	dataset_service: DatasetService
-	session: Session
-}) => {
+} & AppContext) => {
 	//NOTE: id lookup must be perfomed before auth
 	const [dataset_errors, dataset] = await dataset_service.getDataset({ id })
 	if (dataset_errors) {
@@ -43,12 +44,12 @@ export const datasetGetUseCase = async ({
 	if (!dataset) {
 		return err({ reason: 'Not Found' })
 	}
-	const auth_module = getAuthorisationModule()
-	const [errors, allowed] = await auth_module.authorise({
+	const [errors, allowed] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: dataset.id,
 		permits: 'read',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -56,7 +57,7 @@ export const datasetGetUseCase = async ({
 	if (!allowed.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
-	const [errs, permission] = await auth_module.getPermissions({
+	const [errs, permission] = await authorisation_module.getPermissions({
 		namespace: 'Dataset',
 		object: dataset.id,
 		actor: session.identity.id
@@ -71,15 +72,16 @@ export const datasetsGetPaginatedUseCase = async ({
 	page_size = 10,
 	offset = 0,
 	search,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	url: URL
 	dataset_service: DatasetService
 	page_size?: number
 	offset?: number
 	search?: string
-	session: Session
-}) => {
+} & AppContext) => {
 	// const [errors, allowed] = await getAuthorisationModule().authorise({
 	// 	namespace: 'Action',
 	// 	object: 'datasets',
@@ -104,15 +106,15 @@ export const datasetsGetPaginatedUseCase = async ({
 	if (!datasets) {
 		return err({ reason: 'Not Found' })
 	}
-	const auth_module = getAuthorisationModule()
 	const permissions = await Promise.all(
 		datasets.items.map((dataset) =>
-			auth_module
+			authorisation_module
 				.authorise({
 					actor: session.identity.id,
 					namespace: 'Dataset',
 					object: dataset.id,
-					permits: 'read'
+					permits: 'read',
+					configuration
 				})
 				.then(([errors, permission]) => {
 					if (errors !== null) {
@@ -165,19 +167,21 @@ export const datasetGetActivityUseCase = async ({
 	offset = 0,
 	page_size = 10,
 	dataset_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	offset?: number
 	page_size?: number
 	dataset_service: DatasetService
-	session: Session
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: id,
 		permits: 'read',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -228,19 +232,21 @@ export const datasetGetPermissionsUseCase = async ({
 	id,
 	groups_repository,
 	identity_service,
-	users_repository
+	users_repository,
+	configuration,
+	authorisation_module
 }: {
-	session: Session
 	id: string
 	groups_repository: GroupsRepository
 	identity_service: IdentityService
 	users_repository: UsersRepository
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: id,
 		permits: 'share',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 
 	if (errors !== null) {
@@ -254,7 +260,9 @@ export const datasetGetPermissionsUseCase = async ({
 		data: {
 			namespace: 'Dataset',
 			object: id
-		}
+		},
+		configuration,
+		authorisation_module
 	})
 	const sorted_permissions = permissions?.relation_tuples?.reduce(
 		(acc, el) => {
@@ -374,11 +382,11 @@ export const datasetGetPermissionsUseCase = async ({
 
 export const datasetGetUserPermissionsUseCase = async ({
 	id,
-	session
+	session,
+	configuration
 }: {
 	id: string
-	session: Session
-}) => {
+} & AppContext) => {
 	const auth_module = getAuthorisationModule()
 	const permits = ['read', 'edit', 'delete', 'share']
 	const allowed = await Promise.all(
@@ -388,7 +396,8 @@ export const datasetGetUserPermissionsUseCase = async ({
 					namespace: 'Dataset',
 					object: id,
 					permits: permit,
-					actor: session.identity.id
+					actor: session.identity.id,
+					configuration
 				})
 				.then(([errors, permission]) => {
 					if (errors !== null) {

@@ -1,23 +1,23 @@
+import type { AppContext } from '$lib/server/application/context'
 import type { DatasetService } from '$lib/server/application/services/dataset'
 import { err, ok } from '$lib/server/entities/errors'
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 export const datasetDeleteUseCase = async ({
 	id,
 	dataset_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	dataset_service: DatasetService
-	session: Session
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: id,
 		permits: 'delete',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -30,7 +30,7 @@ export const datasetDeleteUseCase = async ({
 	if (errs) {
 		return err(errs)
 	}
-	const [d_errs] = await auth_module.deletePermission({ namespace: 'Dataset', object: id })
+	const [d_errs] = await authorisation_module.deletePermission({ namespace: 'Dataset', object: id })
 	if (d_errs !== null) {
 		return err(d_errs)
 	}

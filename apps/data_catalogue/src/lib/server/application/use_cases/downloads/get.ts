@@ -1,26 +1,29 @@
 import type { DownloadsRepository } from '$lib/server/application/repositories/downloads'
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { DatasetService } from '$lib/server/application/services/dataset'
 import type { Resource } from '$lib/server/entities/models/datasets'
+import type { AuthorisationService } from '$lib/server/application/services/autorisation'
+import type { AppContext } from '$lib/server/application/context'
 
 export const downloadsGetByDatasetUseCase = async ({
 	id,
 	session,
 	dataset_service,
-	downloads_repository
+	downloads_repository,
+	authorisation_module,
+	configuration
 }: {
 	id: string
-	session: Session
 	dataset_service: DatasetService
 	downloads_repository: DownloadsRepository
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+	authorisation_module: AuthorisationService
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Resource',
 		object: id,
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)

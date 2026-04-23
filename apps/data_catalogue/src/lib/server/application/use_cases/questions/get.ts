@@ -1,22 +1,23 @@
-import type { Session } from '$lib/server/entities/models/identity'
 import type { QuestionsRepository } from '$lib/server/application/repositories/questions'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
+import type { AppContext } from '$lib/server/application/context'
 
 export const questionGetUseCase = async ({
 	id,
 	session,
-	questions_repository
+	questions_repository,
+	authorisation_module,
+	configuration
 }: {
-	session: Session
 	id: string
 	questions_repository: QuestionsRepository
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Question',
 		object: id,
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -35,18 +36,20 @@ export const questionsGetUseCase = async ({
 	limit = 50,
 	offset = 0,
 	session,
-	questions_repository
+	questions_repository,
+	authorisation_module,
+	configuration
 }: {
 	limit?: number
 	offset?: number
-	session: Session
 	questions_repository: QuestionsRepository
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'questions',
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)

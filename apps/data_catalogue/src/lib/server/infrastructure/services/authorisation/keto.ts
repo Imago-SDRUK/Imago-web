@@ -88,7 +88,8 @@ const authorise: AuthorisationService['authorise'] = async ({
 	namespace,
 	object,
 	permits,
-	actor
+	actor,
+	configuration
 }) => {
 	log.trace({
 		message: `Evaluating`,
@@ -97,12 +98,23 @@ const authorise: AuthorisationService['authorise'] = async ({
 		permits,
 		actor
 	})
-	return await ketoCheck
-		.checkPermission(permissionToKeto({ namespace, object, permits, actor }))
-		.then((res) => ok(res))
-		.catch((_err) => {
-			return err({ reason: 'Unexpected', error: _err })
-		})
+	if (
+		configuration &&
+		configuration.superusers?.includes(typeof actor === 'string' ? actor : actor.object)
+	) {
+		log.trace({ allowed: true, method: 'superuser' })
+		return ok({ allowed: true })
+	}
+	try {
+		const permission = await ketoCheck.checkPermission(
+			permissionToKeto({ namespace, object, permits, actor })
+		)
+		log.trace({ permission })
+		return ok(permission)
+	} catch (_err) {
+		log.trace({ message: 'permissions error', errors: _err })
+		return err({ reason: 'Unexpected', errors: _err })
+	}
 }
 
 const batchAuthorise: AuthorisationService['batchAuthorise'] = async ({ permissions }) => {

@@ -1,5 +1,3 @@
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import {
 	PermissionQuerySchema,
@@ -10,20 +8,22 @@ import type { GroupsRepository } from '$lib/server/application/repositories/grou
 import type { UsersRepository } from '$lib/server/application/repositories/users'
 import type { IdentityService } from '$lib/server/application/services/identity'
 import type { User } from '$lib/server/entities/models/users'
+import type { AppContext } from '$lib/server/application/context'
 
 export const permissionsGetUseCase = async ({
 	data,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	data: unknown
-	session: Session
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'permissions',
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -35,7 +35,7 @@ export const permissionsGetUseCase = async ({
 	if (schema instanceof type.errors) {
 		return err({ reason: 'Invalid Data', message: schema.summary, id: 'invalid-data' })
 	}
-	const [errs, permissions] = await auth_module.getPermissions(schema)
+	const [errs, permissions] = await authorisation_module.getPermissions(schema)
 	if (errs !== null) {
 		return err(errs)
 	}
@@ -46,19 +46,20 @@ export const permissionsGetActorsUseCase = async ({
 	session,
 	groups_repository,
 	users_repository,
-	identity_service
+	identity_service,
+	configuration,
+	authorisation_module
 }: {
-	session: Session
 	groups_repository: GroupsRepository
 	users_repository: UsersRepository
 	identity_service: IdentityService
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'permissions',
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -118,24 +119,14 @@ export const permissionsGetActorsUseCase = async ({
 		label: string
 		actor: PermissionRequest['actor']
 	}[] = [
-		...groups.flatMap((group) => [
-			{
-				label: `${group.title} - admins`,
-				actor: {
-					namespace: 'Group' as const,
-					object: group.id,
-					relation: 'admins'
-				}
-			},
-			{
-				label: `${group.title} - users`,
-				actor: {
-					namespace: 'Group' as const,
-					object: group.id,
-					relation: 'users'
-				}
+		...groups.map((group) => ({
+			label: group.title,
+			actor: {
+				namespace: 'Group' as const,
+				relation: 'members',
+				object: group.id
 			}
-		]),
+		})),
 		...parsed_users.users.map((user) => ({
 			label: String(user.email),
 			actor: user.id

@@ -1,26 +1,26 @@
-import type { Session } from '$lib/server/entities/models/identity'
 import type { UserRequest } from '$lib/server/entities/models/users'
 import type { UsersRepository } from '$lib/server/application/repositories/users'
+import type { AppContext } from '$lib/server/application/context'
 import { err, ok } from '$lib/server/entities/errors'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 export const userAddGroupUseCase = async ({
 	user_id,
 	group_id,
 	user_repository,
-	session
+	session,
+	authorisation_module,
+	configuration
 }: {
 	user_id: string
 	group_id: string
 	user_repository: UsersRepository
-	session: Session
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'users',
-		permits: 'create'
+		permits: 'create',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -42,10 +42,10 @@ export const userAddGroupUseCase = async ({
 	if (ug_errs !== null) {
 		return err(ug_errs)
 	}
-	const [auth_errs] = await auth_module.createPermission({
+	const [auth_errs] = await authorisation_module.createPermission({
 		namespace: 'Group',
 		object: group_id,
-		relation: 'users',
+		relation: 'members',
 		actor: user_id
 	})
 	if (auth_errs !== null) {
@@ -58,19 +58,20 @@ export const userRemoveGroupUseCase = async ({
 	user_id,
 	group_id,
 	user_repository,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	user_id: string
 	group_id: string
 	user_repository: UsersRepository
-	session: Session
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'users',
-		permits: 'update'
+		permits: 'update',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -85,10 +86,10 @@ export const userRemoveGroupUseCase = async ({
 	if (ug_errs !== null) {
 		return err(ug_errs)
 	}
-	const [auth_errs] = await auth_module.deletePermission({
+	const [auth_errs] = await authorisation_module.deletePermission({
 		namespace: 'Group',
 		object: group_id,
-		relation: 'users',
+		relation: 'members',
 		actor: user_id
 	})
 	if (auth_errs !== null) {
@@ -101,18 +102,20 @@ export const userUpdateUseCase = async ({
 	id,
 	data,
 	user_repository,
-	session
+	session,
+	authorisation_module,
+	configuration
 }: {
 	id: string
 	data: Partial<UserRequest>
 	user_repository: UsersRepository
-	session: Session
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
 		object: 'users',
 		permits: 'update',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors) {
 		return err(errors)

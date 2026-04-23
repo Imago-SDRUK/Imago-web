@@ -1,25 +1,25 @@
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
 import {
 	PermissionRequestSchema,
 	type PermissionRequest
 } from '$lib/server/entities/models/permissions'
 import { type } from 'arktype'
+import type { AppContext } from '$lib/server/application/context'
 
 export const permissionDeleteUseCase = async ({
 	data,
-	session
+	session,
+	authorisation_module,
+	configuration
 }: {
 	data: PermissionRequest
-	session: Session
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'permissions',
-		permits: 'delete'
+		permits: 'delete',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -31,7 +31,7 @@ export const permissionDeleteUseCase = async ({
 	if (schema instanceof type.errors) {
 		return err({ reason: 'Invalid Data', message: schema.summary, id: 'invalid-data' })
 	}
-	const [errs, permissions] = await auth_module.deletePermission(schema)
+	const [errs, permissions] = await authorisation_module.deletePermission(schema)
 	if (errs !== null) {
 		return err(errs)
 	}

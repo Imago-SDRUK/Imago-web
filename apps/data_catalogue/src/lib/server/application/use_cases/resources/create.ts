@@ -1,29 +1,29 @@
 import type { ResourceRepository } from '$lib/server/application/repositories/resource'
 import type { ResourceService } from '$lib/server/application/services/resource'
 import type { StorageService } from '$lib/server/application/services/storage'
-import type { Session } from '$lib/server/entities/models/identity'
 import type { ResourceServiceRequest } from '$lib/server/entities/models/resources'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
 import { v7 } from 'uuid'
+import type { AppContext } from '$lib/server/application/context'
 
 export const resourceCreateUseCase = async ({
 	data,
 	resource_respository,
 	resource_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	data: ResourceServiceRequest
 	resource_respository: ResourceRepository
 	resource_service: ResourceService
-	session: Session
-}) => {
-	const auth_service = getAuthorisationModule()
-	const [errors, permission] = await auth_service.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
 		object: 'resources',
 		permits: 'create',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -56,7 +56,7 @@ export const resourceCreateUseCase = async ({
 	if (errs_resource !== null) {
 		return err(errs_resource)
 	}
-	const [errors_p] = await auth_service.createPermissions({
+	const [errors_p] = await authorisation_module.createPermissions({
 		permissions: [
 			{ namespace: 'Resource', object: resource_id, relation: 'datasets', actor: data.package_id }
 		]
@@ -72,20 +72,21 @@ export const resourceVersionCreateUseCase = async ({
 	resource_id,
 	resource_respository,
 	storage_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	version: string
 	resource_id: string
 	resource_respository: ResourceRepository
 	storage_service: StorageService
-	session: Session
-}) => {
-	const auth_service = getAuthorisationModule()
-	const [errors, permission] = await auth_service.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Resource',
 		object: resource_id,
 		permits: 'edit',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -96,8 +97,12 @@ export const resourceVersionCreateUseCase = async ({
 	const version_id = v7()
 	const [errs_resource, resource] = await resource_respository
 		.getResource({ id: resource_id })
-		.then((res) => ok(res))
-		.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+		.then(([errors, data]) => {
+			if (errors !== null) {
+				return err(errors)
+			}
+			return ok(data)
+		})
 	if (errs_resource !== null) {
 		return err(errs_resource)
 	}
@@ -111,12 +116,16 @@ export const resourceVersionCreateUseCase = async ({
 				id: version_id
 			}
 		})
-		.then((res) => ok(res))
-		.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+		.then(([errors, data]) => {
+			if (errors !== null) {
+				return err(errors)
+			}
+			return ok(data)
+		})
 	if (errs_version !== null) {
 		return err(errs_version)
 	}
-	const [errors_p] = await auth_service.createPermissions({
+	const [errors_p] = await authorisation_module.createPermissions({
 		permissions: [
 			{ namespace: 'ResourceVersion', object: version_id, relation: 'resource', actor: resource_id }
 		]

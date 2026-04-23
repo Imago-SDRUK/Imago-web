@@ -1,24 +1,25 @@
+import type { AppContext } from '$lib/server/application/context'
 import type { DownloadsRepository } from '$lib/server/application/repositories/downloads'
 import { err, ok } from '$lib/server/entities/errors'
 import type { DownloadRequest } from '$lib/server/entities/models/downloads'
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 // NOTE: maybe make this a sub use case instead?
 export const downloadsCreateUseCase = async ({
 	data,
 	session,
-	downloads_repository
+	downloads_repository,
+	configuration,
+	authorisation_module
 }: {
 	data: DownloadRequest
-	session: Session
 	downloads_repository: DownloadsRepository
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Resource',
 		object: data.resource,
-		permits: 'read'
+		permits: 'read',
+		configuration
 	})
 	if (errors) {
 		return err(errors)

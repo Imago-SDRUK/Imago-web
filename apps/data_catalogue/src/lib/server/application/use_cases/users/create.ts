@@ -1,18 +1,18 @@
-import { users, type UserRequest } from '$lib/server/entities/models/users'
 import type { UsersRepository } from '$lib/server/application/repositories/users'
+import type { AppContext } from '$lib/server/application/context'
 import { err, ok } from '$lib/server/entities/errors'
 import { createInsertSchema } from 'drizzle-arktype'
 import { type } from 'arktype'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import { users, type UserRequest } from '$lib/server/entities/models/users'
 
 export const userCreateUseCase = async ({
 	payload,
-	repository
+	repository,
+	authorisation_module
 }: {
 	payload: UserRequest
 	repository: UsersRepository
-}) => {
-	const auth_service = getAuthorisationModule()
+} & AppContext) => {
 	const schema = createInsertSchema(users)
 	const validated = schema(payload)
 	if (validated instanceof type.errors) {
@@ -25,7 +25,7 @@ export const userCreateUseCase = async ({
 	if (errors !== null) {
 		return err(errors)
 	}
-	const [err_p] = await auth_service.createPermissions({
+	const [err_p] = await authorisation_module.createPermissions({
 		permissions: [{ namespace: 'User', object: user.id, relation: 'members', actor: user.id }]
 	})
 	if (err_p !== null) {

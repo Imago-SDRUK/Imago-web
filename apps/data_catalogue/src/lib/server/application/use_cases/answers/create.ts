@@ -1,31 +1,31 @@
-import type { Session } from '$lib/server/entities/models/identity'
 import type { AnswerRequest } from '$lib/server/entities/models/questions'
 import type { AnswersRepository } from '$lib/server/application/repositories/answers'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import type { PermissionRequest } from '$lib/server/entities/models/permissions'
+import type { AuthorisationService } from '$lib/server/application/services/autorisation'
+import type { AppContext } from '$lib/server/application/context'
 import { err, ok } from '$lib/server/entities/errors'
 import { answers } from '$lib/db/schema'
 import { ArkErrors, type } from 'arktype'
 import { createInsertSchema } from 'drizzle-arktype'
 import { getAnswerBasePermissions } from '$lib/server/entities/models/policies'
-import type { PermissionRequest } from '$lib/server/entities/models/permissions'
-import type { AuthorisationService } from '$lib/server/application/services/autorisation'
 
 export const answerCreateUseCase = async ({
 	data,
 	answers_repository,
 	session,
-	authorisation_module
+	authorisation_module,
+	configuration
 }: {
 	data: unknown
-	session: Session
 	answers_repository: AnswersRepository
 	authorisation_module: AuthorisationService
-}) => {
+} & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'answers',
-		permits: 'create'
+		permits: 'create',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -49,18 +49,19 @@ export const answerCreateUseCase = async ({
 export const answersCreateUseCase = async ({
 	data,
 	answers_repository,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	data: unknown[]
-	session: Session
 	answers_repository: AnswersRepository
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
 		namespace: 'Action',
 		object: 'answers',
-		permits: 'create'
+		permits: 'create',
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -91,7 +92,7 @@ export const answersCreateUseCase = async ({
 	const permissions: PermissionRequest[] = user_answers.flatMap((answer) =>
 		getAnswerBasePermissions({ user_id: session.identity.id, answer })
 	)
-	const [p_errs] = await auth_module.createPermissions({ permissions })
+	const [p_errs] = await authorisation_module.createPermissions({ permissions })
 	if (p_errs !== null) {
 		return err(p_errs)
 	}

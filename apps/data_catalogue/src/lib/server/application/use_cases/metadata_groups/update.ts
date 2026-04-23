@@ -1,27 +1,26 @@
-import type { Session } from '$lib/server/entities/models/identity'
+import type { AppContext } from '$lib/server/application/context'
 import type { GroupsService } from '$lib/server/application/services/groups'
 import { err, ok } from '$lib/server/entities/errors'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 export const metadataGroupUpdateUseCase = async ({
 	id,
 	data,
 	session,
-	groups_service
-	// groups_repository
+	groups_service,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	data: unknown
-	session: Session
 	groups_service: GroupsService
 	// groups_repository: GroupsRepository
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
 		object: 'groups',
 		permits: 'update',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors !== null) {
 		return err(errors)

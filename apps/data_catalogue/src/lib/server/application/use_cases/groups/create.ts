@@ -1,30 +1,27 @@
-import type { Session } from '$lib/server/entities/models/identity'
-// import type { GroupsService } from '$lib/server/application/services/groups'
 import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 import { type } from 'arktype'
 import { err, ok } from '$lib/server/entities/errors'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { groups } from '$lib/db/schema'
 import { createInsertSchema } from 'drizzle-arktype'
 import slugify from '@sindresorhus/slugify'
+import type { AppContext } from '$lib/server/application/context'
 
 export const groupCreateUseCase = async ({
 	data,
 	session,
-	// groups_service,
+	configuration,
+	authorisation_module,
 	groups_repository
 }: {
 	data: unknown
-	session: Session
-	// groups_service: GroupsService
 	groups_repository: GroupsRepository
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
 		object: 'groups',
 		permits: 'create',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors !== null) {
 		return err(errors)

@@ -2,27 +2,28 @@ import type { DatasetService } from '$lib/server/application/services/dataset'
 import type { GroupsService } from '$lib/server/application/services/groups'
 import type { TagsService } from '$lib/server/application/services/tags'
 import type { DatasetRequest } from '$lib/server/entities/models/datasets'
-import type { Session } from '$lib/server/entities/models/identity'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { err, ok } from '$lib/server/entities/errors'
 import { generateExtrasFromPayload } from '$lib/globals/datasets'
+import type { AppContext } from '$lib/server/application/context'
 
 export const datasetUpdateUseCase = async ({
 	id,
 	data,
 	dataset_service,
-	session
+	session,
+	authorisation_module,
+	configuration
 }: {
 	id: string
 	data?: DatasetRequest
 	dataset_service: DatasetService
-	session: Session
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: id,
 		permits: 'edit',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 
 	if (errors) {
@@ -48,20 +49,22 @@ export const datasetAddTagUseCase = async ({
 	vocabulary_id,
 	tags_service,
 	dataset_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	tag: string
 	vocabulary_id: string
 	dataset_service: DatasetService
 	tags_service: TagsService
-	session: Session
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: id,
 		permits: 'edit',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 
 	if (errors) {
@@ -103,20 +106,22 @@ export const datasetRemoveTagUseCase = async ({
 	vocabulary_id,
 	tags_service,
 	dataset_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	tag_id: string
 	vocabulary_id: string
 	dataset_service: DatasetService
 	tags_service: TagsService
-	session: Session
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: id,
 		permits: 'edit',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors) {
 		return err(errors)
@@ -153,19 +158,21 @@ export const datasetAddGroupUseCase = async ({
 	dataset_id,
 	groups_service,
 	dataset_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	group_id: string
 	dataset_id: string
 	groups_service: GroupsService
 	dataset_service: DatasetService
-	session: Session
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: dataset_id,
 		permits: 'edit',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 
 	if (errors) {
@@ -209,18 +216,20 @@ export const datasetRemoveGroupUseCase = async ({
 	group_id,
 	dataset_id,
 	dataset_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	group_id: string
 	dataset_id: string
 	dataset_service: DatasetService
-	session: Session
-}) => {
-	const [errors, permission] = await getAuthorisationModule().authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Dataset',
 		object: dataset_id,
 		permits: 'edit',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors) {
 		return err(errors)
