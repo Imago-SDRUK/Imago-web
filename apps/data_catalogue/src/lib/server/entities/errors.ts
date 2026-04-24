@@ -5,12 +5,12 @@ type UnauthenticatedError = { reason: 'Unauthenticated' }
 type MissingIdError = { reason: 'Missing ID' }
 type InvalidDataError = {
 	reason: 'Invalid Data'
-	message?: string
-	id?: string
+	message: string
+	id: string
 	errors?: ArkFormErrors
 }
-type NotFoundError = { reason: 'Not Found' }
-type UnexpectedError = { reason: 'Unexpected'; error?: unknown }
+type NotFoundError = { reason: 'Not Found'; message: string }
+type UnexpectedError = { reason: 'Unexpected'; error: unknown }
 
 export type ErrTypes =
 	| UnauthorisedError

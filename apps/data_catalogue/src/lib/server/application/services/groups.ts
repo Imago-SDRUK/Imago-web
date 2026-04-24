@@ -12,7 +12,7 @@ export type GroupsService = {
 	}: {
 		data: GroupServiceRequest
 	}) => Promise<[ErrTypes, null] | [null, GroupService]>
-	getGroup: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, GroupService | null]>
+	getGroup: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, GroupService]>
 	getGroups: ({
 		page_size,
 		offset
