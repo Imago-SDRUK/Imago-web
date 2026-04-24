@@ -25,10 +25,10 @@
 	import CellText from '$lib/ui/tables/cell_text.svelte'
 	import { page } from '$app/state'
 	import CellEditor from '$lib/ui/tables/cell_editor.svelte'
-	import CellDate from '$lib/ui/tables/cell_date.svelte'
 	import { DateTime } from 'luxon'
 	import type { Group } from '$lib/server/entities/models/groups.js'
 	import { handleEnhance } from '$lib/utils/forms'
+	import type { PermissionRequest } from '$lib/server/entities/models/permissions'
 
 	let { data } = $props()
 	let delete_group = $state('')
@@ -73,6 +73,44 @@
 	let available_users = $derived(
 		search_results.filter((au) => !data.group_users.find((gu) => gu.id === au.id))
 	)
+	const available_actions = (actor: PermissionRequest['actor']): PermissionRequest[] => [
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'permissions',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'users',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'groups',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'datasets',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'answers',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'questions',
+			actor
+		}
+	]
 </script>
 
 <Title>Groups</Title>
@@ -80,9 +118,6 @@
 	<SectionEdit open={selected !== -1 ? true : undefined}>
 		{#snippet leftCol()}
 			<ActionBar>
-				{#snippet left()}
-					<Subtitle>Groups</Subtitle>
-				{/snippet}
 				{#snippet right()}
 					<Button
 						width="auto"
@@ -194,7 +229,14 @@
 										<Input label="Description">
 											<Textarea name="description" bind:value={group.description}></Textarea>
 										</Input>
+										<Input label="Autoenroll">
+											<Select name="autoenroll" value={group.autoenroll}>
+												<option value={true}>Yes</option>
+												<option value={false}>No</option>
+											</Select>
+										</Input>
 									{/key}
+
 									<div class="buttons">
 										<Button
 											type="button"
@@ -273,16 +315,7 @@
 										>
 											<input type="hidden" name="user_id" value={user.id} />
 											<input type="hidden" name="group_id" value={group.id} />
-											<Paragraph>{user.email}</Paragraph>
-											<Select
-												label="Relation"
-												required
-												name="relation"
-												options={[
-													{ label: 'User', value: 'users' },
-													{ label: 'Admin', value: 'admins' }
-												]}
-											></Select>
+											<Paragraph>Add {user.email}?</Paragraph>
 											<div class="buttons">
 												<Button
 													type="button"
@@ -351,6 +384,32 @@
 							</div>
 						{/if}
 					</div>
+					{#if edit}
+						<div class="section">
+							<Subtitle>Permissions</Subtitle>
+							{#each available_actions( { namespace: 'Group', relation: 'members', object: group.id } ) as action (action)}
+								<div class="card">
+									{#if data.group_permissions?.relation_tuples?.find((rt) => rt.subject_set?.object === group.id && rt.object === action.object)}
+										<form action="?/remove_action" method="post" use:enhance={handleEnhance()}>
+											<input type="hidden" name="group_id" value={group.id} />
+											<input type="hidden" name="object" value={action.object} />
+											<Input label="Disable create {action.object}" layout="horizontal">
+												<Button active style="alt">Enabled</Button>
+											</Input>
+										</form>
+									{:else}
+										<form action="?/add_action" method="post" use:enhance={handleEnhance()}>
+											<input type="hidden" name="group_id" value={group.id} />
+											<input type="hidden" name="object" value={action.object} />
+											<Input label="Enable create {action.object}" layout="horizontal">
+												<Button style="alt">Disabled</Button>
+											</Input>
+										</form>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
 				{/if}
 			</div>
 		{/snippet}
