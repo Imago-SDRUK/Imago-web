@@ -8,14 +8,20 @@ import { userUpdateController } from '$lib/server/interface/adapters/controllers
 import { userGetMeController } from '$lib/server/interface/adapters/controllers/users/get.js'
 
 export const load = async ({ locals }: PageServerLoadEvent) => {
-	const [errors, me] = await userGetMeController({ session: locals.session })
+	const [errors, me] = await userGetMeController({
+		configuration: locals.configuration,
+		session: locals.session
+	})
 	if (errors !== null) {
 		return error(500, { message: errors.reason, id: errors.reason })
 	}
 	if (me.status === 'active') {
 		redirect(307, '/')
 	}
-	const [errs, questions] = await questionsGetController({ session: locals.session })
+	const [errs, questions] = await questionsGetController({
+		configuration: locals.configuration,
+		session: locals.session
+	})
 	if (errs) {
 		return error(500, { message: errs.reason, id: errs.reason })
 	}
@@ -47,11 +53,16 @@ export const actions = {
 			question: key,
 			answer: value
 		}))
-		const [errors] = await answersCreateController({ data: body, session: locals.session })
+		const [errors] = await answersCreateController({
+			configuration: locals.configuration,
+			data: body,
+			session: locals.session
+		})
 		if (errors !== null) {
 			return fail(400, { message: errors.reason, id: errors.reason })
 		}
 		const [errs] = await userUpdateController({
+			configuration: locals.configuration,
 			session: locals.session,
 			id: locals.session?.identity.id,
 			payload: { status: 'active' }

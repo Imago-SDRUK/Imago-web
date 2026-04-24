@@ -7,10 +7,10 @@ import { userGetMeController } from '$lib/server/interface/adapters/controllers/
 const FLOW = 'settings'
 export const load = async ({ url, request, cookies, fetch, locals }: PageServerLoadEvent) => {
 	const [errors, user] = await userGetMeController({
+		configuration: locals.configuration,
 		id: locals.session?.identity.id,
 		session: locals.session
 	})
-	console.log(user)
 	if (errors !== null) {
 		if (errors.reason === 'Not Found') {
 			redirect(307, '/user/register')
