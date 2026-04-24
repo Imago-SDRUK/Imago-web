@@ -1,20 +1,21 @@
 <script lang="ts">
+	import type { Tag } from '$lib/server/entities/models/datasets'
 	import { enhance } from '$app/forms'
 	import { invalidateAll } from '$app/navigation'
 	import { getDataset } from '$lib/context/dataset.svelte'
 	import { APP_STATE } from '$lib/globals/state.svelte'
 	import { notify } from '$lib/stores/notify'
-	import type { CkanTag } from '$lib/types/ckan'
-	import { sleep } from '$lib/utils'
-	import { fuzzy, getId, jstr } from '@arturoguzman/art-ui'
-	import { Subtitle, Button, Paragraph, Input, Text, Icon } from '@imago/ui'
+	import { handleEnhance } from '$lib/utils/forms'
+	import { fuzzy } from '@arturoguzman/art-ui'
+	import { Subtitle, Button, Paragraph, Input, Text, Icon, Notice } from '@imago/ui'
+	import slugify from '@sindresorhus/slugify'
 	const ctx = getDataset()
-	let { existing_tags }: { existing_tags: CkanTag[] } = $props()
-	let tags: { display_name: string; id: string }[] = $state([])
+	let { existing_tags }: { existing_tags: (Tag | string)[] } = $props()
 	let search = $state('')
 	let search_results = $derived(
 		existing_tags
 			.filter(() => search !== '')
+			.filter((tag) => typeof tag !== 'string')
 			.filter((tag) => !ctx.dataset.tags.find((_tag) => tag.id === _tag.id))
 			.filter((tag) => fuzzy(search, tag.display_name))
 	)
@@ -24,24 +25,7 @@
 	<Subtitle size="lg">Tags</Subtitle>
 	<div class="wrapper"></div>
 </div>
-<form
-	action="?/add_tag"
-	method="POST"
-	use:enhance={({ cancel }) => {
-		if (APP_STATE.loading) {
-			cancel()
-		}
-		APP_STATE.loading = true
-		return async ({ result }) => {
-			APP_STATE.loading = false
-			if ('data' in result) {
-				notify.send(String(result.data?.message))
-			}
-			search = ''
-			invalidateAll()
-		}
-	}}
->
+<form action="?/add_tag" method="POST" use:enhance={handleEnhance()}>
 	<div class="fields">
 		<div class="search">
 			<Input label="Search or add a tag">
@@ -58,19 +42,27 @@
 			{#if search !== ''}
 				<div class="search-results">
 					{#each search_results as tag, index (tag)}
-						<input type="hidden" name="tag" value={tag.name} />
-						<div class="tag">
-							<Button>
-								<Paragraph>{tag.display_name}</Paragraph>
-							</Button>
-						</div>
+						{#if typeof tag !== 'string'}
+							<input type="hidden" name="tag" value={tag.name} />
+							<div class="tag">
+								<Button>
+									<Paragraph>{tag.display_name}</Paragraph>
+								</Button>
+							</div>
+						{/if}
 					{/each}
 					{#if search_results.length === 0}
-						<input type="hidden" name="tag" value={search} />
-						<Button>
-							<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon>
-							<Paragraph>{search}</Paragraph>
-						</Button>
+						{#if ctx.dataset.tags.find((tag) => tag.name === slugify(search))}
+							<Notice level="info">
+								<Paragraph>Tag {search} has already been added to the dataset.</Paragraph>
+							</Notice>
+						{:else}
+							<input type="hidden" name="tag" value={search} />
+							<Button>
+								<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon>
+								<Paragraph>{search}</Paragraph>
+							</Button>
+						{/if}
 					{/if}
 				</div>
 			{/if}

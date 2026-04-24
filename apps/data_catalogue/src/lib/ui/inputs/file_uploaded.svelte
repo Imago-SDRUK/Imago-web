@@ -5,7 +5,6 @@
 	import { notify } from '$lib/stores/notify'
 	import { Accordion, Button, Checkbox, Icon, Input, Subtitle, Text, Textarea } from '@imago/ui'
 	import { getDataset } from '$lib/context/dataset.svelte'
-	import Upload from './upload.svelte'
 	import FileInput from './file_input.svelte'
 
 	let {

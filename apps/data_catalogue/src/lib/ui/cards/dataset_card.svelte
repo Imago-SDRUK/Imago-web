@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { Paragraph, Button, Icon, Subtitle, ActionBar, Input, Text, Notice } from '@imago/ui'
-	import { notify } from '$lib/stores/notify'
 	import type { CkanDataset, CkanResource } from '$lib/types/ckan'
 	import { fuzzy, jstr } from '@arturoguzman/art-ui'
-	import { applyAction, enhance } from '$app/forms'
+	import { enhance } from '$app/forms'
 	import type {
 		AvailableActor,
 		PermissionActor,
@@ -77,26 +76,7 @@
 		<Subtitle>Metadata groups</Subtitle>
 		<div class="editing">
 			{#each groups.filter((group) => dataset.groups.find((_g) => _g.id === group.id)) as group}
-				<form
-					action="?/remove_group"
-					method="post"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if ('data' in result && result.data) {
-								if ('errors' in result.data) {
-									notify.send(String(jstr(result.data.errors)))
-								}
-								if ('message' in result.data) {
-									notify.send(String(result.data.message))
-								}
-							}
-							if (result.type === 'redirect') {
-								applyAction(result)
-							}
-							await update({ reset: true, invalidateAll: true })
-						}
-					}}
-				>
+				<form action="?/remove_group" method="post" use:enhance={handleEnhance()}>
 					<input type="hidden" value={dataset.id} name="dataset_id" />
 					<input type="hidden" value={group?.id} name="group_id" />
 					<Button width="auto">
@@ -161,7 +141,6 @@
 			{@const relations = relationships?.filter((r) => r.relation === ar.value)}
 			<div class="relations">
 				<Subtitle>{ar.label}</Subtitle>
-
 				{#if relations?.length > 0}
 					<div class="relations">
 						{#each relations as relation (relation)}

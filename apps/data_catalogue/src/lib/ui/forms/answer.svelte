@@ -1,15 +1,17 @@
 <script lang="ts">
-	import type { Question } from '$lib/db/schema/questions'
 	import { COUNTRIES } from '$lib/utils/forms/countries'
-	import { jstr } from '@arturoguzman/art-ui'
 	import { Select, Input, Text, Checkbox, Button, Icon } from '@imago/ui'
 	import Notes from '../text/notes.svelte'
+	import type { Question } from '$lib/server/entities/models/questions'
 	let {
 		answers = $bindable(),
 		question
 	}: { answers: { question: string; answer: string }[]; question: Question } = $props()
 	let answer = $derived(answers.find((answer) => answer.question === question.id))
-	let visibility = $state(question.visibility)
+	let visibility = $derived.by(() => {
+		let value = $state(question.visibility)
+		return value
+	})
 	let desctiption_open = $state(false)
 	$effect(() => {
 		if (answers && question && question.conditionals && Array.isArray(question.conditionals)) {
