@@ -5,6 +5,7 @@ import { env } from '$env/dynamic/private'
 import { RelationshipApi, Configuration, PermissionApi } from '@ory/client-fetch'
 import { err, ok } from '$lib/server/entities/errors'
 import type { Permission, Relationship } from '$lib/server/entities/models/permissions'
+import { jstr } from '@arturoguzman/art-ui'
 
 export const ketoWrite = new RelationshipApi(
 	new Configuration({
@@ -267,17 +268,18 @@ const getPermissions: AuthorisationService['getPermissions'] = async ({
 			namespace: namespace,
 			object: object,
 			relation: permits,
-			subject_id: actor
+			subjectId: actor
 		}
 	} else {
 		body_converted = {
 			namespace: namespace,
 			object: object,
 			relation: permits,
-			subject_set: actor
+			subjectSetNamespace: actor?.namespace,
+			subjectSetObject: actor?.object,
+			subjectSetRelation: actor?.relation
 		}
 	}
-
 	try {
 		const permissions = await ketoRead.getRelationships(body_converted)
 		return ok(permissions)
