@@ -19,7 +19,7 @@ const createDataset: DatasetService['createDataset'] = async ({ data }) => {
 			return err(errors)
 		}
 		if (!dataset.success) {
-			return err(handleCkanError(dataset))
+			return err(handleCkanError(dataset, 'createDataset'))
 		}
 		return ok(dataset.result)
 	} catch (_err) {
@@ -41,7 +41,7 @@ const getDataset: DatasetService['getDataset'] = async ({ id }) => {
 			})
 		)
 		if (!data.success) {
-			return err(handleCkanError(data))
+			return err(handleCkanError(data, 'getDataset'))
 		}
 		return ok(data.result)
 	} catch (_err) {
@@ -62,7 +62,7 @@ const getDatasetsCount: DatasetService['getDatasetsCount'] = async () => {
 		)
 
 		if (!data.success) {
-			return err(handleCkanError(data))
+			return err(handleCkanError(data, 'getDatasetsCount'))
 		}
 
 		return ok(data.result.length)
@@ -93,7 +93,7 @@ const getDatasets: DatasetService['getDatasets'] = async ({ page_size, offset, s
 			})
 		)
 		if (!data.success) {
-			return err(handleCkanError(data))
+			return err(handleCkanError(data, 'getDatasets'))
 		}
 		const max_pages = Math.floor(data.result.count / page_size)
 		const next = offset + 1 > max_pages ? max_pages : offset + 1
@@ -122,7 +122,7 @@ const getDatasetActivity: DatasetService['getDatasetActivity'] = async ({
 		const data = await ckan.request(get('package_activity_list', { id, offset, limit: page_size }))
 
 		if (!data.success) {
-			return err(handleCkanError(data))
+			return err(handleCkanError(data, 'getDatasetActivity'))
 		}
 		return ok(data.result)
 	} catch (_err) {
@@ -138,7 +138,7 @@ const updateDataset: DatasetService['updateDataset'] = async ({ id, data }) => {
 		})
 		const dataset = await ckan.request(patch('package_patch', { id }, data))
 		if (!dataset.success) {
-			return err(handleCkanError(dataset))
+			return err(handleCkanError(dataset, 'updateDataset'))
 		}
 		return ok(dataset.result)
 	} catch (_err) {
@@ -154,7 +154,7 @@ const deleteDataset: DatasetService['deleteDataset'] = async ({ id }) => {
 		})
 		const dataset = await ckan.request(remove('package_delete', { id }))
 		if (!dataset.success) {
-			return err(handleCkanError(dataset))
+			return err(handleCkanError(dataset, 'deleteDataset'))
 		}
 		return ok(null)
 	} catch (_err) {

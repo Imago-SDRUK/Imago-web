@@ -12,7 +12,7 @@ const createGroup: GroupsService['createGroup'] = async ({ data }) => {
 		})
 		const res = await ckan.request(create('group_create', data))
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'createGroup'))
 		}
 		return ok(res.result)
 	} catch (_err) {
@@ -31,7 +31,7 @@ const getGroup: GroupsService['getGroup'] = async ({ id }) => {
 			})
 		)
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'getGroup'))
 		}
 		return ok(res.result)
 	} catch (_err) {
@@ -56,7 +56,7 @@ const getGroups: GroupsService['getGroups'] = async ({ page_size, offset }) => {
 		)
 
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'getGroups'))
 		}
 		return ok(res.result)
 	} catch (_err) {
@@ -73,7 +73,7 @@ const updateGroup: GroupsService['updateGroup'] = async ({ data, id }) => {
 		const res = await ckan.request(patch('group_patch', { id: id }, data))
 
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'updateGroup'))
 		}
 		return ok(res.result)
 	} catch (_err) {
@@ -90,7 +90,7 @@ const deleteGroup: GroupsService['deleteGroup'] = async ({ id }) => {
 		const res = await ckan.request(remove('group_delete', { id }))
 
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'deleteGroup'))
 		}
 		return ok(null)
 	} catch (_err) {

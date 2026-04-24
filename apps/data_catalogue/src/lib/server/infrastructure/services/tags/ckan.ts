@@ -19,7 +19,7 @@ const getTag: TagsService['getTag'] = async ({ id, vocabulary_id }) => {
 			})
 		)
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'getTag'))
 		}
 		return ok(res.result)
 	} catch (_err) {
@@ -40,7 +40,7 @@ const getTags: TagsService['getTags'] = async ({ vocabulary_id }) => {
 			})
 		)
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'getTags'))
 		}
 		return ok({
 			items: res.result,
@@ -89,7 +89,7 @@ const createTag: TagsService['createTag'] = async ({ tag }) => {
 
 		const res = await ckan.request(create('tag_create', tag))
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'createTag'))
 		}
 		return ok(res.result)
 	} catch (_err) {
@@ -106,7 +106,7 @@ const createVocabulary: TagsService['createVocabulary'] = async ({ vocabulary })
 
 		const res = await ckan.request(create('vocabulary_create', vocabulary))
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'createVocabulary'))
 		}
 		return ok(res.result)
 	} catch (_err) {
@@ -122,7 +122,7 @@ const getVocabulary: TagsService['getVocabulary'] = async ({ vocabulary_id }) =>
 		})
 		const res = await ckan.request(get('vocabulary_show', { id: vocabulary_id }))
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'getVocabulary'))
 		}
 		return ok(res.result)
 	} catch (_err) {
@@ -139,7 +139,7 @@ const getVocabularies: TagsService['getVocabularies'] = async () => {
 
 		const res = await ckan.request(get('vocabulary_list'))
 		if (!res.success) {
-			return err(handleCkanError(res))
+			return err(handleCkanError(res, 'getVocabularies'))
 		}
 		return ok(res.result)
 	} catch (_err) {

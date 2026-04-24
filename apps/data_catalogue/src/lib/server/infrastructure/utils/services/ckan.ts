@@ -18,25 +18,26 @@ export const handleCkanError = (
 		| ({
 				help: string
 		  } & CkanError)
-		| CkanTextError
+		| CkanTextError,
+	caller?: string
 ): ErrTypes => {
 	if ('error' in obj) {
 		if (obj.error?.__type === 'Not Found Error') {
-			const keys = Object.keys(obj.error).filter((key) => key !== '__type')
-			return { reason: 'Not Found', message: obj.error?.[keys?.[0]]?.[0] ?? '' }
+			const keys = Object.keys(obj.error).filter((key) => key !== '__type' && key !== 'message')
+			return { reason: 'Not Found', message: obj.error?.[keys?.[0]]?.[0] ?? caller ?? '' }
 		}
 		const keys = Object.keys(obj.error).filter((key) => key !== '__type')
 		return {
 			reason: 'Invalid Data',
-			message: obj.error?.[keys?.[0]]?.[0] ?? '',
-			id: 'createDataset'
+			message: `${keys?.[0]}: ${obj.error?.[keys?.[0]]?.[0] ?? ''}`,
+			id: caller ?? ''
 		}
 	}
 	if ('message' in obj && 'status' in obj) {
 		return {
 			reason: 'Invalid Data',
 			message: obj.message,
-			id: 'createDataset'
+			id: caller ?? ''
 		}
 	}
 	return { reason: 'Unexpected', error: obj }
