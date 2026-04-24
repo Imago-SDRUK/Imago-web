@@ -53,12 +53,10 @@ export const groupSyncController = async ({
 }
 
 export const groupAddUserController = async ({
-	relation,
 	session,
 	data,
 	configuration
 }: {
-	relation: 'admins' | 'users'
 	session?: Session
 	data: Partial<UsersGroupsRequest>
 	configuration: Configuration
@@ -67,7 +65,6 @@ export const groupAddUserController = async ({
 		return err({ reason: 'Unauthenticated' })
 	}
 	return await groupAddUserUseCase({
-		relation,
 		data: { ...data, created_by: session.identity.id, updated_by: session.identity.id },
 		groups_repository: getGroupsRepositoryModule(),
 		...getServerContext({ session, configuration })

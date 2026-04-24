@@ -11,6 +11,7 @@ import { getIdentityModule } from '$lib/server/modules/identity'
 import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
+import { log } from '$lib/utils/server/logger'
 
 const presenter = ({ group }: { group: GroupsRepository }) => group
 
@@ -42,6 +43,7 @@ export const groupGetController = async ({
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
+		log.error({ controller: 'groupGetController', errors })
 		return err(errors)
 	}
 	return ok(group)
@@ -61,10 +63,11 @@ export const groupsGetController = async ({
 		groups_repository: getGroupsRepositoryModule(),
 		...getServerContext({ session, configuration })
 	})
-	if (errors === null) {
-		return ok(groups)
+	if (errors !== null) {
+		log.error({ controller: 'groupsGetController', errors })
+		return err(errors)
 	}
-	return err(errors)
+	return ok(groups)
 }
 
 export const groupGetUsersController = async ({
@@ -89,6 +92,7 @@ export const groupGetUsersController = async ({
 		...getServerContext({ session, configuration })
 	})
 	if (errors === null) {
+		log.error({ controller: 'groupGetUsersController', errors })
 		return ok(groups)
 	}
 	return err(errors)
