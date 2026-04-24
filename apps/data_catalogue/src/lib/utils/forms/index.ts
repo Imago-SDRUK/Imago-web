@@ -1,5 +1,6 @@
 import { applyAction } from '$app/forms'
 import { goto, invalidateAll } from '$app/navigation'
+import { APP_STATE } from '$lib/globals/state.svelte'
 import { notify } from '$lib/stores/notify'
 import type { ActionResult } from '@sveltejs/kit'
 
@@ -130,9 +131,12 @@ export const formGetStringOrUndefined = ({ form, field }: { form: FormData; fiel
 	return value
 }
 
-export const safeJSONParse = (value: string) => {
+export const safeJSONParse = (value?: string) => {
 	try {
-		return JSON.parse(value)
+		if (value) {
+			return JSON.parse(value)
+		}
+		return null
 	} catch (err) {
 		console.log(err)
 		return null
@@ -173,8 +177,10 @@ type HandleEnhanceParams = {
 }
 
 export const handleEnhance = (_params?: HandleEnhanceParams) => (params: FormPreSubmit) => {
+	APP_STATE.loading = true
 	_params?.onsubmit?.(params)
 	return async ({ formData, formElement, action, result, update }: FormResponse) => {
+		APP_STATE.loading = false
 		if (result.type === 'error') {
 			await _params?.onerror?.({ formData, formElement, action, result, update })
 			notify.send({ message: result.error.message })
