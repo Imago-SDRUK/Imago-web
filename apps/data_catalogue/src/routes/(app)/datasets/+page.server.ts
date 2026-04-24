@@ -7,7 +7,6 @@ import {
 	tagsGetController,
 	tagsGetVocabulariesController
 } from '$lib/server/interface/adapters/controllers/tags/get.js'
-import { groupGetController } from '$lib/server/interface/adapters/controllers/groups/get.js'
 import { datasetDeleteController } from '$lib/server/interface/adapters/controllers/datasets/delete.js'
 import { datasetCreateController } from '$lib/server/interface/adapters/controllers/datasets/create.js'
 
@@ -21,6 +20,7 @@ export const load = async ({ locals, url }: PageServerLoadEvent) => {
 	}
 
 	const [errs, datasets] = await datasetsGetController({
+		configuration: locals.configuration,
 		url,
 		offset,
 		page_size: limit,
@@ -36,6 +36,7 @@ export const load = async ({ locals, url }: PageServerLoadEvent) => {
 	}
 	const voc_id = vocabularies.find((voc) => voc.name === 'general')
 	const [errors, tags] = await tagsGetController({
+		configuration: locals.configuration,
 		vocabulary_id: voc_id?.id,
 		session: locals.session
 	})
@@ -44,7 +45,6 @@ export const load = async ({ locals, url }: PageServerLoadEvent) => {
 	}
 
 	return {
-		//NOTE: filter by results that the user is allowed to see
 		datasets: datasets.items,
 		datasets_count: datasets.total,
 		package_count: 0,
@@ -61,7 +61,7 @@ export const load = async ({ locals, url }: PageServerLoadEvent) => {
 export const actions = {
 	create: async ({ request, locals }) => {
 		const form = await request.formData()
-		const group_id = formGetStringOrUndefined({ form, field: 'group' })
+		const group_name = formGetStringOrUndefined({ form, field: 'group' })
 		const title = formGetStringOrUndefined({ form, field: 'title' })
 		const file = form.get('file')
 		let payload: Record<PropertyKey, unknown> = {}
@@ -85,22 +85,27 @@ export const actions = {
 			}
 			payload = text_parse
 		} else {
-			const [group_err, group] = await groupGetController({ session: locals.session, id: group_id })
-			if (group_err !== null) {
-				return fail(404, { message: group_err.reason })
-			}
-
-			if (group === null) {
-				return fail(404, { message: 'Group not found' })
-			}
+			// const [group_err, group] = await groupGetController({
+			// 	configuration: locals.configuration,
+			// 	session: locals.session,
+			// 	id: group_id
+			// })
+			// if (group_err !== null) {
+			// 	return fail(404, { message: group_err.reason })
+			// }
+			//
+			// if (group === null) {
+			// 	return fail(404, { message: 'Group not found' })
+			// }
 			payload = {
 				title: title,
-				groups: [{ id: group.id, name: group.name }],
+				groups: [{ name: group_name }],
 				owner_org: 'imago'
 			}
 		}
 
 		const [dataset_err, dataset] = await datasetCreateController({
+			configuration: locals.configuration,
 			session: locals.session,
 			data: payload
 		})
@@ -116,7 +121,11 @@ export const actions = {
 	delete: async ({ locals, request }) => {
 		const form = await request.formData()
 		const id = formGetStringOrUndefined({ form, field: 'id' })
-		const [errors] = await datasetDeleteController({ id, session: locals.session })
+		const [errors] = await datasetDeleteController({
+			configuration: locals.configuration,
+			id,
+			session: locals.session
+		})
 		if (errors !== null) {
 			if (errors.reason === 'Invalid Data') {
 				return fail(500, { message: errors.message })
