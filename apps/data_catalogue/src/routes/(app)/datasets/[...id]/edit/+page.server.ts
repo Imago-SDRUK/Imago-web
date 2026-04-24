@@ -3,7 +3,11 @@ import {
 	tagsGetController,
 	tagsGetVocabulariesController
 } from '$lib/server/interface/adapters/controllers/tags/get.js'
-import { formGetStringOrUndefined } from '$lib/utils/forms/index.js'
+import {
+	formGetStringOrNull,
+	formGetStringOrUndefined,
+	safeJSONParse
+} from '$lib/utils/forms/index.js'
 import {
 	datasetAddTagController,
 	datasetRemoveTagController,
@@ -107,13 +111,16 @@ export const actions = {
 
 	update: async ({ request, locals, params }) => {
 		const form = await request.formData()
-		const data = parseForm(form)
-		await datasetUpdateController({
+		const data = safeJSONParse(formGetStringOrUndefined({ form, field: 'dataset' }))
+		const [errors, result] = await datasetUpdateController({
 			configuration: locals.configuration,
 			data,
 			id: params.id,
 			session: locals.session
 		})
+		if (errors !== null) {
+			return fail(400, { message: errors.message, id: errors.reason })
+		}
 		return {
 			message: `Dataset successfully updated`
 		}
@@ -146,14 +153,5 @@ export const actions = {
 		return {
 			message: `Datastore updated`
 		}
-		// if (res.ok) {
-		// 	log.debug(jstr(data))
-		// 	return {
-		// 		message: data.message
-		// 	}
-		// }
-		// return fail(res.status, {
-		// 	message: data.message
-		// })
 	}
 }
