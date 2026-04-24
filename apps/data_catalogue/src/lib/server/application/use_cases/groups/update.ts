@@ -14,21 +14,21 @@ export const groupUpdateUseCase = async ({
 	id,
 	data,
 	session,
-	// groups_service,
-	groups_repository
+	groups_repository,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	data: unknown
 	session: Session
-	// groups_service: GroupsService
 	groups_repository: GroupsRepository
-}) => {
-	const auth_module = getAuthorisationModule()
-	const [errors, permission] = await auth_module.authorise({
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Group',
 		object: id,
-		permits: 'admins',
-		actor: session.identity.id
+		permits: 'members',
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors !== null) {
 		return err(errors)
@@ -49,7 +49,8 @@ export const groupUpdateUseCase = async ({
 	const group_data = groupSchema({
 		...data,
 		slug: data?.title ? slugify(data?.title as string) : undefined,
-		updated_by: session.identity.id
+		updated_by: session.identity.id,
+		autoenroll: data.autoenroll === 'true' ? true : false
 	})
 	if (group_data instanceof type.errors) {
 		return err({ reason: 'Invalid Data', message: group_data.summary, id: 'invalid-dataset' })
@@ -62,7 +63,8 @@ export const groupUpdateUseCase = async ({
 			title: group_data.title,
 			visibility: group_data.visibility,
 			updated_at: group_data.updated_at,
-			updated_by: group_data.updated_by
+			updated_by: group_data.updated_by,
+			autoenroll: group_data.autoenroll
 		},
 		id
 	})
