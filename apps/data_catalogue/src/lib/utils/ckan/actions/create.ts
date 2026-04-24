@@ -81,6 +81,7 @@ type VocabularyCreate = [
 		tags?: CkanTag[]
 	},
 	{
+		id: string
 		name: string
 		tags: CkanTag[]
 	}

@@ -23,7 +23,7 @@ export type CkanError = {
 		[k: string]: string[]
 	} & {
 		__type: string
-		message: string
+		message?: string
 	}
 }
 
