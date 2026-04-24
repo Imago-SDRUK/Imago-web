@@ -64,12 +64,8 @@ export const groups = pgTable(
 export const users_groups = pgTable(
 	'users_groups',
 	{
-		created_by: uuid()
-			.references(() => users.id, { onDelete: 'no action' })
-			.notNull(),
-		updated_by: uuid()
-			.references(() => users.id, { onDelete: 'no action' })
-			.notNull(),
+		created_by: uuid().references(() => users.id, { onDelete: 'set null' }),
+		updated_by: uuid().references(() => users.id, { onDelete: 'set null' }),
 		created_at: timestamp({
 			mode: 'date',
 			precision: 3,
@@ -87,10 +83,10 @@ export const users_groups = pgTable(
 			.$onUpdateFn(() => DateTime.now().toBSON()),
 		user_id: uuid('user_id')
 			.notNull()
-			.references(() => users.id),
+			.references(() => users.id, { onDelete: 'cascade' }),
 		group_id: uuid('group_id')
 			.notNull()
-			.references(() => groups.id)
+			.references(() => groups.id, { onDelete: 'cascade' })
 	},
 	(t) => [
 		primaryKey({ columns: [t.user_id, t.group_id] }),

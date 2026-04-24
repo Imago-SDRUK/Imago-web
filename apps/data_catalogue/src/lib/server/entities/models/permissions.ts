@@ -89,7 +89,7 @@ type AvailableNamespaces =
 	| 'User'
 
 const AvailableNamespaces = type(
-	'"Answer" | "Question" | "ResourceVersion" | "Resource" | "Dataset" | "Action" | "Group" | "User"'
+	'"Answer" | "Question" | "ResourceVersion" | "Resource" | "Dataset" | "Group" | "User" | "Action" '
 )
 
 const Actor = type({
@@ -111,7 +111,7 @@ export const PermissionQuerySchema = type({
 	'permits?': 'string',
 	'actor?': Actor
 })
-
+export type Namespaces = typeof AvailableNamespaces.infer
 export type Permission = typeof PermissionValidateSchema.infer
 export type PermissionQuery = typeof PermissionQuerySchema.infer
 
