@@ -58,6 +58,15 @@ const getGroups: GroupsRepository['getGroups'] = async ({ limit, offset }) => {
 	}
 }
 
+const getGroupsAutoenroll: GroupsRepository['getGroupsAutoenroll'] = async () => {
+	try {
+		const _groups = await db.select().from(groups).where(eq(groups.autoenroll, true))
+		return ok(_groups)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 const deleteGroup: GroupsRepository['deleteGroup'] = async ({ id }) => {
 	try {
 		await db.delete(groups).where(eq(groups.id, id))
@@ -169,5 +178,6 @@ export const groupRepositoryInfrastructureDrizzle: GroupsRepository = {
 	addUserToGroup,
 	removeUserFromGroup,
 	getGroupUsers,
-	getGroupsById
+	getGroupsById,
+	getGroupsAutoenroll
 }

@@ -1,4 +1,13 @@
-import { pgTable, uuid, timestamp, text, primaryKey, pgEnum, index } from 'drizzle-orm/pg-core'
+import {
+	pgTable,
+	uuid,
+	timestamp,
+	text,
+	primaryKey,
+	pgEnum,
+	index,
+	boolean
+} from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 import { users } from './users'
 import { DateTime } from 'luxon'
@@ -46,7 +55,8 @@ export const groups = pgTable(
 		slug: text().unique().notNull(),
 		description: text(),
 		datasets: uuid().array(),
-		visibility: group_visibility_enum().default('private').notNull()
+		visibility: group_visibility_enum().default('private').notNull(),
+		autoenroll: boolean().default(false)
 	},
 	(table) => [index('groups_slug_idx').on(table.slug)]
 )

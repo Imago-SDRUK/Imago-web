@@ -1,7 +1,8 @@
 import type { UserRequest } from '$lib/server/entities/models/users'
 import type { UsersRepository } from '$lib/server/application/repositories/users'
 import type { AppContext } from '$lib/server/application/context'
-import { err, ok } from '$lib/server/entities/errors'
+import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
+import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 
 export const userAddGroupUseCase = async ({
 	user_id,
@@ -135,4 +136,69 @@ export const userUpdateUseCase = async ({
 		return err({ reason: 'Not Found' })
 	}
 	return ok(updated_user)
+}
+
+export const userAutoEnrollUseCase = async ({
+	id,
+	groups_repository,
+	users_repository,
+	authorisation_module,
+	session
+}: {
+	id: string
+	users_repository: UsersRepository
+	groups_repository: GroupsRepository
+} & AppContext) => {
+	const [errs, permissions] = await authorisation_module.batchAuthorise({
+		permissions: [
+			{
+				namespace: 'User',
+				object: session.identity.id,
+				permits: 'members',
+				actor: session.identity.id
+			},
+			{
+				namespace: 'Action',
+				object: 'users',
+				permits: 'create',
+				actor: session.identity.id
+			}
+		]
+	})
+	if (errs) {
+		return err(errs)
+	}
+	const permission = permissions.results.some((permission) => permission.allowed)
+	if (!permission) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [errors, user] = await users_repository.getUser({ id })
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (user === null) {
+		return err({ reason: 'Unexpected' })
+	}
+	const [groups_errors, groups] = await groups_repository.getGroupsAutoenroll()
+	if (groups_errors !== null) {
+		return err(groups_errors)
+	}
+	const enroll_errors: ErrTypes[] = []
+	for (const group of groups) {
+		const [errs] = await users_repository.addUserToGroup({
+			data: {
+				user_id: user.id,
+				group_id: group.id,
+				created_by: session.identity.id,
+				updated_by: session.identity.id
+			}
+		})
+		if (errs) {
+			enroll_errors.push(errs)
+		}
+	}
+	if (enroll_errors.length > 0) {
+		return err(enroll_errors[0])
+	}
+	return ok(null)
 }

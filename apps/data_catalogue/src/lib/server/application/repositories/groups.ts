@@ -28,6 +28,8 @@ export type GroupsRepository = {
 		limit: number
 		offset: number
 	}) => Promise<[ErrTypes, null] | [null, Group[]]>
+
+	getGroupsAutoenroll: () => Promise<[ErrTypes, null] | [null, Group[]]>
 	getGroupsById: ({
 		ids
 	}: {

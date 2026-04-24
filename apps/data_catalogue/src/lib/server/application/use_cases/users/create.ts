@@ -4,15 +4,20 @@ import { err, ok } from '$lib/server/entities/errors'
 import { createInsertSchema } from 'drizzle-arktype'
 import { type } from 'arktype'
 import { users, type UserRequest } from '$lib/server/entities/models/users'
+import { env } from '$env/dynamic/private'
 
 export const userCreateUseCase = async ({
 	payload,
 	repository,
-	authorisation_module
+	authorisation_module,
+	identity_token
 }: {
 	payload: UserRequest
 	repository: UsersRepository
 } & AppContext) => {
+	if (identity_token !== env.IDENTITY_TOKEN) {
+		return err({ reason: 'Unauthorised' })
+	}
 	const schema = createInsertSchema(users)
 	const validated = schema(payload)
 	if (validated instanceof type.errors) {

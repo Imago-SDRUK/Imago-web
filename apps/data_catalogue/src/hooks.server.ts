@@ -89,9 +89,10 @@ const handleAccessMode: Handle = async ({ event, resolve }) => {
 		event.locals.access = true
 	}
 
-	const preauthorised = event.cookies.get('kratos-api') === env.ADMIN_TOKEN
+	const preauthorised = event.cookies.get('kratos-api') === env.IDENTITY_TOKEN
 	if (preauthorised) {
 		event.locals.access = true
+		event.locals.identity_token = event.cookies.get('kratos-api')
 	}
 	if (!event.locals.access && event.url.pathname !== '/access') {
 		return new Response(null, {
@@ -181,7 +182,10 @@ const handleProfile: Handle = async ({ event, resolve }) => {
 		event.locals.session.identity &&
 		event.locals.session.identity.id !== 'anonymous'
 	) {
-		const [error, profile] = await userGetMeController({ session: event.locals.session })
+		const [error, profile] = await userGetMeController({
+			session: event.locals.session,
+			configuration: event.locals.configuration
+		})
 		if (error !== null) {
 			redirect(307, `/user/register`)
 		}

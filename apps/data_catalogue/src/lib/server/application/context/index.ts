@@ -7,18 +7,22 @@ export type AppContext = {
 	session: Session
 	configuration: Configuration
 	authorisation_module: AuthorisationService
+	identity_token?: string
 }
 
 export const getServerContext = ({
 	session,
-	configuration
+	configuration,
+	identity_token
 }: {
 	session: Session
 	configuration: Configuration
+	identity_token?: string
 }): AppContext => {
 	return {
 		session,
 		configuration,
-		authorisation_module: getAuthorisationModule()
+		authorisation_module: getAuthorisationModule(),
+		identity_token
 	}
 }
