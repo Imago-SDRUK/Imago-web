@@ -12,7 +12,10 @@
 		Icon,
 		Paragraph,
 		Subtitle,
-		handleSearchParams
+		handleSearchParams,
+		Input,
+		Text,
+		Textarea
 	} from '@imago/ui'
 	import { onMount } from 'svelte'
 	import CellText from '$lib/ui/tables/cell_text.svelte'
@@ -23,11 +26,12 @@
 	import CellStatus from '$lib/ui/tables/cell_status.svelte'
 	import { toggleDialog } from '$lib/utils/ui/index.js'
 	import Dialog from '$lib/ui/cards/dialog.svelte'
-	import { applyAction, enhance } from '$app/forms'
-	import { notify } from '$lib/stores/notify.js'
+	import { enhance } from '$app/forms'
 	import CellDate from '$lib/ui/tables/cell_date.svelte'
 	import { goto } from '$app/navigation'
 	import CellEditorCtx from '$lib/ui/tables/cell_editor_ctx.svelte'
+	import { handleEnhance } from '$lib/utils/forms/index.js'
+	import { jstr } from '@arturoguzman/art-ui'
 	let { data } = $props()
 	let dataset_selected = $derived(
 		data.datasets.items?.findIndex(
@@ -164,7 +168,11 @@
 						<Title>Metadata groups</Title>
 					{/snippet}
 					{#snippet right()}
-						<Button>
+						<Button
+							onclick={() => {
+								toggleDialog('create-metadata-group')
+							}}
+						>
 							<Icon icon={{ icon: 'plus', set: 'tabler' }}></Icon>
 						</Button>
 					{/snippet}
@@ -249,22 +257,7 @@
 <Dialog id="dataset-delete">
 	<Subtitle size="md">Delete dataset</Subtitle>
 	<Paragraph>Are you sure you want to delete this dataset?</Paragraph>
-	<form
-		action="/datasets?/delete"
-		method="post"
-		use:enhance={() => {
-			return async ({ result }) => {
-				if (result.type === 'redirect') {
-					notify.send(`Dataset successfully deleted`)
-				}
-				if ('data' in result) {
-					notify.send(String(result.data?.message))
-				}
-				applyAction(result)
-				toggleDialog('dataset-delete')
-			}
-		}}
-	>
+	<form action="/datasets?/delete" method="post" use:enhance={handleEnhance()}>
 		<div class="fields">
 			<input type="text" hidden value={data.dataset?.id} name="id" />
 		</div>
@@ -283,19 +276,7 @@
 <Dialog id="group-delete">
 	<Subtitle size="md">Delete dataset</Subtitle>
 	<Paragraph>Are you sure you want to delete this group?</Paragraph>
-	<form
-		action="?/delete_group"
-		method="post"
-		use:enhance={() => {
-			return async ({ result }) => {
-				if ('data' in result) {
-					notify.send(String(result.data?.message))
-				}
-				applyAction(result)
-				toggleDialog('group-delete')
-			}
-		}}
-	>
+	<form action="?/delete_group" method="post" use:enhance={handleEnhance()}>
 		<div class="fields">
 			<input type="text" hidden value={data.metadata_group?.id} name="group_id" />
 		</div>
@@ -307,6 +288,37 @@
 				}}>Cancel</Button
 			>
 			<Button>Delete</Button>
+		</div>
+	</form>
+</Dialog>
+
+<Dialog id="create-metadata-group">
+	<form
+		action="?/create_metadata_group"
+		method="post"
+		use:enhance={handleEnhance({
+			onsuccess: () => {
+				toggleDialog('create-metadata-group')
+			}
+		})}
+	>
+		<Subtitle>Add group</Subtitle>
+		<div class="inputs">
+			<Input label="Title">
+				<Text name="title"></Text>
+			</Input>
+			<Input label="Description">
+				<Textarea name="description"></Textarea>
+			</Input>
+		</div>
+		<div class="buttons">
+			<Button
+				type="button"
+				onclick={() => {
+					toggleDialog('create-metadata-group')
+				}}>Cancel</Button
+			>
+			<Button>Save</Button>
 		</div>
 	</form>
 </Dialog>
