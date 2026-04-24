@@ -355,7 +355,7 @@ export const datasetGetPermissionsUseCase = async ({
 	const parsed_groups: PermissionActor[] = sorted_permissions?.groups.map((_g) => {
 		const group = groups.find((g) => g.id === _g.subject_set?.object)
 		return {
-			label: `${group?.title} - ${_g.subject_set?.relation}`,
+			label: String(group?.title),
 			actor: _g.subject_set,
 			relation: _g.relation
 		}
