@@ -15,6 +15,7 @@ import { getTagsModule } from '$lib/server/modules/tags'
 import { getGroupsServiceModule } from '$lib/server/modules/groups'
 import { getServerContext } from '$lib/server/application/context'
 import type { Configuration } from '$lib/server/entities/models/configuration'
+import { log } from '$lib/utils/server/logger'
 
 export const datasetUpdateController = async ({
 	id,
@@ -74,7 +75,7 @@ export const datasetAddTagController = async ({
 	if (!vocabulary_id || typeof vocabulary_id !== 'string') {
 		return err({ reason: 'Invalid Data', message: `You need to provide a tag`, id: 'no-tag' })
 	}
-	return await datasetAddTagUseCase({
+	const [errors, data] = await datasetAddTagUseCase({
 		id,
 		tag: tag,
 		vocabulary_id: vocabulary_id,
@@ -82,6 +83,11 @@ export const datasetAddTagController = async ({
 		dataset_service: getDatasetModule(),
 		...getServerContext({ session, configuration })
 	})
+	if (errors !== null) {
+		log.error(errors)
+		return err(errors)
+	}
+	return ok(data)
 }
 
 export const datasetRemoveTagController = async ({

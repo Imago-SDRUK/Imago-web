@@ -17,6 +17,7 @@ import { getIdentityModule } from '$lib/server/modules/identity'
 import { getUserModule } from '$lib/server/modules/user'
 import { getServerContext } from '$lib/server/application/context'
 import type { Configuration } from '$lib/server/entities/models/configuration'
+import { log } from '$lib/utils/server/logger'
 
 const presenter = ({ dataset }: { dataset: Dataset | null }) => dataset
 
@@ -46,6 +47,7 @@ export const datasetGetController = async ({
 	})
 
 	if (errors !== null) {
+		log.error({ controller: 'datasetGetController', errors })
 		return err(errors)
 	}
 	return ok(presenter({ dataset }))
@@ -88,6 +90,7 @@ export const datasetsGetController = async ({
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
+		log.error({ controller: 'datasetsGetController', errors })
 		return err(errors)
 	}
 	return ok(datasets)
@@ -145,13 +148,18 @@ export const datasetGetPermissionsController = async ({
 	if (!id) {
 		return err({ reason: 'Unauthenticated' })
 	}
-	return await datasetGetPermissionsUseCase({
+	const [errors, result] = await datasetGetPermissionsUseCase({
 		id,
 		groups_repository: getGroupsRepositoryModule(),
 		identity_service: getIdentityModule(),
 		users_repository: getUserModule(),
 		...getServerContext({ session, configuration })
 	})
+	if (errors !== null) {
+		log.error({ controller: 'datasetGetPermissionsController', errors })
+		return err(errors)
+	}
+	return ok(result)
 }
 
 export const datasetGetUserPermissionsController = async ({
@@ -169,8 +177,13 @@ export const datasetGetUserPermissionsController = async ({
 	if (!id) {
 		return err({ reason: 'Unauthenticated' })
 	}
-	return await datasetGetUserPermissionsUseCase({
+	const [errors, result] = await datasetGetUserPermissionsUseCase({
 		id,
 		...getServerContext({ session, configuration })
 	})
+	if (errors !== null) {
+		log.error({ controller: 'datasetGetUserPermissionsController', errors })
+		return err(errors)
+	}
+	return ok(result)
 }
