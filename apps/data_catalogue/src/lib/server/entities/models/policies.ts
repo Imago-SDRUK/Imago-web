@@ -1,116 +1,37 @@
-import type { Dataset, Resource } from '$lib/server/entities/models/datasets'
 import type { PermissionRequest } from '$lib/server/entities/models/permissions'
 import type { Answer } from '$lib/server/entities/models/questions'
 
 export const getDatasetBasePermissions = ({
-	object,
+	id,
 	owner,
-	group
+	admin_group
 }: {
-	object: Dataset
+	id: string
 	owner?: string
-	group?: string
+	admin_group: string | null
 }): PermissionRequest[] => {
 	const namespace = 'Dataset'
-	const base: PermissionRequest[] = [
-		{
+	const base: PermissionRequest[] = []
+	if (admin_group) {
+		base.push({
 			namespace,
-			object: object.id,
+			object: id,
 			relation: 'admins',
 			actor: {
 				namespace: 'Group',
-				object: 'admin',
-				relation: 'users'
-			}
-		},
-		{
-			namespace,
-			object: object.id,
-			relation: 'editors',
-			actor: {
-				namespace: 'Group',
-				object: 'editor',
-				relation: 'users'
-			}
-		},
-		{
-			namespace,
-			object: object.id,
-			relation: 'viewers',
-			actor: {
-				namespace: 'Group',
-				object: 'viewer',
-				relation: 'users'
-			}
-		}
-	]
-	if (group) {
-		base.push({
-			namespace,
-			object: object.id,
-			relation: 'viewers',
-			actor: {
-				namespace: 'Group',
-				object: group,
-				relation: 'users'
+				object: admin_group,
+				relation: 'members'
 			}
 		})
 	}
 	if (owner) {
-		return [
-			...base,
-			{
-				namespace,
-				object: object.id,
-				relation: 'owners',
-				actor: owner
-			}
-		]
+		base.push({
+			namespace,
+			object: id,
+			relation: 'owners',
+			actor: owner
+		})
 	}
-	return base
-}
-
-export const getResourceBasePermissions = ({
-	object,
-	dataset_id
-}: {
-	object: Resource
-	dataset_id: string
-}): PermissionRequest[] => {
-	const namespace = 'Resource'
-	const base: PermissionRequest[] = [
-		{
-			namespace,
-			object: object.id,
-			relation: 'datasets',
-			actor: {
-				namespace: 'Dataset',
-				object: dataset_id,
-				relation: 'admins'
-			}
-		},
-		{
-			namespace,
-			object: object.id,
-			relation: 'datasets',
-			actor: {
-				namespace: 'Dataset',
-				object: dataset_id,
-				relation: 'editors'
-			}
-		},
-		{
-			namespace,
-			object: object.id,
-			relation: 'datasets',
-			actor: {
-				namespace: 'Dataset',
-				object: dataset_id,
-				relation: 'viewers'
-			}
-		}
-	]
-
 	return base
 }
 
@@ -125,7 +46,7 @@ export const getUserBasePermissions = ({ id }: { id: string }): PermissionReques
 		{
 			namespace: 'Group',
 			object: 'viewer',
-			relation: 'users',
+			relation: 'members',
 			actor: id
 		}
 	]
@@ -133,31 +54,23 @@ export const getUserBasePermissions = ({ id }: { id: string }): PermissionReques
 
 export const getAnswerBasePermissions = ({
 	user_id,
-	answer
+	answer,
+	admin_group
 }: {
 	user_id: string
 	answer: Answer
+	admin_group: string | null
 }): PermissionRequest[] => {
 	const namespace = 'Answer'
 	return [
 		{
 			namespace,
 			object: answer.id,
-			relation: 'admins',
+			relation: 'members',
 			actor: {
 				namespace: 'Group',
-				object: 'admin',
-				relation: 'users'
-			}
-		},
-		{
-			namespace,
-			object: answer.id,
-			relation: 'editors',
-			actor: {
-				namespace: 'Group',
-				object: 'editor',
-				relation: 'users'
+				object: admin_group ?? 'admin',
+				relation: 'members'
 			}
 		},
 		{
@@ -181,7 +94,7 @@ export const getGroupBasePermissions = ({
 		{
 			namespace,
 			object: object,
-			relation: 'users',
+			relation: 'members',
 			actor: owner
 		}
 	]
