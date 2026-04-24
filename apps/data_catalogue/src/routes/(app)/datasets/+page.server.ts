@@ -83,7 +83,16 @@ export const actions = {
 			if (Object.keys(text_parse).length === 0) {
 				return fail(400, { message: 'File must contain data' })
 			}
-			payload = text_parse
+
+			const [voc_errors, vocabularies] = await tagsGetVocabulariesController()
+			if (voc_errors !== null) {
+				return fail(400, { message: voc_errors.message })
+			}
+			const voc_id = vocabularies.find((voc) => voc.name === 'general')
+			const tags = text_parse?.['tags']
+				?.split(`,`)
+				?.map((str) => ({ name: str, vocabulary_id: voc_id?.id }))
+			payload = { ...text_parse, tags }
 		} else {
 			// const [group_err, group] = await groupGetController({
 			// 	configuration: locals.configuration,
@@ -103,7 +112,6 @@ export const actions = {
 				owner_org: 'imago'
 			}
 		}
-
 		const [dataset_err, dataset] = await datasetCreateController({
 			configuration: locals.configuration,
 			session: locals.session,
@@ -111,6 +119,9 @@ export const actions = {
 		})
 		if (dataset_err !== null) {
 			if (dataset_err.reason === 'Invalid Data') {
+				return fail(400, { message: dataset_err.message })
+			}
+			if (dataset_err.reason === 'Not Found') {
 				return fail(400, { message: dataset_err.message })
 			}
 			return fail(500, { message: dataset_err.reason })
