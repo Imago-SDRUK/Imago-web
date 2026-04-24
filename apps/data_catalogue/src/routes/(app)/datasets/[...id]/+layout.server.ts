@@ -1,34 +1,37 @@
-import { ketoCheck } from '$lib/utils/auth/index.js'
+import {
+	datasetGetController,
+	datasetGetUserPermissionsController
+} from '$lib/server/interface/adapters/controllers/datasets/get.js'
 import { error } from '@sveltejs/kit'
 
 export const load = async ({ locals, params }) => {
-	const subroutes: { label: string; href: string }[] = []
-	/**
-	 * TODO: get dataset and check if the dataset is restricted via private or status, and if the user is memeber of the group where the dataset is allowed
-	 **/
-	if (locals.session?.identity.id) {
-		const permission = await ketoCheck.checkPermission({
-			subjectId: locals.session?.identity.id,
-			relation: 'read',
-			namespace: 'Dataset',
-			object: params.id
-		})
-		if (!permission) {
-			error(401, { message: 'Unauthorised', id: 'Unauthorised' })
-		}
-		const edit_permission = await ketoCheck.checkPermission({
-			subjectId: locals.session?.identity.id,
-			relation: 'edit',
-			namespace: 'Dataset',
-			object: params.id
-		})
-		if (edit_permission.allowed) {
-			subroutes.push({ label: 'Preview', href: `/datasets/${params.id}` })
-			subroutes.push({ label: 'Edit', href: `/datasets/${params.id}/edit` })
-		}
+	const [errs, dataset] = await datasetGetController({
+		configuration: locals.configuration,
+		id: params.id,
+		session: locals.session
+	})
+	if (errs !== null) {
+		error(400, { message: `There's been an error retreiving this dataset`, id: '' })
 	}
-
+	if (dataset === null) {
+		error(404, { message: `Not found`, id: 'not-found' })
+	}
+	const subroutes: { label: string; href: string }[] = []
+	const [errors, permits] = await datasetGetUserPermissionsController({
+		configuration: locals.configuration,
+		session: locals.session,
+		id: dataset.id
+	})
+	if (errors !== null) {
+		return error(400, { message: errors.reason, id: errors.reason })
+	}
+	if (permits.includes('edit')) {
+		subroutes.push({ label: 'Preview', href: `/datasets/${params.id}` })
+		subroutes.push({ label: 'Edit', href: `/datasets/${params.id}/edit` })
+	}
 	return {
-		subroutes
+		dataset,
+		subroutes,
+		permits
 	}
 }
