@@ -1,13 +1,12 @@
 import type { TagsService } from '$lib/server/application/services/tags'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { Session } from '$lib/server/entities/models/identity'
-// import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 
 export const tagsGetUseCase = async ({
 	limit = 10,
 	offset = 0,
 	search,
-	session,
+	// session,
 	tags_service,
 	vocabulary_id
 }: {

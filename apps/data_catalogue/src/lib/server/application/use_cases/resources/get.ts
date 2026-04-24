@@ -2,33 +2,32 @@ import type { ResourceRepository } from '$lib/server/application/repositories/re
 import type { DatastoreService } from '$lib/server/application/services/datastore'
 import type { ResourceService } from '$lib/server/application/services/resource'
 import type { StorageService } from '$lib/server/application/services/storage'
-import type { Session } from '$lib/server/entities/models/identity'
-import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import { err, ok } from '$lib/server/entities/errors'
 import type { AppContext } from '$lib/server/application/context'
-import type { ResourceVersion } from '$lib/server/entities/models/resources'
 
 export const resourceGetUseCase = async ({
 	id,
 	resource_respository,
 	resource_service,
 	datastore_service,
-	session
+	session,
+	configuration,
+	authorisation_module
 }: {
 	id: string
 	resource_respository: ResourceRepository
 	resource_service: ResourceService
 	datastore_service: DatastoreService
-	session: Session
-}) => {
+} & AppContext) => {
 	// if (session.identity.id === 'anonymous') {
 	// 	return err({ reason: 'Unauthenticated' })
 	// }
-	const [errors, permission] = await getAuthorisationModule().authorise({
+	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Resource',
 		object: id,
 		permits: 'read',
-		actor: session.identity.id
+		actor: session.identity.id,
+		configuration
 	})
 	if (errors) {
 		return err(errors)
