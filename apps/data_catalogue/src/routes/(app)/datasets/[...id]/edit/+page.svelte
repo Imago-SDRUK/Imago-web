@@ -50,21 +50,21 @@
 						}}
 					>
 						<div class="fields">
-							<InputBlock design="row">
-								<Input label="State">
-									<Select name="state" bind:value={ctx.dataset.state}>
-										<option value="draft">Draft</option>
-										<option value="active">Published</option>
-									</Select>
-								</Input>
-
-								<Input label="Visibility">
-									<Select name="private" bind:value={ctx.dataset.private}>
-										<option value={true}>Private</option>
-										<option value={false}>Public</option>
-									</Select>
-								</Input>
-							</InputBlock>
+							<!-- <InputBlock design="row"> -->
+							<!-- 	<Input label="State"> -->
+							<!-- 		<Select name="state" bind:value={ctx.dataset.state}> -->
+							<!-- 			<option value="draft">Draft</option> -->
+							<!-- 			<option value="active">Published</option> -->
+							<!-- 		</Select> -->
+							<!-- 	</Input> -->
+							<!---->
+							<!-- 	<Input label="Visibility"> -->
+							<!-- 		<Select name="private" bind:value={ctx.dataset.private}> -->
+							<!-- 			<option value={true}>Private</option> -->
+							<!-- 			<option value={false}>Public</option> -->
+							<!-- 		</Select> -->
+							<!-- 	</Input> -->
+							<!-- </InputBlock> -->
 
 							<InputBlock>
 								<Input label="Title" required>

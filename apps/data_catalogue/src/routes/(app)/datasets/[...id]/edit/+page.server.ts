@@ -1,20 +1,25 @@
-import {
-	datasetAddTagController,
-	datasetGetController,
-	datasetRemoveTagController
-} from '$lib/server/interface/adapters/controllers/datasets/get.js'
+import { datasetGetController } from '$lib/server/interface/adapters/controllers/datasets/get.js'
 import {
 	tagsGetController,
 	tagsGetVocabulariesController
 } from '$lib/server/interface/adapters/controllers/tags/get.js'
 import { formGetStringOrUndefined } from '$lib/utils/forms/index.js'
-import { datasetUpdateController } from '$lib/server/interface/adapters/controllers/datasets/update.js'
+import {
+	datasetAddTagController,
+	datasetRemoveTagController,
+	datasetUpdateController
+} from '$lib/server/interface/adapters/controllers/datasets/update.js'
 import { datastoreUpdateController } from '$lib/server/interface/adapters/controllers/datastore/update.js'
 import { resourceUpdateController } from '$lib/server/interface/adapters/controllers/resources/update.js'
 import { error, fail } from '@sveltejs/kit'
 
-export const load = async ({ params, locals }) => {
+export const load = async ({ params, locals, parent }) => {
+	const { permits } = await parent()
+	if (!permits.includes('edit')) {
+		error(401, { message: 'Unauthorised', id: 'Unauthorised' })
+	}
 	const [dataset_err, dataset] = await datasetGetController({
+		configuration: locals.configuration,
 		session: locals.session,
 		id: params.id
 	})
@@ -25,6 +30,7 @@ export const load = async ({ params, locals }) => {
 		error(404, { message: 'Not found', id: 'not-found' })
 	}
 	const [tags_err, tags] = await tagsGetController({
+		configuration: locals.configuration,
 		session: locals.session,
 		vocabulary_id: 'general'
 	})
@@ -71,6 +77,7 @@ export const actions = {
 			return fail(400, { message: `Error finding the vocabulary general` })
 		}
 		const [errors] = await datasetAddTagController({
+			configuration: locals.configuration,
 			session: locals.session,
 			id: params.id,
 			vocabulary_id: vocabulary_id.id,
@@ -86,6 +93,7 @@ export const actions = {
 		const tag = formGetStringOrUndefined({ form, field: 'tag' })
 		const vocabulary_id = 'general'
 		const [errors] = await datasetRemoveTagController({
+			configuration: locals.configuration,
 			session: locals.session,
 			id: params.id,
 			tag_id: tag,
@@ -100,7 +108,12 @@ export const actions = {
 	update: async ({ request, locals, params }) => {
 		const form = await request.formData()
 		const data = parseForm(form)
-		await datasetUpdateController({ data, id: params.id, session: locals.session })
+		await datasetUpdateController({
+			configuration: locals.configuration,
+			data,
+			id: params.id,
+			session: locals.session
+		})
 		return {
 			message: `Dataset successfully updated`
 		}
@@ -110,6 +123,7 @@ export const actions = {
 		const form = await request.formData()
 		const parsed = parseForm(form)
 		await resourceUpdateController({
+			configuration: locals.configuration,
 			id: params.id,
 			session: locals.session,
 			data: parsed
@@ -124,6 +138,7 @@ export const actions = {
 		const id = formGetStringOrUndefined({ form, field: 'id' })
 		const metadata = parseForm(form)
 		await datastoreUpdateController({
+			configuration: locals.configuration,
 			session: locals.session,
 			metadata,
 			resource_id: id
