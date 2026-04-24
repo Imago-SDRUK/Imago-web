@@ -4,51 +4,53 @@ import { create, createCkanClient, get } from '$lib/utils/ckan/ckan'
 import { error } from '@sveltejs/kit'
 import { log } from '$lib/utils/server/logger'
 import { err, ok } from '$lib/server/entities/errors'
+import { handleCkanError } from '$lib/server/infrastructure/utils/services/ckan'
 
 const getTag: TagsService['getTag'] = async ({ id, vocabulary_id }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const data = await ckan.request(
-		get('tag_show', {
-			id,
-			vocabulary_id
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
-	)
-	if (data.success === false) {
-		if ('error' in data && data.error?.__type === 'Not Found Error') {
-			return err({ reason: 'Not Found' })
+		const res = await ckan.request(
+			get('tag_show', {
+				id,
+				vocabulary_id
+			})
+		)
+		if (!res.success) {
+			return err(handleCkanError(res))
 		}
-		return err({ reason: 'Unexpected' })
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return ok(data.result)
 }
 
 const getTags: TagsService['getTags'] = async ({ vocabulary_id }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const data = await ckan.request(
-		get('tag_list', {
-			vocabulary_id,
-			all_fields: true
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
-	)
-	if (data.success === false) {
-		if ('error' in data && data.error?.__type === 'Not Found Error') {
-			return err({ reason: 'Not Found' })
+		const res = await ckan.request(
+			get('tag_list', {
+				vocabulary_id,
+				all_fields: true
+			})
+		)
+		if (!res.success) {
+			return err(handleCkanError(res))
 		}
-		return err({ reason: 'Unexpected' })
+		return ok({
+			items: res.result,
+			limit: 0,
+			next: 0,
+			total: 0
+		})
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-
-	return ok({
-		items: data.result,
-		limit: 0,
-		next: 0,
-		total: 0
-	})
 }
 
 const searchTags: TagsService['getTags'] = async ({ offset, limit, vocabulary_id }) => {
@@ -79,66 +81,70 @@ const searchTags: TagsService['getTags'] = async ({ offset, limit, vocabulary_id
 }
 
 const createTag: TagsService['createTag'] = async ({ tag }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
+		})
 
-	const data = await ckan.request(create('tag_create', tag))
-	if (data.success === false) {
-		log.error(data)
-		error(400, { message: `There's been an issue creating this tag ${tag.name}`, id: 'tag-error' })
+		const res = await ckan.request(create('tag_create', tag))
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return data.result
 }
 
 const createVocabulary: TagsService['createVocabulary'] = async ({ vocabulary }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-
-	const data = await ckan.request(create('vocabulary_create', vocabulary))
-	if (data.success === false) {
-		log.error(data)
-		error(400, {
-			message: `There's been an issue creating this vocabulary`,
-			id: 'vocabulary-error'
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
+
+		const res = await ckan.request(create('vocabulary_create', vocabulary))
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return data.result
 }
 
 const getVocabulary: TagsService['getVocabulary'] = async ({ vocabulary_id }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const data = await ckan.request(get('vocabulary_show', { id: vocabulary_id }))
-	if (data.success === false) {
-		log.error(data)
-		if ('error' in data && data.error?.__type === 'Not Found Error') {
-			return null
-		}
-		error(400, {
-			message: `There's been an issue retreiving this vocabulary`,
-			id: 'vocabulary-error'
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
+		const res = await ckan.request(get('vocabulary_show', { id: vocabulary_id }))
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return data.result
 }
 
 const getVocabularies: TagsService['getVocabularies'] = async () => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
+		})
 
-	const data = await ckan.request(get('vocabulary_list'))
-	if (!data.success) {
-		return err({ reason: 'Unexpected', error: data })
+		const res = await ckan.request(get('vocabulary_list'))
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return ok(data.result)
 }
 
 export const infrastructureServiceTagsCkan: TagsService = {

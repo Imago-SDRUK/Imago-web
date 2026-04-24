@@ -7,9 +7,17 @@ import type {
 } from '$lib/server/entities/models/datasets'
 
 export type TagsService = {
-	createTag: ({ tag }: { tag: TagRequest }) => Promise<Tag>
-	createVocabulary: ({ vocabulary }: { vocabulary: VocabularyRequest }) => Promise<Vocabulary>
-	getVocabulary: ({ vocabulary_id }: { vocabulary_id: string }) => Promise<Vocabulary | null>
+	createTag: ({ tag }: { tag: TagRequest }) => Promise<[ErrTypes, null] | [null, Tag]>
+	createVocabulary: ({
+		vocabulary
+	}: {
+		vocabulary: VocabularyRequest
+	}) => Promise<[ErrTypes, null] | [null, Vocabulary]>
+	getVocabulary: ({
+		vocabulary_id
+	}: {
+		vocabulary_id: string
+	}) => Promise<[ErrTypes, null] | [null, Vocabulary | null]>
 	getVocabularies: () => Promise<[ErrTypes, null] | [null, Vocabulary[]]>
 	getTags: ({
 		search

@@ -1,12 +1,11 @@
 import { env } from '$env/dynamic/private'
-import { SERVER_ERRORS } from '$lib/globals/server'
 import type { DatasetService } from '$lib/server/application/services/dataset'
 import type { DatastoreService } from '$lib/server/application/services/datastore'
-import { err, ok } from '$lib/server/entities/errors'
+import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { CSVW, CSVWColumn, CSVWTable } from '$lib/server/entities/models/datastore'
+import { handleCkanError } from '$lib/server/infrastructure/utils/services/ckan'
 import type { CkanDatastore, CkanDatastoreCreate, CkanDatastoreField } from '$lib/types/ckan'
 import { create, createCkanClient, get } from '$lib/utils/ckan/ckan'
-import { error } from '@sveltejs/kit'
 
 const SPLIT_CHAR = '@'
 
@@ -143,12 +142,12 @@ const getStructuralMetadata: DatastoreService['getStructuralMetadata'] = async (
 			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
 		const res = await ckan.request(get('datastore_info', { resource_id: id }))
-		if (res.success) {
-			return ok(datastoreToCsvw(res.result))
+		if (!res.success) {
+			return err(handleCkanError(res))
 		}
-		return err({ reason: 'Unexpected', errors: res })
+		return ok(datastoreToCsvw(res.result))
 	} catch (_err) {
-		return err({ reason: 'Unexpected', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 
@@ -170,17 +169,26 @@ const setStructuralMetadata: DatastoreService['setStructuralMetadata'] = async (
 		})
 		const result = await Promise.all(
 			record.map(async (table) => {
-				return ckan.request(create('datastore_create', table)).then((res) => {
-					if (res.success) {
-						return datastoreToCsvw(res.result)
-					}
-					error(...SERVER_ERRORS[500])
-				})
+				return ckan.request(create('datastore_create', table))
 			})
 		)
-		return ok(result)
+		const { errors, data } = result.reduce(
+			(acc, res) => {
+				if (!res.success) {
+					acc.errors.push(handleCkanError(res))
+					return acc
+				}
+				acc.data.push(datastoreToCsvw(res.result))
+				return acc
+			},
+			{ errors: [], data: [] } as { errors: ErrTypes[]; data: CSVW[] }
+		)
+		if (errors.length > 0) {
+			return err(errors[0])
+		}
+		return ok(data)
 	} catch (_err) {
-		return err({ reason: 'Unexpected', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 
@@ -203,17 +211,27 @@ const updateStructuralMetadata: DatastoreService['updateStructuralMetadata'] = a
 		})
 		const result = await Promise.all(
 			record.map(async (table) => {
-				return ckan.request(create('datastore_create', table)).then((res) => {
-					if (res.success) {
-						return datastoreToCsvw(res.result)
-					}
-					error(...SERVER_ERRORS[500])
-				})
+				return ckan.request(create('datastore_create', table))
 			})
 		)
-		return ok(result)
+
+		const { errors, data } = result.reduce(
+			(acc, res) => {
+				if (!res.success) {
+					acc.errors.push(handleCkanError(res))
+					return acc
+				}
+				acc.data.push(datastoreToCsvw(res.result))
+				return acc
+			},
+			{ errors: [], data: [] } as { errors: ErrTypes[]; data: CSVW[] }
+		)
+		if (errors.length > 0) {
+			return err(errors[0])
+		}
+		return ok(data)
 	} catch (_err) {
-		return err({ reason: 'Unexpected', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 

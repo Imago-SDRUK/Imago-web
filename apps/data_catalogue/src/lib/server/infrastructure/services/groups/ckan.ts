@@ -1,79 +1,101 @@
 import type { GroupsService } from '$lib/server/application/services/groups'
 import { env } from '$env/dynamic/private'
 import { create, createCkanClient, get, patch, remove } from '$lib/utils/ckan/ckan'
-import { error } from '@sveltejs/kit'
 import { err, ok } from '$lib/server/entities/errors'
+import { handleCkanError } from '$lib/server/infrastructure/utils/services/ckan'
 
 const createGroup: GroupsService['createGroup'] = async ({ data }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const group = await ckan.request(create('group_create', data))
-	if (group.success === false) {
-		return err({ reason: 'Unexpected', error: JSON.stringify(group) })
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
+		})
+		const res = await ckan.request(create('group_create', data))
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return ok(group.result)
 }
 const getGroup: GroupsService['getGroup'] = async ({ id }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const data = await ckan.request(
-		get('group_show', {
-			id
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
-	)
-	if (data.success) {
-		return ok(data.result)
+		const res = await ckan.request(
+			get('group_show', {
+				id
+			})
+		)
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return err({ reason: 'Unexpected' })
-	// return ok(null)
 }
 
 const getGroups: GroupsService['getGroups'] = async ({ page_size, offset }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const limit = page_size
-	const data = await ckan.request(
-		get('group_list', {
-			offset,
-			limit,
-			include_groups: true,
-			all_fields: true
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
 		})
-	)
-	if (data.success === false) {
-		return err({ reason: 'Unexpected', error: data })
+		const limit = page_size
+		const res = await ckan.request(
+			get('group_list', {
+				offset,
+				limit,
+				include_groups: true,
+				all_fields: true
+			})
+		)
+
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return ok(data.result)
 }
 
 const updateGroup: GroupsService['updateGroup'] = async ({ data, id }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const group = await ckan.request(patch('group_patch', { id: id }, data))
-	if (group.success === false) {
-		return err({ reason: 'Unexpected', error: group })
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
+		})
+		const res = await ckan.request(patch('group_patch', { id: id }, data))
+
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(res.result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return ok(group.result)
 }
 
 const deleteGroup: GroupsService['deleteGroup'] = async ({ id }) => {
-	const ckan = createCkanClient({
-		url: env.CKAN_URL,
-		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
-	})
-	const group = await ckan.request(remove('group_delete', { id }))
-	if (group.success === false) {
-		return err({ reason: 'Unexpected', error: group })
+	try {
+		const ckan = createCkanClient({
+			url: env.CKAN_URL,
+			token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined
+		})
+		const res = await ckan.request(remove('group_delete', { id }))
+
+		if (!res.success) {
+			return err(handleCkanError(res))
+		}
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-	return ok(null)
 }
 
 export const infrastructureServiceGroupsCkan: GroupsService = {
