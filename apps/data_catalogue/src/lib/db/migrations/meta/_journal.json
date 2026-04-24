@@ -78,6 +78,20 @@
       "when": 1776859861637,
       "tag": "0010_third_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1776960878861,
+      "tag": "0011_noisy_medusa",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1777013902344,
+      "tag": "0012_milky_firebird",
+      "breakpoints": true
     }
   ]
 }
