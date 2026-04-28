@@ -3,7 +3,6 @@
 	import { invalidateAll } from '$app/navigation'
 	import licenses from '$lib/utils/ckan/licenses.json'
 	import { BaseSection, Button, Editor, Input, InputBlock, Select, Subtitle, Text } from '@imago/ui'
-	import Resources from '$lib/ui/dataset/resource/resources.svelte'
 	import { getDataset, setDataset } from '$lib/context/dataset.svelte.js'
 	import { debug } from '$lib/globals/dev.svelte.js'
 	import Tags from '$lib/ui/dataset/tags.svelte'
@@ -115,15 +114,10 @@
 						</div>
 					</form>
 				</div>
-
-				<div class="form">
-					<Tags existing_tags={data.tags}></Tags>
-				</div>
 			</div>
 			<div class="right-col">
 				<div class="form">
-					<Subtitle size="lg">Resources</Subtitle>
-					<Resources></Resources>
+					<Tags existing_tags={data.tags}></Tags>
 				</div>
 			</div>
 		</div>

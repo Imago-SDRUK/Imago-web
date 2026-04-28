@@ -1,27 +1,31 @@
-import {
-	tagsGetController,
-	tagsGetVocabulariesController
-} from '$lib/server/interface/adapters/controllers/tags/get.js'
-import { formGetStringOrUndefined, safeJSONParse } from '$lib/utils/forms/index.js'
-import {
-	datasetAddTagController,
-	datasetRemoveTagController,
-	datasetUpdateController
-} from '$lib/server/interface/adapters/controllers/datasets/update.js'
+import { tagsGetController } from '$lib/server/interface/adapters/controllers/tags/get.js'
+import { formGetStringOrUndefined } from '$lib/utils/forms/index.js'
 import { datastoreUpdateController } from '$lib/server/interface/adapters/controllers/datastore/update.js'
 import {
 	resourceAddVersionController,
-	resourceUpdateController
+	resourceUpdateController,
+	resourceVersionUpdateController
 } from '$lib/server/interface/adapters/controllers/resources/update.js'
 import { error, fail } from '@sveltejs/kit'
-import { resourceCreateController } from '$lib/server/interface/adapters/controllers/resources/create.js'
-import { resourceDeleteController } from '$lib/server/interface/adapters/controllers/resources/delete.js'
+import { resourceCreateControllerWithVersion } from '$lib/server/interface/adapters/controllers/resources/create.js'
+import {
+	resourceDeleteController,
+	resourceVersionDeleteController
+} from '$lib/server/interface/adapters/controllers/resources/delete.js'
+import { resourceGetController } from '$lib/server/interface/adapters/controllers/resources/get.js'
+import type {
+	Resource,
+	ResourceServiceDto,
+	ResourceVersion
+} from '$lib/server/entities/models/resources.js'
+import type { CSVW } from '$lib/types/csvw.js'
 
-export const load = async ({ locals, parent }) => {
-	const { dataset, permits } = await parent()
+export const load = async ({ locals, parent, url }) => {
+	const { permits, dataset } = await parent()
 	if (!permits.includes('edit')) {
 		error(401, { message: 'Unauthorised', id: 'Unauthorised' })
 	}
+
 	const [tags_err, tags] = await tagsGetController({
 		configuration: locals.configuration,
 		session: locals.session,
@@ -31,9 +35,30 @@ export const load = async ({ locals, parent }) => {
 	if (tags_err !== null) {
 		error(400, { message: tags_err.reason, id: tags_err.reason })
 	}
+	let resource:
+		| (ResourceServiceDto & {
+				resource: Resource
+				versions: ResourceVersion[]
+				metadata: CSVW | null
+		  })
+		| null = null
+	const edit = url.searchParams.get('edit')
+	if (edit) {
+		resource = await resourceGetController({
+			id: edit,
+			configuration: locals.configuration,
+			session: locals.session
+		}).then(([errors, users]) => {
+			if (errors !== null) {
+				error(500, { message: errors.reason, id: errors.reason })
+			}
+			return users
+		})
+	}
 	return {
 		dataset,
-		tags: tags.items
+		tags: tags.items,
+		resource
 	}
 }
 
@@ -58,63 +83,6 @@ const parseForm = (form: FormData) => {
 }
 
 export const actions = {
-	add_tag: async ({ locals, params, request }) => {
-		const form = await request.formData()
-		const tag = formGetStringOrUndefined({ form, field: 'tag' })
-		const [errs, vocabularies] = await tagsGetVocabulariesController()
-		if (errs !== null) {
-			return fail(400, { message: `Error finding the vocabulary general` })
-		}
-		const vocabulary_id = vocabularies.find((v) => v.name === 'general')
-		if (!vocabulary_id) {
-			return fail(400, { message: `Error finding the vocabulary general` })
-		}
-		const [errors] = await datasetAddTagController({
-			configuration: locals.configuration,
-			session: locals.session,
-			id: params.id,
-			vocabulary_id: vocabulary_id.id,
-			tag: String(tag)
-		})
-		if (errors !== null) {
-			return fail(400, { message: `Error adding the tag ${tag}` })
-		}
-		return { message: `Tag ${tag} added` }
-	},
-	remove_tag: async ({ locals, params, request }) => {
-		const form = await request.formData()
-		const tag = formGetStringOrUndefined({ form, field: 'tag' })
-		const vocabulary_id = 'general'
-		const [errors] = await datasetRemoveTagController({
-			configuration: locals.configuration,
-			session: locals.session,
-			id: params.id,
-			tag_id: tag,
-			vocabulary_id
-		})
-		if (errors !== null) {
-			return fail(400, { message: errors.reason })
-		}
-		return { message: `Tag ${tag} removed` }
-	},
-
-	update: async ({ request, locals, params }) => {
-		const form = await request.formData()
-		const data = safeJSONParse(formGetStringOrUndefined({ form, field: 'dataset' }))
-		const [errors, result] = await datasetUpdateController({
-			configuration: locals.configuration,
-			data,
-			id: params.id,
-			session: locals.session
-		})
-		if (errors !== null) {
-			return fail(400, { message: errors.message, id: errors.reason })
-		}
-		return {
-			message: `Dataset successfully updated`
-		}
-	},
-
 	update_resource: async ({ request, params, locals }) => {
 		const form = await request.formData()
 		const parsed = parseForm(form)
@@ -143,7 +111,7 @@ export const actions = {
 			message: `Datastore updated`
 		}
 	},
-	upload_file: async ({ request, locals }) => {
+	add_resource: async ({ request, locals }) => {
 		const form = await request.formData()
 		const parsed = parseForm(form) as {
 			name: string
@@ -151,18 +119,23 @@ export const actions = {
 			type: string
 			package_id: string
 		}
-		console.log(form)
-		const [errors, resource] = await resourceCreateController({
+
+		const [errors, version] = await resourceCreateControllerWithVersion({
 			session: locals.session,
 			configuration: locals.configuration,
-			data: parsed
+			data: parsed,
+			version_data: {
+				changelog: formGetStringOrUndefined({ form, field: 'changelog' }),
+				version: formGetStringOrUndefined({ form, field: 'version' })
+			}
 		})
 		if (errors !== null) {
-			// return fail(500, { message: errors.message ?? errors.reason })
+			console.log(errors)
+			return fail(500, { message: errors.message ?? errors.reason })
 		}
-		console.log(resource)
 		return {
-			message: 'ok'
+			message: 'Resource created, uploading file',
+			url: version.url
 		}
 	},
 
@@ -172,7 +145,7 @@ export const actions = {
 		const [errors, resource] = await resourceDeleteController({
 			session: locals.session,
 			configuration: locals.configuration,
-			data: { resource_id: resource_id }
+			resource_id
 		})
 		if (errors !== null) {
 			console.log(errors)
@@ -180,7 +153,7 @@ export const actions = {
 		}
 		console.log(resource)
 		return {
-			message: 'ok'
+			message: 'Resource deleted'
 		}
 	},
 	add_version: async ({ request, locals }) => {
@@ -203,7 +176,55 @@ export const actions = {
 		}
 		console.log(url)
 		return {
-			message: 'ok',
+			message: 'Resource version created',
+			url
+		}
+	},
+	update_version: async ({ request, locals }) => {
+		const form = await request.formData()
+		const version_id = formGetStringOrUndefined({ form, field: 'version_id' })
+		const version = formGetStringOrUndefined({ form, field: 'version' })
+		const changelog = formGetStringOrUndefined({ form, field: 'changelog' })
+		if (!version_id) {
+			return fail(400, { message: 'Provide a version id' })
+		}
+		const [errors, url] = await resourceVersionUpdateController({
+			session: locals.session,
+			configuration: locals.configuration,
+			version_id,
+			data: {
+				version: version,
+				changelog: changelog
+			}
+		})
+		if (errors !== null) {
+			console.log(errors)
+			return fail(500, { message: errors.message ?? errors.reason })
+		}
+		console.log(url)
+		return {
+			message: 'Resource version updated',
+			url
+		}
+	},
+	delete_version: async ({ request, locals }) => {
+		const form = await request.formData()
+		const version_id = formGetStringOrUndefined({ form, field: 'version_id' })
+		if (!version_id) {
+			return fail(400, { message: 'Provide a version id' })
+		}
+		const [errors, url] = await resourceVersionDeleteController({
+			session: locals.session,
+			configuration: locals.configuration,
+			version_id
+		})
+		if (errors !== null) {
+			console.log(errors)
+			return fail(500, { message: errors.message ?? errors.reason })
+		}
+		console.log(url)
+		return {
+			message: 'Resource version deleted',
 			url
 		}
 	}

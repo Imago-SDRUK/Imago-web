@@ -3,7 +3,6 @@
 	import { AVAILABLE_RELATIONS } from '$lib/globals/auth'
 	import type { AvailableActor } from '$lib/server/entities/models/permissions'
 	import { handleEnhance } from '$lib/utils/forms'
-	import { jstr } from '@arturoguzman/art-ui'
 	import { Button, Icon, Select, Subtitle } from '@imago/ui'
 	let {
 		creating_permission = $bindable(),
