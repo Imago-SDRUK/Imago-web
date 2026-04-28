@@ -10,7 +10,9 @@
 		Paragraph,
 		Icon,
 		ActionBar,
-		handleSearchParams
+		handleSearchParams,
+		Select,
+		Input
 	} from '@imago/ui'
 	import { onMount } from 'svelte'
 	import CellText from '$lib/ui/tables/cell_text.svelte'
@@ -65,12 +67,31 @@
 	let show_groups = $state(false)
 </script>
 
+<form
+	action="?/create"
+	method="post"
+	use:enhance={() => {
+		return async ({ result }) => {
+			console.log(result)
+		}
+	}}
+>
+	<Input label="Status">
+		<Select name="status">
+			{#each ['preregister', 'active', 'archived', 'draft', 'suspended'] as v}
+				<option value={v}>{v}</option>
+			{/each}
+		</Select>
+	</Input>
+	<Button>Create user</Button>
+</form>
 <SectionEdit open={selected > -1 ? true : undefined}>
 	{#snippet leftCol()}
 		<div class="section">
 			<Title>Users</Title>
 			<BaseTable data={data.users.items} {columns}></BaseTable>
 			<div class="buttons">
+				<pre>{jstr(data.users)}</pre>
 				{#if data.users.first}
 					<Button
 						href={handleSearchParams({
@@ -135,7 +156,7 @@
 					<div class="details">
 						<Paragraph>First name: {data.user.first_name}</Paragraph>
 						<Paragraph>Last name: {data.user.last_name}</Paragraph>
-						<Paragraph>Email: {data.user.last_name}</Paragraph>
+						<Paragraph>Email: {data.user.email}</Paragraph>
 						{#if data.user?.created_at}
 							<Paragraph
 								>Created at: {DateTime.fromISO(data.user?.created_at)
