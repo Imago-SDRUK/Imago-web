@@ -1,3 +1,4 @@
+import type { Transaction } from '$lib/db'
 import type { ErrTypes } from '$lib/server/entities/errors'
 import type {
 	Resource,
@@ -19,12 +20,18 @@ export type ResourceRepository = {
 		data
 	}: {
 		data: ResourceRequest
+		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, Resource]>
-	deleteResource: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, null]>
-	getResourceVersion: ({
+	deleteResource: ({
 		id
 	}: {
 		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, null]>
+	getResourceVersion: ({
+		resource
+	}: {
+		resource: string
 		version: string
 	}) => Promise<[ErrTypes, null] | [null, ResourceVersion]>
 	getResourceVersions: ({
@@ -36,6 +43,7 @@ export type ResourceRepository = {
 		data
 	}: {
 		data: ResourceVersionRequest
+		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ResourceVersion]>
 	deleteResourceVersion: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, null]>
 	updateResource: ({
@@ -44,6 +52,7 @@ export type ResourceRepository = {
 	}: {
 		data: Partial<ResourceRequest>
 		id: string
+		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, Resource]>
 	updateVersion: ({
 		data,
@@ -51,5 +60,12 @@ export type ResourceRepository = {
 	}: {
 		data: Partial<ResourceVersionRequest>
 		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ResourceVersion]>
+	updateVersionAddDownload: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ResourceVersion]>
 }
