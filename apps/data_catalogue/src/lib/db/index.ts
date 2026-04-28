@@ -1,7 +1,8 @@
-import { drizzle } from 'drizzle-orm/node-postgres'
+import { drizzle, NodePgTransaction, type NodePgQueryResultHKT } from 'drizzle-orm/node-postgres'
 import pg, { Client, Pool } from 'pg'
 import * as schema from './schema/'
 import { env } from './envs'
+import type { ExtractTablesWithRelations } from 'drizzle-orm'
 
 const client = new Client({
 	user: env.DB_USER,
@@ -64,3 +65,14 @@ export const db = drizzle({
 	schema,
 	logger: false
 })
+
+// export type Transaction = PgTransaction<
+// 	PgQueryResultHKT,
+// 	Record<string, never>,
+// 	ExtractTablesWithRelations<Record<string, never>>
+// >
+
+export type Transaction = NodePgTransaction<
+	typeof schema,
+	ExtractTablesWithRelations<typeof schema>
+>
