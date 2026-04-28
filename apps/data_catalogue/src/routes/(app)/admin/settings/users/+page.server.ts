@@ -2,18 +2,13 @@ import { error, fail } from '@sveltejs/kit'
 import { log } from '$lib/utils/server/logger.js'
 import { authorise, ketoRead, ketoWrite } from '$lib/utils/auth/index.js'
 import { formGetStringOrUndefined } from '$lib/utils/forms/index.js'
-import { get } from '$lib/utils/ckan/ckan.js'
-import { AUTH_GROUPS } from '$lib/globals/auth.js'
-import type { LinkPagination } from '$lib/types/ory/kratos/index.js'
-import { answers, type Answer } from '$lib/server/entities/models/questions.js'
 import { userCreateController } from '$lib/server/interface/adapters/controllers/users/create.js'
 import {
-	userGetController,
 	userGetMeController,
 	usersGetController
 } from '$lib/server/interface/adapters/controllers/users/get.js'
 import { groupsGetController } from '$lib/server/interface/adapters/controllers/groups/get.js'
-export const load = async ({ locals, fetch, url }) => {
+export const load = async ({ locals }) => {
 	const [u_err, user] = await userGetMeController({
 		configuration: locals.configuration,
 		session: locals.session
@@ -44,51 +39,6 @@ export const load = async ({ locals, fetch, url }) => {
 		groups,
 		answers: null
 	}
-	// await authorise({
-	// 	namespace: 'Endpoint',
-	// 	object: '/api/v1/users',
-	// 	relation: 'GET',
-	// 	session: locals.session
-	// })
-	// const built_url = new URL(`https://127.0.0.1/api/v1/users`)
-	// const page_size = url.searchParams.get('page_size') ?? '10'
-	// const page_token = url.searchParams.get('page_token')
-	// if (page_size) built_url.searchParams.append('page_size', page_size)
-	// if (page_token) built_url.searchParams.append('page_token', page_token)
-	// const res = await fetch(built_url.pathname + built_url.search)
-	// const users = (await res.json()) as LinkPagination & {
-	// 	items: { first_name: string; last_name: string; id: string; email: string; groups: string[] }[]
-	// }
-	// const edit = url.searchParams.get('edit')
-	// let user = null
-	// let answers = null
-	// if (edit) {
-	// 	console.log('ho')
-	// 	user = (await fetch(`/api/v1/users/${edit}`).then((res) => res.json())) as {
-	// 		first_name: string
-	// 		last_name: string
-	// 		email: string
-	// 		id: string
-	// 		preferences: Record<PropertyKey, unknown>
-	// 		created_at: string
-	// 		updated_at: string
-	// 		deleted_at: string
-	// 		groups: string[]
-	// 	}
-	// 	answers = (await fetch(`/api/v1/users/${edit}/answers`).then((res) =>
-	// 		res.json()
-	// 	)) as (Answer & {
-	// 		question: { id: string; title: string; description: string | null } | null
-	// 	})[]
-	// }
-	// const ckan_groups = await locals.ckan.request(get('group_list'))
-	// const groups = [...AUTH_GROUPS, ...(ckan_groups.success ? ckan_groups.result : [])]
-	// return {
-	// 	groups,
-	// 	users,
-	// 	user,
-	// 	answers
-	// }
 }
 
 export const actions = {
