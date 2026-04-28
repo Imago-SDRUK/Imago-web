@@ -7,9 +7,10 @@ import {
 } from '$lib/server/application/use_cases/resources/update'
 import { resourceVersionCreateUseCase } from '$lib/server/application/use_cases/resources/create'
 import { getStorageModule } from '$lib/server/modules/storage'
-import { err } from '$lib/server/entities/errors'
-import type { configuration, Configuration } from '$lib/server/entities/models/configuration'
+import { err, ok } from '$lib/server/entities/errors'
+import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
+import { log } from '$lib/utils/server/logger'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -39,28 +40,27 @@ export const resourceUpdateController = async ({
 
 export const resourceAddVersionController = async ({
 	session,
-	id,
-	version,
-	configuration
+	configuration,
+	data
 }: {
-	version: string
 	session: App.Locals['session']
-	id: string
-	data: Partial<ResourceRequest>
+	data: Partial<ResourceVersionRequest>
 	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
-	return await resourceVersionCreateUseCase({
-		resource_id: id,
+	const [errors, res] = await resourceVersionCreateUseCase({
+		data,
 		resource_respository: getResourceRepositoryModule(),
 		storage_service: getStorageModule(),
-		version,
 		...getServerContext({ session, configuration })
 	})
-	// return upload_url
-	// return presenter({ resource })
+	if (errors !== null) {
+		log.error({ controller: 'resourceAddVersionController' })
+		return err(errors)
+	}
+	return ok(res)
 }
 
 export const resourceUpdateVersionFileController = async ({
@@ -86,7 +86,7 @@ export const resourceUpdateVersionFileController = async ({
 	return upload_url
 }
 
-export const resourceUpdateVersionController = async ({
+export const resourceVersionUpdateController = async ({
 	session,
 	version_id,
 	data,

@@ -1,32 +1,33 @@
-import { downloads } from '$lib/db/schema'
 import { getServerContext } from '$lib/server/application/context'
 import { downloadsCreateUseCase } from '$lib/server/application/use_cases/downloads/create'
-import { err } from '$lib/server/entities/errors'
+import { err, ok } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
-import { type } from 'arktype'
-import { createInsertSchema } from 'drizzle-arktype'
+import { getResourceRepositoryModule } from '$lib/server/modules/resources'
 
 export const downloadCreateController = async ({
-	data,
+	resource_id,
+	version_id,
 	session,
 	configuration
 }: {
-	data: unknown
+	version_id: string
+	resource_id: string
 	session: App.Locals['session']
 	configuration: Configuration
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
-	const schema = createInsertSchema(downloads)
-	const validated = schema(data)
-	if (validated instanceof type.errors) {
-		return err({ reason: 'Unauthorised', message: validated.summary })
-	}
-	return await downloadsCreateUseCase({
-		data: validated,
+	const [download_errors, download] = await downloadsCreateUseCase({
+		resource_id,
+		version_id,
 		downloads_repository: getDownloadsModule(),
+		resource_repository: getResourceRepositoryModule(),
 		...getServerContext({ session, configuration })
 	})
+	if (download_errors !== null) {
+		return err(download_errors)
+	}
+	return ok(download)
 }

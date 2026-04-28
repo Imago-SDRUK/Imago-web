@@ -1,5 +1,5 @@
 import { getServerContext } from '$lib/server/application/context'
-import { permissionCreateGetUseCase } from '$lib/server/application/use_cases/permissions/create'
+import { permissionCreateUseCase } from '$lib/server/application/use_cases/permissions/create'
 import { err, ok } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import type { PermissionRequest } from '$lib/server/entities/models/permissions'
@@ -16,7 +16,7 @@ export const permissionCreateController = async ({
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
-	const [errors, permissions] = await permissionCreateGetUseCase({
+	const [errors, permissions] = await permissionCreateUseCase({
 		data,
 		...getServerContext({ session, configuration })
 	})
