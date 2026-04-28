@@ -90,7 +90,7 @@
 				<div class="structural-metadata">
 					<Subtitle size="md">Structural metadata</Subtitle>
 					<div class="tables">
-						{#each data.resource.metadata.tables as table}
+						{#each data.resource.metadata?.tables as table}
 							<div class="table">
 								<Subtitle>{table['dc:title']}</Subtitle>
 								<BaseTable data={table.tableSchema.columns ?? []} {columns} {apiFn}></BaseTable>
