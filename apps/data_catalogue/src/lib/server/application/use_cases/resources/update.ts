@@ -1,7 +1,13 @@
 import type { ResourceRepository } from '$lib/server/application/repositories/resource'
-import type { ResourceRequest, ResourceVersionRequest } from '$lib/server/entities/models/resources'
+import {
+	resource_versions,
+	type ResourceRequest,
+	type ResourceVersionRequest
+} from '$lib/server/entities/models/resources'
 import { err, ok } from '$lib/server/entities/errors'
 import type { AppContext } from '$lib/server/application/context'
+import { createInsertSchema, createUpdateSchema } from 'drizzle-arktype'
+import { type } from 'arktype'
 
 export const resourceUpdateUseCase = async ({
 	resource_id,
@@ -66,8 +72,23 @@ export const resourceVersionUpdateUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
+	const schema = createUpdateSchema(resource_versions, {
+		version: () => type('string.semver')
+	})
+	const validated = schema({
+		...data,
+		updated_by: session.identity.id
+	})
+	if (validated instanceof type.errors) {
+		return err({
+			reason: 'Invalid Data',
+			message: validated.summary,
+			id: 'resource version validation'
+		})
+	}
+
 	const [errs, resource_version] = await resource_respository
-		.updateVersion({ id: version_id, data })
+		.updateVersion({ id: version_id, data: validated })
 		.then((res) => ok(res))
 		.catch((_err) => err({ reason: 'Unexpected', error: _err }))
 	if (errs !== null) {
