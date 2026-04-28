@@ -2,6 +2,7 @@ import {
 	datasetGetController,
 	datasetGetUserPermissionsController
 } from '$lib/server/interface/adapters/controllers/datasets/get.js'
+import { redirect } from '@sveltejs/kit'
 import { error } from '@sveltejs/kit'
 
 export const load = async ({ locals, params }) => {
@@ -11,6 +12,12 @@ export const load = async ({ locals, params }) => {
 		session: locals.session
 	})
 	if (errs !== null) {
+		if (errs.reason === 'Unauthenticated') {
+			redirect(307, '/auth/login')
+		}
+		if (errs.reason === 'Unauthorised') {
+			redirect(307, '/datasets')
+		}
 		error(400, { message: `There's been an error retreiving this dataset`, id: '' })
 	}
 	if (dataset === null) {
