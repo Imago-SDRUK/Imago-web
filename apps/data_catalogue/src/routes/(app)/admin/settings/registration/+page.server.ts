@@ -1,5 +1,5 @@
 import { db } from '$lib/db/index.js'
-import { questions } from '$lib/db/schema/questions.js'
+import { questions } from '$lib/server/entities/models/questions.js'
 import { SERVER_ERRORS } from '$lib/globals/server.js'
 import { handleDBError } from '$lib/utils/db/index.js'
 import { parseForm } from '$lib/utils/forms/index.js'
