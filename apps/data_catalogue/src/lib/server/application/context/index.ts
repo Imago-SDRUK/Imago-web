@@ -1,3 +1,4 @@
+import type { Transaction } from '$lib/db'
 import type { AuthorisationService } from '$lib/server/application/services/autorisation'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import type { Session } from '$lib/server/entities/models/identity'
@@ -8,21 +9,25 @@ export type AppContext = {
 	configuration: Configuration
 	authorisation_module: AuthorisationService
 	identity_token?: string
+	tx?: Transaction
 }
 
 export const getServerContext = ({
 	session,
 	configuration,
-	identity_token
+	identity_token,
+	tx
 }: {
 	session: Session
 	configuration: Configuration
 	identity_token?: string
+	tx?: Transaction
 }): AppContext => {
 	return {
 		session,
 		configuration,
 		authorisation_module: getAuthorisationModule(),
-		identity_token
+		identity_token,
+		tx
 	}
 }
