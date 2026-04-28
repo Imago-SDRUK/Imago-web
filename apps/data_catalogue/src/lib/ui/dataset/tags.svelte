@@ -51,17 +51,29 @@
 							</div>
 						{/if}
 					{/each}
+					<input type="hidden" name="tag" value={search} />
+					<Button>
+						<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon>
+						<Paragraph>{search}</Paragraph>
+					</Button>
+
+					<!-- {#if !existing_tags.find( (tag) => fuzzy(search, typeof tag === 'string' ? tag : tag.display_name) )} -->
+					<!-- 	<input type="hidden" name="tag" value={search} /> -->
+					<!-- 	<Button> -->
+					<!-- 		<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon> -->
+					<!-- 		<Paragraph>{search}</Paragraph> -->
+					<!-- 	</Button> -->
+					<!-- {/if} -->
 					{#if search_results.length === 0}
 						{#if ctx.dataset.tags.find((tag) => tag.name === slugify(search))}
 							<Notice level="info">
 								<Paragraph>Tag {search} has already been added to the dataset.</Paragraph>
 							</Notice>
-						{:else}
-							<input type="hidden" name="tag" value={search} />
-							<Button>
-								<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon>
-								<Paragraph>{search}</Paragraph>
-							</Button>
+							<!-- <input type="hidden" name="tag" value={search} /> -->
+							<!-- <Button> -->
+							<!-- 	<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon> -->
+							<!-- 	<Paragraph>{search}</Paragraph> -->
+							<!-- </Button> -->
 						{/if}
 					{/if}
 				</div>
