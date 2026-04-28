@@ -20,6 +20,7 @@
 		Button,
 		Icon,
 		Input,
+		Notice,
 		Paragraph,
 		SectionEdit,
 		Subtitle,
@@ -110,9 +111,7 @@
 						</Button>
 					{/snippet}
 				</ActionBar>
-
 				<Facts record={data.resource ?? {}} {keys}></Facts>
-
 				<div class="versions">
 					<ActionBar>
 						{#snippet left()}
@@ -221,7 +220,7 @@
 										<Button
 											type="button"
 											onclick={() => {
-												toggleDialog('add-resource')
+												toggleDialog('add-version')
 											}}>Cancel</Button
 										>
 									</div>
@@ -310,6 +309,49 @@
 						</div>
 					{/each}
 				</div>
+			</div>
+			<div class="section">
+				<ActionBar
+					>{#snippet left()}
+						<Subtitle>Structural metadata</Subtitle>
+					{/snippet}
+					{#snippet right()}
+						<Button
+							onclick={() => {
+								toggleDialog('add-datastore')
+							}}
+						>
+							<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
+						</Button>
+					{/snippet}
+				</ActionBar>
+				{#if data.resource.metadata === null}
+					<Notice level="info">
+						<Paragraph>No structural metadata has been added</Paragraph>
+					</Notice>
+				{/if}
+				<Dialog id="add-datastore">
+					<form
+						enctype="multipart/form-data"
+						method="post"
+						action="?/add_datastore"
+						use:enhance={handleEnhance()}
+					>
+						<input type="hidden" value={data.resource.id} name="id" />
+						<Input>
+							<input type="file" name="file" />
+						</Input>
+						<div class="buttons" data-disabled={enable_buttons ? undefined : true}>
+							<Button
+								type="button"
+								onclick={() => {
+									toggleDialog('add-datastore')
+								}}>Cancel</Button
+							>
+							<Button>Upload</Button>
+						</div>
+					</form>
+				</Dialog>
 			</div>
 		{/if}
 	{/snippet}

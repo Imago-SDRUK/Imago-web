@@ -1,5 +1,5 @@
 import { tagsGetController } from '$lib/server/interface/adapters/controllers/tags/get.js'
-import { formGetStringOrUndefined } from '$lib/utils/forms/index.js'
+import { formGetStringOrUndefined, safeJSONParse } from '$lib/utils/forms/index.js'
 import { datastoreUpdateController } from '$lib/server/interface/adapters/controllers/datastore/update.js'
 import {
 	resourceAddVersionController,
@@ -19,6 +19,9 @@ import type {
 	ResourceVersion
 } from '$lib/server/entities/models/resources.js'
 import type { CSVW } from '$lib/types/csvw.js'
+import { err, ok } from '$lib/server/entities/errors.js'
+import { datastoreCreateController } from '$lib/server/interface/adapters/controllers/datastore/create.js'
+import { jstr } from '@arturoguzman/art-ui'
 
 export const load = async ({ locals, parent, url }) => {
 	const { permits, dataset } = await parent()
@@ -96,7 +99,35 @@ export const actions = {
 			message: `Resource successfully updated`
 		}
 	},
-
+	add_datastore: async ({ request, locals }) => {
+		const form = await request.formData()
+		const id = formGetStringOrUndefined({ form, field: 'id' })
+		const file = form.get('file')
+		if (!file || typeof file === 'string') {
+			return fail(400, { message: 'File must be a file' })
+		}
+		const [blob_err, blob] = await file
+			.text()
+			.then((res) => ok(safeJSONParse(res)))
+			.catch((_err) => err({ reason: 'Unexpected', error: _err }))
+		if (blob_err !== null) {
+			return fail(500, { message: blob_err.reason, id: blob_err.reason })
+		}
+		const [errors, data] = await datastoreCreateController({
+			configuration: locals.configuration,
+			session: locals.session,
+			metadata: blob,
+			resource_id: id
+		})
+		if (errors !== null) {
+			console.log(errors)
+			return fail(400, { message: errors.message ?? errors.reason })
+		}
+		console.log(jstr(data))
+		return {
+			message: `Datastore updated`
+		}
+	},
 	update_datastore: async ({ request, locals }) => {
 		const form = await request.formData()
 		const id = formGetStringOrUndefined({ form, field: 'id' })
