@@ -34,6 +34,24 @@ const DatasetExtrasSchema = type({
 	value: 'string'
 })
 
+// const DatasetExtrasSchema = type({
+// 	'source?': 'string',
+// 	'content?': 'string',
+// 	'file_id?': 'string',
+// 	'constraints?': 'string',
+// 	'crs?': 'string',
+// 	'spatial_coverage?': 'string',
+// 	'spatial_resolution?': 'string',
+// 	'temporal_coverage?': 'string',
+// 	'temporal_resolution?': 'string',
+// 	'size?': 'string',
+// 	'lineage?': 'string',
+// 	'data_source?': 'string',
+// 	'data_quality?': 'string'
+// })
+
+export type DatasetExtrasKeys = typeof DatasetExtrasSchema.infer
+
 /**
  * NOTE: This is the return type
  **/
