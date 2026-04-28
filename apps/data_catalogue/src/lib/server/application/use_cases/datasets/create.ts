@@ -5,9 +5,9 @@ import { type } from 'arktype'
 import { generateExtrasFromPayload } from '$lib/globals/datasets'
 import { err, ok } from '$lib/server/entities/errors'
 import { DatasetSchema } from '$lib/server/entities/models/datasets'
-import { getDatasetBasePermissions } from '$lib/utils/auth/permissions/translation'
 import { log } from '$lib/utils/server/logger'
 import slugify from '@sindresorhus/slugify'
+import { getDatasetBasePermissions } from '$lib/server/entities/models/policies'
 
 export const datasetCreateUseCase = async ({
 	data,
@@ -40,13 +40,16 @@ export const datasetCreateUseCase = async ({
 	if (dataset instanceof type.errors) {
 		return err({ reason: 'Invalid Data', message: dataset.summary, id: 'invalid-dataset' })
 	}
-	const [g_error, group_r] = await group_service.getGroup({ id: dataset.groups[0].name })
+	log.trace('Validated dataset')
+	const [g_error] = await group_service.getGroup({ id: dataset.groups[0].name })
 	if (g_error !== null) {
+		if (g_error.reason === 'Not Found') {
+			return err({ reason: 'Not Found', message: `Group ${dataset.groups[0].name} doesn't exist` })
+		}
 		return err(g_error)
 	}
-	if (group_r === null) {
-		return err({ reason: 'Not Found', message: `Group ${dataset.groups[0].name} doesn't exist` })
-	}
+
+	log.trace('No errors in group')
 	const extras = generateExtrasFromPayload(dataset.extras)
 	const [e_dataset, _dataset] = await dataset_service.createDataset({
 		data: { ...dataset, extras: extras, name: slugify(dataset.title), owner_org: 'imago' }

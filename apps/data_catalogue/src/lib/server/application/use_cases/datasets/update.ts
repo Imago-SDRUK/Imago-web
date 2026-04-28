@@ -5,6 +5,7 @@ import type { DatasetRequest } from '$lib/server/entities/models/datasets'
 import { err, ok } from '$lib/server/entities/errors'
 import { generateExtrasFromPayload } from '$lib/globals/datasets'
 import type { AppContext } from '$lib/server/application/context'
+import { log } from '$lib/utils/server/logger'
 
 export const datasetUpdateUseCase = async ({
 	id,
@@ -33,10 +34,15 @@ export const datasetUpdateUseCase = async ({
 		return err({ reason: 'Unauthorised' })
 	}
 	if (!data) {
-		return err({ reason: 'Invalid Data' })
+		return err({
+			reason: 'Invalid Data',
+			message: `You need to provide data to upload`,
+			id: 'empty-payload'
+		})
 	}
 	const extras = generateExtrasFromPayload(data.extras)
-	const [errs, dataset] = await dataset_service.updateDataset({ id, data: { ...data, extras } })
+	log.trace({ data })
+	const [errs, dataset] = await dataset_service.updateDataset({ id, data: { ...data, extras, id } })
 	if (errs !== null) {
 		return err(errs)
 	}
@@ -78,7 +84,7 @@ export const datasetAddTagUseCase = async ({
 		return err(errs_dataset)
 	}
 	if (!dataset) {
-		return err({ reason: 'Not Found' })
+		return err({ reason: 'Not Found', message: 'Dataset not found' })
 	}
 	const [tag_errs, tag_record] = await tags_service.getTag({ id: tag, vocabulary_id })
 
@@ -89,7 +95,11 @@ export const datasetAddTagUseCase = async ({
 	}
 	let t_record = tag_record
 	if (!t_record) {
-		t_record = await tags_service.createTag({ tag: { name: tag, vocabulary_id } })
+		const [tag_errors, _tag] = await tags_service.createTag({ tag: { name: tag, vocabulary_id } })
+		if (tag_errors !== null) {
+			return tag_errors
+		}
+		t_record = _tag
 	}
 	if (dataset.tags.find((_tag) => _tag.id === t_record.id)) return ok(dataset)
 	const new_tags = [...dataset.tags, t_record]
