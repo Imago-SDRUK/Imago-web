@@ -90,7 +90,11 @@ export const answersCreateUseCase = async ({
 		return err(errs)
 	}
 	const permissions: PermissionRequest[] = user_answers.flatMap((answer) =>
-		getAnswerBasePermissions({ user_id: session.identity.id, answer })
+		getAnswerBasePermissions({
+			user_id: session.identity.id,
+			answer,
+			admin_group: configuration.admin_group
+		})
 	)
 	const [p_errs] = await authorisation_module.createPermissions({ permissions })
 	if (p_errs !== null) {
