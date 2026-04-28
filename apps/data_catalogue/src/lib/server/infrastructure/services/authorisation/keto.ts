@@ -5,7 +5,6 @@ import { env } from '$env/dynamic/private'
 import { RelationshipApi, Configuration, PermissionApi } from '@ory/client-fetch'
 import { err, ok } from '$lib/server/entities/errors'
 import type { Permission, Relationship } from '$lib/server/entities/models/permissions'
-import { jstr } from '@arturoguzman/art-ui'
 
 export const ketoWrite = new RelationshipApi(
 	new Configuration({
@@ -92,13 +91,6 @@ const authorise: AuthorisationService['authorise'] = async ({
 	actor,
 	configuration
 }) => {
-	log.trace({
-		message: `Evaluating`,
-		namespace,
-		object,
-		permits,
-		actor
-	})
 	if (
 		configuration &&
 		configuration.superusers?.includes(typeof actor === 'string' ? actor : actor.object)
@@ -107,14 +99,15 @@ const authorise: AuthorisationService['authorise'] = async ({
 		return ok({ allowed: true })
 	}
 	try {
-		const permission = await ketoCheck.checkPermission(
+		const permission = await ketoCheck.checkPermissionRaw(
 			permissionToKeto({ namespace, object, permits, actor })
 		)
-		log.trace({ permission })
-		return ok(permission)
+		const value = await permission.value()
+		log.trace({ namespace, object, permits, actor, permission: value })
+		return ok(value)
 	} catch (_err) {
-		log.trace({ message: 'permissions error', errors: _err })
-		return err({ reason: 'Unexpected', errors: _err })
+		log.trace({ namespace, object, permits, actor, message: 'permissions error', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 
@@ -185,7 +178,7 @@ const createPermission: AuthorisationService['createPermission'] = async ({
 			.then((res) => ok(res))
 			.catch((_err) => err({ reason: 'Unexpected', error: _err }))
 	}
-	return err({ reason: 'Unexpected' })
+	return err({ reason: 'Unexpected', error: '' })
 }
 
 const createPermissions: AuthorisationService['createPermissions'] = async ({ permissions }) => {
