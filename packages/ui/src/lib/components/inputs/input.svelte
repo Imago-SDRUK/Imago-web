@@ -12,11 +12,17 @@
 		label,
 		children,
 		required,
-		message
+		message,
+		subgrid
 	}: InputComponentProps & { children: Snippet<[string]> } = $props()
 </script>
 
-<div class="input-layout" data-layout={layout} data-message={message ? true : undefined}>
+<div
+	class="input-layout"
+	data-layout={layout}
+	data-message={message ? true : undefined}
+	data-subgrid={subgrid ? true : undefined}
+>
 	{#if label}
 		<div class="label">
 			<InputLabel {required} {id} {label} {label_size}></InputLabel>
@@ -56,7 +62,7 @@
 		grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
 		grid-template-rows: minmax(0, 1fr);
 		align-items: center;
-		gap: 0.35rem;
+		gap: 0.35rem 1rem;
 	}
 	.input-layout[data-layout='horizontal'][data-message] {
 		grid-template-columns: minmax(0, 1fr);
@@ -67,6 +73,12 @@
 		grid-template-columns: minmax(0, 400px) minmax(max-content, 1fr);
 		grid-template-rows: minmax(0, 1fr);
 		gap: 2rem;
+	}
+
+	.input-layout[data-subgrid] {
+		display: grid;
+		grid-column: 1 / -1;
+		grid-template-columns: subgrid;
 	}
 	.label {
 		display: flex;
