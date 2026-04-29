@@ -249,6 +249,40 @@ const deletePermission: AuthorisationService['deletePermission'] = async ({
 	return ok(null)
 }
 
+const deletePermissions: AuthorisationService['createPermissions'] = async ({ permissions }) => {
+	const parsed = permissions.map(({ namespace, relation, actor, object }) => {
+		let body_converted = {}
+		if (typeof actor === 'string') {
+			body_converted = {
+				namespace: namespace,
+				object: object,
+				relation: relation,
+				subject_id: actor
+			}
+		} else {
+			body_converted = {
+				namespace: namespace,
+				object: object,
+				relation: relation,
+				subject_set: actor
+			}
+		}
+		return {
+			action: 'delete',
+			relation_tuple: body_converted
+		}
+	}) as { action: 'delete'; relation_tuple: Relationship }[]
+
+	try {
+		await ketoWrite.patchRelationships({
+			relationshipPatch: parsed
+		})
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 const getPermissions: AuthorisationService['getPermissions'] = async ({
 	namespace,
 	permits,
@@ -290,6 +324,7 @@ export const authorisationServiceInfrastructureKeto: AuthorisationService = {
 	createPermission,
 	// updatePermission,
 	deletePermission,
+	deletePermissions,
 	createPermissions,
 	getPermissions
 }
