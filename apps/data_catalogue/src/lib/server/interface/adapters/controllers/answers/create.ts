@@ -6,6 +6,7 @@ import {
 } from '$lib/server/application/use_cases/answers/create'
 import { getServerContext } from '$lib/server/application/context'
 import type { Configuration } from '$lib/server/entities/models/configuration'
+import { log } from '$lib/utils/server/logger'
 
 export const answerCreateController = async ({
 	data,
@@ -51,6 +52,7 @@ export const answersCreateController = async ({
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
+		log.error({ controller: 'answersCreateController', error: errors })
 		return err(errors)
 	}
 	return ok(answer)

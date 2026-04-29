@@ -95,7 +95,7 @@ const addUserToGroup: UsersRepository['addUserToGroup'] = async ({ data }) => {
 		if (result[0]) {
 			return ok(result[0])
 		}
-		return err({ reason: 'Unexpected' })
+		return err({ reason: 'Unexpected', error: 'not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -110,7 +110,7 @@ const removeUserGroup: UsersRepository['removeUserGroup'] = async ({ data }) => 
 		if (result[0]) {
 			return ok(result[0])
 		}
-		return err({ reason: 'Unexpected' })
+		return err({ reason: 'Unexpected', error: 'not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
