@@ -4,12 +4,14 @@ import {
 	groupAddUserUseCase,
 	groupRemoveUserUseCase,
 	groupsSyncUseCase,
+	groupToggleAutoenrollUseCase,
 	groupUpdateUseCase
 } from '$lib/server/application/use_cases/groups/update'
 import type { Session } from '$lib/server/entities/models/identity'
 import type { UsersGroupsRequest } from '$lib/server/entities/models/groups'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
+import { getQuestionsModule } from '$lib/server/modules/questions'
 
 export const groupUpdateController = async ({
 	id,
@@ -31,6 +33,32 @@ export const groupUpdateController = async ({
 	return await groupUpdateUseCase({
 		id,
 		data,
+		groups_repository: getGroupsRepositoryModule(),
+		...getServerContext({ session, configuration })
+	})
+}
+
+export const groupToggleAutoenrollController = async ({
+	id,
+	autoenroll,
+	session,
+	configuration
+}: {
+	id?: string
+	autoenroll: boolean
+	session: App.Locals['session']
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	if (!id) {
+		return err({ reason: 'Invalid Data', message: 'You need to provide an id', id: 'id' })
+	}
+	return await groupToggleAutoenrollUseCase({
+		id,
+		autoenroll,
+		questions_repository: getQuestionsModule(),
 		groups_repository: getGroupsRepositoryModule(),
 		...getServerContext({ session, configuration })
 	})

@@ -7,6 +7,8 @@ import { userCreateUseCase } from '$lib/server/application/use_cases/users/creat
 import { getUserModule } from '$lib/server/modules/user'
 import { log } from '$lib/utils/server/logger'
 import { ok } from 'node:assert/strict'
+import { userAutoEnrollUseCase } from '$lib/server/application/use_cases/users/update'
+import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
 
 export const userCreateController = async ({
 	session,
@@ -21,6 +23,7 @@ export const userCreateController = async ({
 }) => {
 	log.trace({ message: `User create controller request` })
 	if (!identity_token) {
+		log.trace({ message: `Error with identity token`, identity_token })
 		return err({ reason: 'Unauthenticated' })
 	}
 	if (!session) {
@@ -34,6 +37,16 @@ export const userCreateController = async ({
 	if (errors !== null) {
 		log.error({ controller: 'userCreateController', errors })
 		return err(errors)
+	}
+	const [groups_error] = await userAutoEnrollUseCase({
+		groups_repository: getGroupsRepositoryModule(),
+		user_id: result.id,
+		users_repository: getUserModule(),
+		...getServerContext({ session, configuration, identity_token })
+	})
+	if (groups_error !== null) {
+		log.error({ message: 'error autoenrolling user', groups_error })
+		return err(groups_error)
 	}
 	return ok(result)
 }

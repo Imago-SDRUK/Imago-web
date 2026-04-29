@@ -9,6 +9,8 @@ import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'driz
 import slugify from '@sindresorhus/slugify'
 import type { UsersGroupsRequest } from '$lib/server/entities/models/groups'
 import type { AppContext } from '$lib/server/application/context'
+import type { QuestionsRepository } from '$lib/server/application/repositories/questions'
+import type { PermissionRequest } from '$lib/server/entities/models/permissions'
 
 export const groupUpdateUseCase = async ({
 	id,
@@ -63,8 +65,8 @@ export const groupUpdateUseCase = async ({
 			title: group_data.title,
 			visibility: group_data.visibility,
 			updated_at: group_data.updated_at,
-			updated_by: group_data.updated_by,
-			autoenroll: group_data.autoenroll
+			updated_by: group_data.updated_by
+			// autoenroll: group_data.autoenroll
 		},
 		id
 	})
@@ -313,4 +315,82 @@ export const groupRemoveUserUseCase = async ({
 		return err({ reason: 'Unexpected' })
 	}
 	return ok(user_group)
+}
+
+export const groupToggleAutoenrollUseCase = async ({
+	id,
+	autoenroll,
+	session,
+	groups_repository,
+	configuration,
+	authorisation_module,
+	questions_repository
+}: {
+	id: string
+	autoenroll: boolean
+	session: Session
+	groups_repository: GroupsRepository
+	questions_repository: QuestionsRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		namespace: 'Group',
+		object: id,
+		permits: 'members',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+
+	const [err_g, group_r] = await groups_repository.updateGroup({
+		data: {
+			autoenroll
+		},
+		id
+	})
+	if (err_g !== null) {
+		return err(err_g)
+	}
+	if (group_r === null) {
+		return err({ reason: 'Unexpected', error: group_r })
+	}
+	const [questions_errors, questions] = await questions_repository.getQuestions({
+		limit: 250,
+		offset: 0
+	})
+	if (questions_errors !== null) {
+		return err(questions_errors)
+	}
+	const permissions: PermissionRequest[] = [
+		{
+			namespace: 'Action',
+			object: 'answers',
+			relation: 'groups',
+			actor: group_r.id
+		},
+		...questions.map((question) => ({
+			namespace: 'Question' as const,
+			relation: 'viewers',
+			object: question.id,
+			actor: { namespace: 'Group' as const, object: group_r.id, relation: 'members' }
+		}))
+	]
+
+	if (autoenroll) {
+		const [errors] = await authorisation_module.createPermissions({ permissions: permissions })
+		if (errors !== null) {
+			return err(errors)
+		}
+	}
+	if (!autoenroll) {
+		const [errors] = await authorisation_module.deletePermissions({ permissions: permissions })
+		if (errors !== null) {
+			return err(errors)
+		}
+	}
+	return ok(group_r)
 }

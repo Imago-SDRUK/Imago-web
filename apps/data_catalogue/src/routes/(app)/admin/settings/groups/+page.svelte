@@ -6,6 +6,7 @@
 	import {
 		ActionBar,
 		Button,
+		Checkbox,
 		Icon,
 		Input,
 		Notice,
@@ -229,12 +230,6 @@
 										<Input label="Description">
 											<Textarea name="description" bind:value={group.description}></Textarea>
 										</Input>
-										<Input label="Autoenroll">
-											<Select name="autoenroll" value={group.autoenroll}>
-												<option value={true}>Yes</option>
-												<option value={false}>No</option>
-											</Select>
-										</Input>
 									{/key}
 
 									<div class="buttons">
@@ -384,6 +379,19 @@
 							</div>
 						{/if}
 					</div>
+					{#if edit}
+						<div class="section">
+							<form action="?/toggle_autoenroll" method="post" use:enhance={handleEnhance()}>
+								<input type="hidden" value={group.id} name="id" />
+								<Input label="Autoenroll">
+									<Checkbox name="autoenroll"></Checkbox>
+								</Input>
+								<Button>
+									<Paragraph>Save</Paragraph>
+								</Button>
+							</form>
+						</div>
+					{/if}
 					{#if edit}
 						<div class="section">
 							<Subtitle>Permissions</Subtitle>

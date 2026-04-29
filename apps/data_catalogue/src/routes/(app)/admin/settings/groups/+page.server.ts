@@ -6,6 +6,7 @@ import { groupDeleteController } from '$lib/server/interface/adapters/controller
 import {
 	groupAddUserController,
 	groupRemoveUserController,
+	groupToggleAutoenrollController,
 	groupUpdateController
 } from '$lib/server/interface/adapters/controllers/groups/update.js'
 import {
@@ -111,6 +112,26 @@ export const actions = {
 		console.log(group)
 		return {
 			message: 'Group updated'
+		}
+	},
+	toggle_autoenroll: async ({ locals, request }) => {
+		const form = await request.formData()
+		const id = formGetStringOrUndefined({ form, field: 'id' })
+		const autoenroll = formGetStringOrUndefined({ form, field: 'autoenroll' })
+		const is_autoenroll = autoenroll === 'on' ? true : false
+		const [errors, group] = await groupToggleAutoenrollController({
+			configuration: locals.configuration,
+			id,
+			autoenroll: is_autoenroll,
+			session: locals.session
+		})
+		if (errors !== null) {
+			console.log(errors)
+			return fail(500, { message: errors.message ?? errors.reason })
+		}
+		console.log(group)
+		return {
+			message: `Group autoenroll set to ${group.autoenroll}`
 		}
 	},
 	delete: async ({ locals, request }) => {
