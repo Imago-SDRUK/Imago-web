@@ -5,6 +5,7 @@ import { createInsertSchema } from 'drizzle-arktype'
 import { type } from 'arktype'
 import { users, type UserRequest } from '$lib/server/entities/models/users'
 import { env } from '$env/dynamic/private'
+import { log } from '$lib/utils/server/logger'
 
 export const userCreateUseCase = async ({
 	payload,
@@ -19,15 +20,16 @@ export const userCreateUseCase = async ({
 		return err({ reason: 'Unauthorised' })
 	}
 	const schema = createInsertSchema(users)
-	const validated = schema(payload)
+	const validated = schema({ ...payload, status: 'preregister' })
 	if (validated instanceof type.errors) {
-		return err({ reason: 'Invalid Data', message: validated.summary })
+		return err({ reason: 'Invalid Data', message: validated.summary, id: 'error creating user' })
 	}
 	const { id, preferences, groups, status } = validated
 	const [errors, user] = await repository.createUser({
 		data: { id, preferences, groups, status }
 	})
 	if (errors !== null) {
+		log.error({ errors, message: 'Error creating user' })
 		return err(errors)
 	}
 	const [err_p] = await authorisation_module.createPermissions({
