@@ -65,6 +65,7 @@
 					{#if Array.isArray(data.groups)}
 						<Input required={manual_form_required} label="Group">
 							<Select
+								value=""
 								name="group"
 								options={data.groups.map((result) => ({
 									label: typeof result === 'string' ? result : result.title,

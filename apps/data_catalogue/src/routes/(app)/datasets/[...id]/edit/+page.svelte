@@ -84,11 +84,14 @@
 							</InputBlock>
 							<InputBlock design="row">
 								<Input label="License">
-									<Select name="license_id" bind:value={ctx.dataset.license_id}>
-										{#each licenses as license}
-											<option value={license.id}>{license.title}</option>
-										{/each}
-									</Select>
+									<Select
+										name="license_id"
+										bind:value={ctx.dataset.license_id}
+										options={licenses.map((license) => ({
+											label: license.title,
+											value: license.id
+										}))}
+									></Select>
 								</Input>
 
 								<Input label="Version">
