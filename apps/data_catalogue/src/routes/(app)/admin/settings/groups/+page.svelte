@@ -438,28 +438,12 @@
 		<form
 			action="?/delete"
 			method="post"
-			use:enhance={() => {
-				return async ({ result, update }) => {
-					if (result.type === 'error') {
-						console.log(result)
-						notify.send({ message: result.error.message })
-					}
-					if ('data' in result && result.data) {
-						if ('errors' in result.data) {
-							notify.send(String(jstr(result.data.errors)))
-						}
-						if ('message' in result.data) {
-							notify.send(String(result.data.message))
-						}
-					}
-					if (result.type === 'redirect') {
-						applyAction(result)
-					}
-					update({ reset: true, invalidateAll: true })
+			use:enhance={handleEnhance({
+				onsuccess: () => {
 					delete_group = ''
 					toggleDialog('delete-group')
 				}
-			}}
+			})}
 		>
 			<input name="id" type="text" value={delete_group} hidden />
 			<Button>Delete</Button>
@@ -467,30 +451,7 @@
 	</div>
 </Dialog>
 <Dialog id="add-group">
-	<form
-		action="?/create"
-		method="post"
-		use:enhance={() => {
-			return async ({ result, update }) => {
-				if (result.type === 'error') {
-					console.log(result)
-					notify.send({ message: result.error.message })
-				}
-				if ('data' in result && result.data) {
-					if ('errors' in result.data) {
-						notify.send(String(jstr(result.data.errors)))
-					}
-					if ('message' in result.data) {
-						notify.send(String(result.data.message))
-					}
-				}
-				if (result.type === 'redirect') {
-					applyAction(result)
-				}
-				update({ reset: true, invalidateAll: true })
-			}
-		}}
-	>
+	<form action="?/create" method="post" use:enhance={handleEnhance()}>
 		<Subtitle>Add group</Subtitle>
 		<div class="inputs">
 			<Input label="Title">
