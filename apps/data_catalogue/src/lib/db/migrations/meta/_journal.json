@@ -92,6 +92,13 @@
       "when": 1777013902344,
       "tag": "0012_milky_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1777464567544,
+      "tag": "0013_next_patriot",
+      "breakpoints": true
     }
   ]
 }
