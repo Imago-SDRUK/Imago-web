@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type IColumnConfig } from '@svar-ui/svelte-grid'
 	import { debug } from '$lib/globals/dev.svelte.js'
-	import type { CkanDataset } from '$lib/types/ckan/index.js'
+	import type { CkanDataset, CkanGroup } from '$lib/types/ckan/index.js'
 	import DatasetCard from '$lib/ui/cards/dataset_card.svelte'
 	import BaseTable from '$lib/ui/tables/base_table.svelte'
 	import {
@@ -31,7 +31,6 @@
 	import { goto } from '$app/navigation'
 	import CellEditorCtx from '$lib/ui/tables/cell_editor_ctx.svelte'
 	import { handleEnhance } from '$lib/utils/forms/index.js'
-	import { jstr } from '@arturoguzman/art-ui'
 	let { data } = $props()
 	let dataset_selected = $derived(
 		data.datasets.items?.findIndex(
@@ -113,7 +112,7 @@
 		}
 	]
 
-	const metadata_groups_columns: (IColumnConfig & { id: keyof CkanDataset })[] = [
+	const metadata_groups_columns: (IColumnConfig & { id: keyof CkanGroup })[] = [
 		{
 			id: 'title',
 			header: 'Title',
@@ -257,7 +256,15 @@
 <Dialog id="dataset-delete">
 	<Subtitle size="md">Delete dataset</Subtitle>
 	<Paragraph>Are you sure you want to delete this dataset?</Paragraph>
-	<form action="/datasets?/delete" method="post" use:enhance={handleEnhance()}>
+	<form
+		action="/datasets?/delete"
+		method="post"
+		use:enhance={handleEnhance({
+			onsuccess: () => {
+				toggleDialog('dataset-delete')
+			}
+		})}
+	>
 		<div class="fields">
 			<input type="text" hidden value={data.dataset?.id} name="id" />
 		</div>
@@ -276,7 +283,15 @@
 <Dialog id="group-delete">
 	<Subtitle size="md">Delete dataset</Subtitle>
 	<Paragraph>Are you sure you want to delete this group?</Paragraph>
-	<form action="?/delete_group" method="post" use:enhance={handleEnhance()}>
+	<form
+		action="?/delete_group"
+		method="post"
+		use:enhance={handleEnhance({
+			onsuccess: () => {
+				toggleDialog('group-delete')
+			}
+		})}
+	>
 		<div class="fields">
 			<input type="text" hidden value={data.metadata_group?.id} name="group_id" />
 		</div>
