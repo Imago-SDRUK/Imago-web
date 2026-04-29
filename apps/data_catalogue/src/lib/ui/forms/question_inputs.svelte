@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Question } from '$lib/db/schema/questions'
 	import {
 		Icon,
 		Input,
@@ -12,10 +11,11 @@
 		Editor
 	} from '@imago/ui'
 	import OptionsCreate from '../inputs/options_create.svelte'
+	import type { Question } from '$lib/server/entities/models/questions'
 
 	let {
-		questions,
-		question = $bindable()
+		question = $bindable(),
+		questions
 	}: {
 		question: Question
 		questions: Question[]
@@ -32,38 +32,38 @@
 </script>
 
 <div class="question">
+	<input type="hidden" name="question_data" value={JSON.stringify(question)} />
 	<div class="question-inputs">
-		<Input label="Question">
-			<Text name="question" required value={question.question}></Text>
+		<Input label="Question" required>
+			<Text name="question" required bind:value={question.question}></Text>
 		</Input>
-		<Input label="Description">
+		<Input label="Description" required>
 			<textarea name="description" hidden bind:value={question.description}></textarea>
 			<Editor bind:content={question.description}></Editor>
 		</Input>
 		{#if question.description && question.description !== ''}
-			<Input label="Label">
-				<Text name="label" value={question.label}></Text>
+			<Input label="Label" required>
+				<Text name="label" bind:value={question.label}></Text>
 			</Input>
 		{/if}
 		<Input label="Type" required>
 			<Select name="type" bind:value={question.type} required {options}></Select>
 		</Input>
 		{#if question.type === 'select' || question.type === 'multiple_select'}
-			<OptionsCreate name="options" bind:options={question.options}></OptionsCreate>
+			<OptionsCreate options={question.options}></OptionsCreate>
 		{/if}
 	</div>
-	<div class="settings">
+	<div class="section">
 		<Subtitle>Settings</Subtitle>
 		<div class="settings-toggles">
-			<Input label="Visibility">
-				<Checkbox name="visibility" checked={question.visibility}></Checkbox>
+			<Input label="Visibility" layout="horizontal" subgrid>
+				<Checkbox name="visibility" bind:checked={question.visibility}></Checkbox>
 			</Input>
-			<Input label="Required">
-				<Checkbox name="required" checked={question.required}></Checkbox>
+			<Input label="Required" layout="horizontal" subgrid>
+				<Checkbox name="required" bind:checked={question.required}></Checkbox>
 			</Input>
 		</div>
 		<div class="conditionals">
-			<input name="conditionals" type="text" value={JSON.stringify(question.conditionals)} hidden />
 			<div class="conditionals-header">
 				<Paragraph>Conditionals</Paragraph>
 				<Button
@@ -73,7 +73,7 @@
 							question.conditionals.push({
 								question: '',
 								value: '',
-								action: 'visible',
+								action: [],
 								operator: 'equal'
 							})
 						}
@@ -127,7 +127,8 @@
 									bind:value={conditional.action}
 									options={[
 										{ label: 'Visible', value: 'visible' },
-										{ label: 'Hidden', value: 'hidden' }
+										{ label: 'Hidden', value: 'hidden' },
+										{ label: 'Required', value: 'required' }
 									]}
 								></Select>
 							</Input>
@@ -150,16 +151,13 @@
 		flex-direction: column;
 		gap: 0.5rem;
 	}
-	.settings {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		padding: 1rem;
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-	}
+
 	.settings-toggles {
-		display: flex;
+		display: grid;
+		grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+		grid-auto-flow: row;
+		justify-items: stretch;
+		gap: 0.5rem;
 	}
 	.conditionals-header {
 		display: flex;
@@ -177,6 +175,15 @@
 	}
 	.conditional {
 		background-color: var(--background-accent);
+		padding: 1rem;
+		border-radius: var(--radius);
+	}
+	.section {
+		display: grid;
+		gap: 0.25rem 1rem;
+		grid-template-columns: minmax(0, 1fr);
+		grid-auto-flow: row;
+		background-color: var(--background-muted);
 		padding: 1rem;
 		border-radius: var(--radius);
 	}

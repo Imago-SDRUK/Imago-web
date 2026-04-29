@@ -1,9 +1,10 @@
 import type { QuestionsRepository } from '$lib/server/application/repositories/questions'
 import { err, ok } from '$lib/server/entities/errors'
-import { questions } from '$lib/server/entities/models/questions'
+import { questions, type QuestionRequest } from '$lib/server/entities/models/questions'
 import { type } from 'arktype'
 import { createUpdateSchema } from 'drizzle-arktype'
 import type { AppContext } from '$lib/server/application/context'
+import { DateTime } from 'luxon'
 
 export const questionUpdateUseCase = async ({
 	id,
@@ -14,7 +15,7 @@ export const questionUpdateUseCase = async ({
 	configuration
 }: {
 	id: string
-	data: unknown
+	data: Partial<QuestionRequest>
 	questions_repository: QuestionsRepository
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
@@ -31,8 +32,21 @@ export const questionUpdateUseCase = async ({
 		return err({ reason: 'Unauthorised' })
 	}
 	const schema = createUpdateSchema(questions)
-	const validated = schema(data)
+
+	const validated = schema({
+		question: data.question,
+		description: data.description,
+		label: data.label,
+		required: data.required,
+		group: data.group,
+		type: data.type,
+		options: data.options,
+		conditionals: data.conditionals,
+		visibility: data.visibility,
+		status: data.status
+	})
 	if (validated instanceof type.errors) {
+		console.log(data)
 		return err({ reason: 'Unauthorised', message: validated.summary })
 	}
 

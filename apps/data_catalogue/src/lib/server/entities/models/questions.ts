@@ -57,7 +57,7 @@ export const questions = pgTable(
 		question: text().notNull(),
 		description: text(),
 		label: text(),
-		required: boolean(),
+		required: boolean().default(false),
 		group: text(),
 		type: question_type_enum().default('string'),
 		options: jsonb().$type<{ label: string; value: string }[]>().default([]),
@@ -67,7 +67,7 @@ export const questions = pgTable(
 					question: string
 					value: string
 					operator: 'equal' | 'not_equal' | 'includes'
-					action: 'visible' | 'hidden'
+					action: ('visible' | 'hidden' | 'required')[]
 				}[]
 			>()
 			.default([]),

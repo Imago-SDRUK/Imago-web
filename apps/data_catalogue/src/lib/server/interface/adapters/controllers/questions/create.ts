@@ -2,6 +2,7 @@ import { getServerContext } from '$lib/server/application/context'
 import { questionCreateUseCase } from '$lib/server/application/use_cases/questions/create'
 import { err, ok } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
+import type { QuestionRequest } from '$lib/server/entities/models/questions'
 import { getQuestionsModule } from '$lib/server/modules/questions'
 
 export const questionCreateController = async ({
@@ -9,7 +10,7 @@ export const questionCreateController = async ({
 	session,
 	configuration
 }: {
-	data: unknown
+	data: QuestionRequest
 	configuration: Configuration
 	session: App.Locals['session']
 }) => {

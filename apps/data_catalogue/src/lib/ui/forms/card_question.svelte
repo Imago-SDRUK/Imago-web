@@ -3,9 +3,9 @@
 	import { notify } from '$lib/stores/notify.js'
 	import { Button, BaseCard, Subtitle, Icon } from '@imago/ui'
 	import { jstr } from '@arturoguzman/art-ui'
-	import type { Question } from '$lib/db/schema/questions'
 	import { invalidateAll } from '$app/navigation'
 	import QuestionInputs from '../forms/question_inputs.svelte'
+	import type { Question } from '$lib/server/entities/models/questions'
 	let { question = $bindable(), questions }: { question: Question; questions: Question[] } =
 		$props()
 	let open = $state(false)

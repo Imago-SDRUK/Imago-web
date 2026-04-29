@@ -1,18 +1,15 @@
 import { err, ok } from '$lib/server/entities/errors'
-import { questionUpdateUseCase } from '$lib/server/application/use_cases/questions/update'
 import { getQuestionsModule } from '$lib/server/modules/questions'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
-import type { QuestionRequest } from '$lib/server/entities/models/questions'
+import { questionDeleteUseCase } from '$lib/server/application/use_cases/questions/delete'
 
-export const questionUpdateController = async ({
+export const questionDeleteController = async ({
 	id,
-	data,
 	session,
 	configuration
 }: {
 	id: string
-	data: Partial<QuestionRequest>
 	session: App.Locals['session']
 	configuration: Configuration
 }) => {
@@ -22,9 +19,8 @@ export const questionUpdateController = async ({
 	if (!id) {
 		return err({ reason: 'Invalid Data', message: 'You need to provide an id', id: '' })
 	}
-	const [errors, answer] = await questionUpdateUseCase({
+	const [errors, answer] = await questionDeleteUseCase({
 		id,
-		data,
 		questions_repository: getQuestionsModule(),
 		...getServerContext({ session, configuration })
 	})
