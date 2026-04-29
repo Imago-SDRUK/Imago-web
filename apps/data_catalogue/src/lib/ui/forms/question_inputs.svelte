@@ -124,6 +124,7 @@
 							</Input>
 							<Input label="Action">
 								<Select
+									multiple
 									bind:value={conditional.action}
 									options={[
 										{ label: 'Visible', value: 'visible' },

@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { applyAction, enhance } from '$app/forms'
-	import { notify } from '$lib/stores/notify.js'
-	import { Button, BaseCard, Subtitle, Icon } from '@imago/ui'
-	import { jstr } from '@arturoguzman/art-ui'
+	import { enhance } from '$app/forms'
+	import { Button, BaseCard, Subtitle, Icon, ActionBar } from '@imago/ui'
 	import { invalidateAll } from '$app/navigation'
 	import QuestionInputs from '../forms/question_inputs.svelte'
 	import type { Question } from '$lib/server/entities/models/questions'
+	import { handleEnhance } from '$lib/utils/forms'
 	let { question = $bindable(), questions }: { question: Question; questions: Question[] } =
 		$props()
 	let open = $state(false)
@@ -13,9 +12,11 @@
 
 <BaseCard>
 	<div class="question-card">
-		<div class="card-header">
-			<Subtitle>{question.question} {question.required ? '*' : ''}</Subtitle>
-			<div class="buttons">
+		<ActionBar>
+			{#snippet left()}
+				<Subtitle size="sm">{question.question} {question.required ? '*' : ''}</Subtitle>
+			{/snippet}
+			{#snippet right()}
 				<Button
 					active={open}
 					onclick={() => {
@@ -24,55 +25,16 @@
 				>
 					<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
 				</Button>
-				<form
-					action="?/delete_question"
-					method="post"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if ('data' in result && result.data) {
-								if ('errors' in result.data) {
-									notify.send(String(jstr(result.data.errors)))
-								}
-								if ('message' in result.data) {
-									notify.send(String(result.data.message))
-								}
-							}
-							if (result.type === 'redirect') {
-								applyAction(result)
-							}
-							update({ reset: true, invalidateAll: true })
-						}
-					}}
-				>
-					<input type="text" hidden value={question.id} name="id" />
-					<Button>
-						<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
-					</Button>
-				</form>
-			</div>
-		</div>
+			{/snippet}
+		</ActionBar>
 		{#if open}
-			<form
-				class="form"
-				action="?/update_question"
-				method="post"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						if ('data' in result && result.data) {
-							if ('errors' in result.data) {
-								notify.send(String(jstr(result.data.errors)))
-							}
-							if ('message' in result.data) {
-								notify.send(String(result.data.message))
-							}
-						}
-						if (result.type === 'redirect') {
-							applyAction(result)
-						}
-						update({ invalidateAll: true })
-					}
-				}}
-			>
+			<form action="?/delete_question" method="post" use:enhance={handleEnhance()}>
+				<input type="text" hidden value={question.id} name="id" />
+				<Button>
+					<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
+				</Button>
+			</form>
+			<form class="form" action="?/update_question" method="post" use:enhance={handleEnhance()}>
 				<div class="inputs">
 					<input type="text" hidden bind:value={question.id} name="id" />
 					<QuestionInputs {questions} bind:question></QuestionInputs>
@@ -101,10 +63,7 @@
 		gap: 1rem;
 		padding: 1rem;
 	}
-	.card-header {
-		display: flex;
-		justify-content: space-between;
-	}
+
 	.form {
 		background-color: var(--background);
 		border-radius: var(--radius);
