@@ -3,6 +3,8 @@ import type { UsersRepository } from '$lib/server/application/repositories/users
 import type { AppContext } from '$lib/server/application/context'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { GroupsRepository } from '$lib/server/application/repositories/groups'
+import { env } from '$env/dynamic/private'
+import { log } from '$lib/utils/server/logger'
 
 export const userAddGroupUseCase = async ({
 	user_id,
@@ -112,10 +114,10 @@ export const userUpdateUseCase = async ({
 	user_repository: UsersRepository
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
-		namespace: 'Action',
-		object: 'users',
-		permits: 'update',
 		actor: session.identity.id,
+		namespace: 'User',
+		object: session.identity.id,
+		permits: 'members',
 		configuration
 	})
 	if (errors) {
@@ -133,51 +135,57 @@ export const userUpdateUseCase = async ({
 		return err(errs)
 	}
 	if (!updated_user) {
-		return err({ reason: 'Not Found' })
+		return err({ reason: 'Not Found', message: 'user not found' })
 	}
 	return ok(updated_user)
 }
 
 export const userAutoEnrollUseCase = async ({
-	id,
+	user_id,
 	groups_repository,
 	users_repository,
-	authorisation_module,
-	session
+	// session,
+	identity_token,
+	configuration,
+	authorisation_module
 }: {
-	id: string
+	user_id: string
 	users_repository: UsersRepository
 	groups_repository: GroupsRepository
 } & AppContext) => {
-	const [errs, permissions] = await authorisation_module.batchAuthorise({
-		permissions: [
-			{
-				namespace: 'User',
-				object: session.identity.id,
-				permits: 'members',
-				actor: session.identity.id
-			},
-			{
-				namespace: 'Action',
-				object: 'users',
-				permits: 'create',
-				actor: session.identity.id
-			}
-		]
-	})
-	if (errs) {
-		return err(errs)
-	}
-	const permission = permissions.results.some((permission) => permission.allowed)
-	if (!permission) {
+	if (identity_token !== env.IDENTITY_TOKEN) {
 		return err({ reason: 'Unauthorised' })
 	}
-	const [errors, user] = await users_repository.getUser({ id })
+	// const [errs, permissions] = await authorisation_module.batchAuthorise({
+	// 	permissions: [
+	// 		{
+	// 			namespace: 'User',
+	// 			object: session.identity.id,
+	// 			permits: 'members',
+	// 			actor: session.identity.id
+	// 		},
+	// 		{
+	// 			namespace: 'Action',
+	// 			object: 'users',
+	// 			permits: 'create',
+	// 			actor: session.identity.id
+	// 		}
+	// 	]
+	// })
+	// if (errs) {
+	// 	return err(errs)
+	// }
+	// console.log(jstr(permissions))
+	// const permission = permissions.results.some((permission) => permission.allowed)
+	// if (!permission) {
+	// 	return err({ reason: 'Unauthorised' })
+	// }
+	const [errors, user] = await users_repository.getUser({ id: user_id })
 	if (errors !== null) {
 		return err(errors)
 	}
 	if (user === null) {
-		return err({ reason: 'Unexpected' })
+		return err({ reason: 'Unexpected', error: `There's been an issue getting this user`, id: '' })
 	}
 	const [groups_errors, groups] = await groups_repository.getGroupsAutoenroll()
 	if (groups_errors !== null) {
@@ -189,16 +197,27 @@ export const userAutoEnrollUseCase = async ({
 			data: {
 				user_id: user.id,
 				group_id: group.id,
-				created_by: session.identity.id,
-				updated_by: session.identity.id
+				created_by: configuration?.superusers?.[0],
+				updated_by: configuration?.superusers?.[0]
 			}
 		})
 		if (errs) {
 			enroll_errors.push(errs)
 		}
+		const [auth_errs] = await authorisation_module.createPermission({
+			namespace: 'Group',
+			object: group.id,
+			relation: 'members',
+			actor: user_id
+		})
+		if (auth_errs !== null) {
+			enroll_errors.push(auth_errs)
+		}
 	}
 	if (enroll_errors.length > 0) {
+		log.error({ message: 'fail to autoenroll user', user: user.id, enroll_errors })
 		return err(enroll_errors[0])
 	}
+
 	return ok(null)
 }
