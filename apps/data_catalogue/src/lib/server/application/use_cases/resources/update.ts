@@ -6,7 +6,7 @@ import {
 } from '$lib/server/entities/models/resources'
 import { err, ok } from '$lib/server/entities/errors'
 import type { AppContext } from '$lib/server/application/context'
-import { createInsertSchema, createUpdateSchema } from 'drizzle-arktype'
+import { createUpdateSchema } from 'drizzle-arktype'
 import { type } from 'arktype'
 
 export const resourceUpdateUseCase = async ({
