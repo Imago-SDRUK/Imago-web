@@ -4,9 +4,10 @@ import type { AnswersRepository } from '$lib/server/application/repositories/ans
 import { err, ok } from '$lib/server/entities/errors'
 import { eq } from 'drizzle-orm'
 
-const createAnswer: AnswersRepository['createAnswer'] = async ({ data }) => {
+const createAnswer: AnswersRepository['createAnswer'] = async ({ data, tx }) => {
 	try {
-		const answer = await db.insert(answers).values(data).returning()
+		const _db = tx ?? db
+		const answer = await _db.insert(answers).values(data).returning()
 		return ok(answer[0])
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
