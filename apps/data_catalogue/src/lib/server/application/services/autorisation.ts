@@ -36,6 +36,12 @@ export type AuthorisationService = {
 	}: {
 		permissions: PermissionRequest[]
 	}) => Promise<[ErrTypes, null] | [null, null]>
+
+	deletePermissions: ({
+		permissions
+	}: {
+		permissions: PermissionRequest[]
+	}) => Promise<[ErrTypes, null] | [null, null]>
 	// updatePermission: () => Promise<void>
 	deletePermission: ({
 		namespace,
