@@ -44,22 +44,33 @@ export const questionsGetUseCase = async ({
 	offset?: number
 	questions_repository: QuestionsRepository
 } & AppContext) => {
-	const [errors, permission] = await authorisation_module.authorise({
-		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'questions',
-		permits: 'read',
-		configuration
-	})
-	if (errors) {
-		return err(errors)
-	}
-	if (!permission.allowed) {
-		return err({ reason: 'Unauthorised' })
-	}
-	const [errs, question] = await questions_repository.getQuestions({ limit, offset })
+	const [errs, questions] = await questions_repository.getQuestions({ limit, offset })
 	if (errs !== null) {
 		return err(errs)
 	}
-	return ok(question)
+
+	const allowed = await Promise.all(
+		questions.map((question) =>
+			authorisation_module
+				.authorise({
+					actor: session.identity.id,
+					namespace: 'Question',
+					object: question.id,
+					permits: 'read',
+					configuration
+				})
+				.then(([errors, allowed]) => {
+					console.log(`question ${question.id} is ${allowed?.allowed}`)
+					if (errors !== null) {
+						return null
+					}
+					if (allowed.allowed) {
+						return question.id
+					}
+					return null
+				})
+		)
+	)
+	const filtered = questions.filter((question) => allowed.find((id) => id === question.id))
+	return ok(filtered)
 }
