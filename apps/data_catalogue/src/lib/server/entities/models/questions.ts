@@ -54,6 +54,7 @@ export const questions = pgTable(
 	'questions',
 	{
 		id: uuid().primaryKey().defaultRandom(),
+		sort: text().unique(),
 		question: text().notNull(),
 		description: text(),
 		label: text(),

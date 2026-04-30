@@ -42,6 +42,7 @@ export const questionCreateUseCase = async ({
 		conditionals: data.conditionals,
 		visibility: data.visibility,
 		status: data.status,
+		sort: data.sort,
 		created_by: session.identity.id,
 		updated_by: session.identity.id,
 		created_at: DateTime.now().toJSDate(),

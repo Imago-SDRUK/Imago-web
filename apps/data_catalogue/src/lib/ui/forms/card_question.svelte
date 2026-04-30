@@ -1,59 +1,116 @@
 <script lang="ts">
+	import { generateKeyBetween } from 'fractional-indexing'
 	import { enhance } from '$app/forms'
-	import { Button, BaseCard, Subtitle, Icon, ActionBar } from '@imago/ui'
+	import { Button, BaseCard, Subtitle, Icon, ActionBar, Paragraph } from '@imago/ui'
 	import { invalidateAll } from '$app/navigation'
 	import QuestionInputs from '../forms/question_inputs.svelte'
 	import type { Question } from '$lib/server/entities/models/questions'
 	import { handleEnhance } from '$lib/utils/forms'
-	let { question = $bindable(), questions }: { question: Question; questions: Question[] } =
-		$props()
+	let {
+		question = $bindable(),
+		questions,
+		sorting = $bindable()
+	}: { question: Question; questions: Question[]; sorting: { dragging: string | null } } = $props()
 	let open = $state(false)
+	const index = $derived(questions.findIndex((q) => q.id === question.id))
+	const handleSort = async () => {
+		const current = structuredClone($state.snapshot(sorting))
+		const sort = generateKeyBetween(questions[index - 1]?.sort, question.sort)
+		if (current.dragging) {
+			await fetch(`/api/v1/questions/${current.dragging}`, {
+				method: 'POST',
+				body: JSON.stringify({ sort: sort })
+			}).catch((err) => console.log(err))
+			await invalidateAll()
+		}
+	}
 </script>
 
-<BaseCard>
-	<div class="question-card">
-		<ActionBar>
-			{#snippet left()}
-				<Subtitle size="sm">{question.question} {question.required ? '*' : ''}</Subtitle>
-			{/snippet}
-			{#snippet right()}
-				<Button
-					active={open}
-					onclick={() => {
-						open = !open
-					}}
-				>
-					<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
-				</Button>
-			{/snippet}
-		</ActionBar>
-		{#if open}
-			<form action="?/delete_question" method="post" use:enhance={handleEnhance()}>
-				<input type="text" hidden value={question.id} name="id" />
-				<Button>
-					<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
-				</Button>
-			</form>
-			<form class="form" action="?/update_question" method="post" use:enhance={handleEnhance()}>
-				<div class="inputs">
-					<input type="text" hidden bind:value={question.id} name="id" />
-					<QuestionInputs {questions} bind:question></QuestionInputs>
-				</div>
-				<div class="buttons">
+<div
+	class="drag-and-drop"
+	draggable="true"
+	role="none"
+	ondragstart={() => {
+		sorting.dragging = question.id
+	}}
+	ondragend={(e) => {
+		e.stopPropagation()
+		e.preventDefault()
+		sorting.dragging = null
+	}}
+	ondragover={(e) => {
+		e.stopPropagation()
+		e.preventDefault()
+		// console.log(e, 'drag over')
+	}}
+	ondragenter={(e) => {
+		e.stopPropagation()
+		// console.log(e, 'drag enter')
+	}}
+	ondragleave={(e) => {
+		e.stopPropagation()
+		// console.log(e)
+		// console.log(e, 'drag leave')
+	}}
+	ondrop={async (e) => {
+		e.stopPropagation()
+		e.preventDefault()
+		// console.log(questions[index - 1]?.sort)
+		// console.log(question.sort)
+
+		await handleSort()
+	}}
+>
+	<BaseCard>
+		<div class="question-card">
+			<ActionBar>
+				{#snippet left()}
+					<Subtitle size="sm">{question.question} {question.required ? '*' : ''}</Subtitle>
+				{/snippet}
+
+				{#snippet right()}
 					<Button
-						type="button"
+						active={open}
 						onclick={() => {
-							invalidateAll()
-						}}>Cancel</Button
+							open = !open
+						}}
 					>
-					<Button type="submit">Save</Button>
-				</div>
-			</form>
-		{/if}
-	</div>
-</BaseCard>
+						<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
+					</Button>
+				{/snippet}
+			</ActionBar>
+			{#if open}
+				<form action="?/delete_question" method="post" use:enhance={handleEnhance()}>
+					<input type="text" hidden value={question.id} name="id" />
+					<Button>
+						<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
+					</Button>
+				</form>
+				<form class="form" action="?/update_question" method="post" use:enhance={handleEnhance()}>
+					<div class="inputs">
+						<input type="text" hidden bind:value={question.id} name="id" />
+						<QuestionInputs {questions} bind:question></QuestionInputs>
+					</div>
+					<div class="buttons">
+						<Button
+							type="button"
+							onclick={() => {
+								invalidateAll()
+							}}>Cancel</Button
+						>
+						<Button type="submit">Save</Button>
+					</div>
+				</form>
+			{/if}
+		</div>
+	</BaseCard>
+</div>
 
 <style>
+	.drag-and-drop {
+		display: flex;
+		gap: 1rem;
+	}
 	.question-card {
 		background-color: var(--background-accent);
 		border-radius: var(--radius);

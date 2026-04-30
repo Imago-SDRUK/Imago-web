@@ -4,7 +4,7 @@ import { questions, type QuestionRequest } from '$lib/server/entities/models/que
 import { type } from 'arktype'
 import { createUpdateSchema } from 'drizzle-arktype'
 import type { AppContext } from '$lib/server/application/context'
-import { DateTime } from 'luxon'
+import { log } from '$lib/utils/server/logger'
 
 export const questionUpdateUseCase = async ({
 	id,
@@ -43,14 +43,54 @@ export const questionUpdateUseCase = async ({
 		options: data.options,
 		conditionals: data.conditionals,
 		visibility: data.visibility,
-		status: data.status
+		status: data.status,
+		sort: data.sort
 	})
 	if (validated instanceof type.errors) {
 		console.log(data)
 		return err({ reason: 'Unauthorised', message: validated.summary })
 	}
-
+	log.trace({ message: 'Updating', question: validated })
 	const [errs, answer] = await questions_repository.updateQuestion({ data: validated, id })
+	if (errs !== null) {
+		return err(errs)
+	}
+	return ok(answer)
+}
+
+export const questionUpdateSortUseCase = async ({
+	id,
+	sort,
+	session,
+	questions_repository,
+	authorisation_module,
+	configuration
+}: {
+	id: string
+	sort: string
+	questions_repository: QuestionsRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		actor: session.identity.id,
+		namespace: 'Question',
+		object: id,
+		permits: 'edit',
+		configuration
+	})
+	if (errors) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	if (!sort) {
+		return err({ reason: 'Invalid Data', message: 'You need to provide a sort value', id: '' })
+	}
+	if (typeof sort !== 'string') {
+		return err({ reason: 'Invalid Data', message: 'Sort needs to be a string', id: '' })
+	}
+	log.trace({ message: 'Updating', question: id, sort })
+	const [errs, answer] = await questions_repository.updateQuestionSort({ sort, id })
 	if (errs !== null) {
 		return err(errs)
 	}

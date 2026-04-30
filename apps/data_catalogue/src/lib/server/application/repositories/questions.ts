@@ -21,5 +21,11 @@ export type QuestionsRepository = {
 		id: string
 		data: Partial<QuestionRequest>
 	}) => Promise<[ErrTypes, null] | [null, Question]>
+	updateQuestionSort: ({
+		id
+	}: {
+		id: string
+		sort: string
+	}) => Promise<[ErrTypes, null] | [null, Question]>
 	deleteQuestion: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, null]>
 }

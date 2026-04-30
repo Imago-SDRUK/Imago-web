@@ -2,7 +2,7 @@ import type { QuestionsRepository } from '$lib/server/application/repositories/q
 import { db } from '$lib/db'
 import { questions } from '$lib/server/entities/models/questions'
 import { err, ok } from '$lib/server/entities/errors'
-import { eq } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 
 const createQuestion: QuestionsRepository['createQuestion'] = async ({ data }) => {
 	try {
@@ -22,6 +22,19 @@ const updateQuestion: QuestionsRepository['updateQuestion'] = async ({ id, data 
 	}
 }
 
+const updateQuestionSort: QuestionsRepository['updateQuestionSort'] = async ({ id, sort }) => {
+	try {
+		const question = await db
+			.update(questions)
+			.set({ sort })
+			.where(eq(questions.id, id))
+			.returning()
+		return ok(question[0])
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 const getQuestion: QuestionsRepository['getQuestion'] = async ({ id }) => {
 	try {
 		const question = await db.select().from(questions).where(eq(questions.id, id))
@@ -33,7 +46,12 @@ const getQuestion: QuestionsRepository['getQuestion'] = async ({ id }) => {
 
 const getQuestions: QuestionsRepository['getQuestions'] = async ({ limit, offset }) => {
 	try {
-		const question = await db.select().from(questions).limit(limit).offset(offset)
+		const question = await db
+			.select()
+			.from(questions)
+			.orderBy(asc(questions.sort))
+			.limit(limit)
+			.offset(offset)
 		return ok(question)
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
@@ -54,5 +72,6 @@ export const questionsRepositoryInfrastructureDrizzle: QuestionsRepository = {
 	deleteQuestion,
 	getQuestion,
 	updateQuestion,
-	getQuestions
+	getQuestions,
+	updateQuestionSort
 }

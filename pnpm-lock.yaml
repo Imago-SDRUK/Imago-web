@@ -170,6 +170,9 @@ importers:
       eslint-plugin-svelte:
         specifier: ^3.17.1
         version: 3.17.1(eslint@9.39.4(jiti@2.6.1))(svelte@5.55.5(@typescript-eslint/types@8.59.1))
+      fractional-indexing:
+        specifier: ^3.2.0
+        version: 3.2.0
       globals:
         specifier: ^17.5.0
         version: 17.5.0
@@ -7776,6 +7779,10 @@ packages:
 
   fraction.js@5.3.4:
     resolution: {integrity: sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ==}
+
+  fractional-indexing@3.2.0:
+    resolution: {integrity: sha512-PcOxmqwYCW7O2ovKRU8OoQQj2yqTfEB/yeTYk4gPid6dN5ODRfU1hXd9tTVZzax/0NkO7AxpHykvZnT1aYp/BQ==}
+    engines: {node: ^14.13.1 || >=16.0.0}
 
   framer-motion@12.38.0:
     resolution: {integrity: sha512-rFYkY/pigbcswl1XQSb7q424kSTQ8q6eAC+YUsSKooHQYuLdzdHjrt6uxUC+PRAO++q5IS7+TamgIw1AphxR+g==}
@@ -21054,6 +21061,8 @@ snapshots:
   forwarded@0.2.0: {}
 
   fraction.js@5.3.4: {}
+
+  fractional-indexing@3.2.0: {}
 
   framer-motion@12.38.0:
     dependencies:

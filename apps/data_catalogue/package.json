@@ -57,6 +57,7 @@
 		"eslint": "^9.39.4",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.17.1",
+		"fractional-indexing": "^3.2.0",
 		"globals": "^17.5.0",
 		"luxon": "^3.7.2",
 		"marked": "^16.4.2",

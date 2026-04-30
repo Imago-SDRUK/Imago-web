@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { generateKeyBetween } from 'fractional-indexing'
 	import { Button, Title } from '@imago/ui'
 	import { enhance } from '$app/forms'
 	import CardQuestion from '$lib/ui/forms/card_question.svelte'
@@ -13,6 +14,7 @@
 	})
 
 	let question: Question = $state({
+		sort: generateKeyBetween(questions.at(-1).sort, null),
 		id: '',
 		conditionals: [],
 		question: '',
@@ -30,6 +32,12 @@
 		options: [],
 		type: null
 	})
+	let sorting: { dragging: string | null } = $state({
+		dragging: null
+	})
+	const resetQuestion = (clean: Question) => {
+		question = clean
+	}
 </script>
 
 <div class="page">
@@ -39,9 +47,27 @@
 			class="form"
 			action="?/create_question"
 			use:enhance={handleEnhance({
-				// onsuccess: () => {
-				// 	resetQuestion()
-				// }
+				onsuccess: () => {
+					resetQuestion({
+						sort: generateKeyBetween(questions.at(-1).sort, null),
+						id: '',
+						conditionals: [],
+						question: '',
+						required: false,
+						status: 'draft',
+						visibility: false,
+						created_by: '',
+						updated_by: '',
+						created_at: DateTime.now().toJSDate(),
+						deleted_at: DateTime.now().toJSDate(),
+						updated_at: DateTime.now().toJSDate(),
+						description: '',
+						group: '',
+						label: '',
+						options: [],
+						type: null
+					})
+				}
 			})}
 			method="post"
 		>
@@ -57,7 +83,7 @@
 	<div class="right-col">
 		<Title size="md">Existing questions</Title>
 		{#each questions as question, index (question.id)}
-			<CardQuestion {questions} bind:question={questions[index]}></CardQuestion>
+			<CardQuestion {questions} bind:question={questions[index]} bind:sorting></CardQuestion>
 		{/each}
 	</div>
 </div>
