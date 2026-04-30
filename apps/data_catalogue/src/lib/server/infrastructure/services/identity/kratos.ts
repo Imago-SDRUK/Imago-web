@@ -89,7 +89,7 @@ const getIdentity: IdentityService['getIdentity'] = async ({ id }) => {
 		})
 	} catch (_err) {
 		if (_err.response.status === 404) {
-			return err({ reason: 'Not Found', message: _err.response.statusText })
+			return err({ reason: 'Not Found', message: _err.response.statusText, id: id })
 		}
 		return err({ reason: 'Unexpected', error: _err })
 	}

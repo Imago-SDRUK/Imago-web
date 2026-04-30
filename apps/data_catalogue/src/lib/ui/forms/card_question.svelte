@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { generateKeyBetween } from 'fractional-indexing'
 	import { enhance } from '$app/forms'
-	import { Button, BaseCard, Subtitle, Icon, ActionBar, Paragraph } from '@imago/ui'
+	import { Button, BaseCard, Subtitle, Icon, ActionBar } from '@imago/ui'
 	import { invalidateAll } from '$app/navigation'
 	import QuestionInputs from '../forms/question_inputs.svelte'
 	import type { Question } from '$lib/server/entities/models/questions'
@@ -41,23 +41,15 @@
 	ondragover={(e) => {
 		e.stopPropagation()
 		e.preventDefault()
-		// console.log(e, 'drag over')
 	}}
 	ondragenter={(e) => {
 		e.stopPropagation()
-		// console.log(e, 'drag enter')
 	}}
 	ondragleave={(e) => {
 		e.stopPropagation()
-		// console.log(e)
-		// console.log(e, 'drag leave')
 	}}
 	ondrop={async (e) => {
 		e.stopPropagation()
-		e.preventDefault()
-		// console.log(questions[index - 1]?.sort)
-		// console.log(question.sort)
-
 		await handleSort()
 	}}
 >
