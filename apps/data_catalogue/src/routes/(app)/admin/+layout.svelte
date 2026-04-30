@@ -10,26 +10,26 @@
 			label: 'Permissions',
 			href: '/admin/settings/permissions',
 			subpaths: [
-				{
-					label: 'Datasets',
-					href: `/admin/settings/permissions/datasets`
-				},
-				{
-					label: 'Endpoints',
-					href: `/admin/settings/permissions/endpoints`
-				},
-				{
-					label: 'Groups',
-					href: `/admin/settings/permissions/groups`
-				},
-				{
-					label: 'Resources',
-					href: `/admin/settings/permissions/resources`
-				},
-				{
-					label: 'Users',
-					href: `/admin/settings/permissions/users`
-				}
+				// {
+				// 	label: 'Datasets',
+				// 	href: `/admin/settings/permissions/datasets`
+				// },
+				// {
+				// 	label: 'Endpoints',
+				// 	href: `/admin/settings/permissions/endpoints`
+				// },
+				// {
+				// 	label: 'Groups',
+				// 	href: `/admin/settings/permissions/groups`
+				// },
+				// {
+				// 	label: 'Resources',
+				// 	href: `/admin/settings/permissions/resources`
+				// },
+				// {
+				// 	label: 'Users',
+				// 	href: `/admin/settings/permissions/users`
+				// }
 			]
 		},
 		{ label: 'Registration', href: '/admin/settings/registration', subpaths: [] },

@@ -4,13 +4,13 @@
 	import BaseTable from '$lib/ui/tables/base_table.svelte'
 	import Notes from '$lib/ui/text/notes.svelte'
 	import { jstr } from '@arturoguzman/art-ui'
-	import { BaseSection, Button, Subtitle, Paragraph, Icon, formatBytes, Title } from '@imago/ui'
-	import { DateTime } from 'luxon'
+	import { BaseSection, Button, Subtitle, Icon, Title } from '@imago/ui'
 	import type { CSVWColumn } from '$lib/types/csvw.js'
 	import CellText from '$lib/ui/tables/cell_text.svelte'
+	import Facts from '$lib/ui/cards/facts.svelte'
 
 	let { data } = $props()
-	let result = $derived(data.data.result)
+	let result = $derived(data.resource)
 
 	const columns: (IColumnConfig & { id: keyof CSVWColumn })[] = [
 		// {
@@ -58,78 +58,39 @@
 						<Notes note={String(result.description)}></Notes>
 					{/if}
 				</div>
-				<div class="metadata">
-					<Subtitle>Metadata</Subtitle>
-					{#if result.format !== null}
-						<div class="metadata-field">
-							<Subtitle>Format</Subtitle>
-							<Notes note={String(result.format)}></Notes>
-						</div>
-					{/if}
-
-					{#if result.mimetype !== null}
-						<div class="metadata-field">
-							<Subtitle>MIME Type</Subtitle>
-							<Notes note={String(result.mimetype)}></Notes>
-						</div>
-					{/if}
-					{#if result.created !== null}
-						<div class="metadata-field">
-							<Subtitle>Created</Subtitle>
-							<Paragraph
-								>{DateTime.fromISO(String(result.created)).toLocaleString(
-									DateTime.DATETIME_FULL
-								)}</Paragraph
-							>
-						</div>
-					{/if}
-					{#if result.last_modified !== null}
-						<div class="metadata-field">
-							<Subtitle>Modified</Subtitle>
-							<Paragraph
-								>{DateTime.fromISO(String(result.last_modified)).toLocaleString(
-									DateTime.DATETIME_FULL
-								)}</Paragraph
-							>
-						</div>
-					{/if}
-					{#if result.size}
-						<div class="metadata-field">
-							<Subtitle>Size</Subtitle>
-							<Paragraph>{formatBytes(Number(result.size))}</Paragraph>
-						</div>
-					{/if}
-				</div>
+				<Subtitle>Metadata</Subtitle>
+				<Facts record={result} keys={['format', 'mimetype', 'created', 'size', 'last_modified']}
+				></Facts>
 			</div>
 		</div>
 		<div class="right-col">
 			<Subtitle size="md">Downloads</Subtitle>
-			{#if Array.isArray(result) === false && typeof result.url === 'string'}
-				<div class="latest">
-					<Subtitle>Latest:</Subtitle>
-					<Button href={result.url} download={result.name}
-						>Download: {result.name ?? result.description}
-						<Icon icon={{ icon: 'file-download', set: 'tabler' }}></Icon>
-					</Button>
-				</div>
-			{/if}
+			<!-- {#if result.versions.length > 0} -->
+			<div class="latest">
+				<Subtitle>Latest:</Subtitle>
+				<Button href={result.versions[0].url} download={result.name}>
+					Download: {result.name ?? result.description} - {result.versions[0].version}
+					<Icon icon={{ icon: 'file-download', set: 'tabler' }}></Icon>
+				</Button>
+			</div>
+			<!-- {/if} -->
 
 			<div class="versions-block">
 				<Subtitle>Available versions</Subtitle>
 				<div class="versions">
-					{#each data.versions as version}
-						<Button href="{result.url}?version={version.version}" download={result.name}>
+					{#each data.resource.versions as version}
+						<Button href={version.url} download={result.name}>
 							Version: {version.version}
 							<Icon icon={{ icon: 'file-download', set: 'tabler' }}></Icon>
 						</Button>
 					{/each}
 				</div>
 			</div>
-			{#if data.structural_metadata?.tables}
+			{#if data.resource.metadata}
 				<div class="structural-metadata">
 					<Subtitle size="md">Structural metadata</Subtitle>
 					<div class="tables">
-						{#each data.structural_metadata?.tables as table}
+						{#each data.resource.metadata?.tables as table}
 							<div class="table">
 								<Subtitle>{table['dc:title']}</Subtitle>
 								<BaseTable data={table.tableSchema.columns ?? []} {columns} {apiFn}></BaseTable>
@@ -151,27 +112,12 @@
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		min-height: 70lvh;
+		gap: 2rem;
 	}
 	.file-metadata {
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;
-	}
-
-	.metadata {
-		width: 100%;
-		display: grid;
-		grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
-		grid-auto-flow: row;
-		gap: 0rem 2rem;
-	}
-	.metadata-field {
-		display: grid;
-		grid-column: 1/-1;
-		grid-template-rows: subgrid;
-		grid-template-columns: subgrid;
-		width: 100%;
-		overflow-x: hidden;
 	}
 	.right-col {
 		display: flex;

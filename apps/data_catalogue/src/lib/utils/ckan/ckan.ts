@@ -133,8 +133,8 @@ export const remove =
 export const patch =
 	<T extends CkanPatchActions[0]>(
 		action: T,
-		query: Extract<CkanPatchActions, [T, unknown]>[1],
-		body: Record<PropertyKey, unknown>
+		query: Extract<CkanPatchActions, [T, unknown, unknown, unknown]>[1],
+		body: Extract<CkanPatchActions, [T, unknown, unknown, unknown]>[2] | FormData
 	) =>
 	async (client: CkanClient) => {
 		const url = processURL(client.url, `/api/3/action/${action}`, query)
@@ -151,7 +151,8 @@ export const patch =
 			_body = JSON.stringify(body)
 		}
 		const res = await fetch(url, { method: 'POST', headers, body: _body })
-		const data = await handleCKANResponse(res)
+		const data =
+			await handleCKANResponse<Extract<CkanCreateActions, [T, unknown, unknown, unknown]>[3]>(res)
 		return data
 	}
 

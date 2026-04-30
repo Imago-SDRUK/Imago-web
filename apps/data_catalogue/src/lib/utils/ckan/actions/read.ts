@@ -13,7 +13,7 @@ type PackageList = [
 		limit?: number
 		offset?: number
 	},
-	{ result: string[] }
+	string[]
 ]
 
 type CurrentPackageListWithResources = [
@@ -22,7 +22,13 @@ type CurrentPackageListWithResources = [
 		limit?: number
 		offset?: number
 		page?: number
-	}
+	},
+	{
+		id: string
+		name: string
+		resources: CkanResource[]
+		metadata_modified: string
+	}[]
 ]
 
 type PackageShow = [
@@ -62,14 +68,20 @@ type MemberList = [
 		id: string
 		object_type?: string
 		capacity?: string
-	}
+	},
+	{
+		id: string
+		type: string
+		capacity: string
+	}[]
 ]
 
 type MemberRolesList = [
 	'member_roles_list',
 	{
 		group_type?: string
-	}
+	},
+	string[]
 ]
 
 type PackageCollaboratorList = [
@@ -77,7 +89,13 @@ type PackageCollaboratorList = [
 	{
 		id: string
 		capacity?: string
-	}
+	},
+	{
+		package_id: string
+		user_id: string
+		capacity: string
+		last_modified: string
+	}[]
 ]
 
 type PackageCollaboratorListForUser = [
@@ -85,7 +103,12 @@ type PackageCollaboratorListForUser = [
 	{
 		id: string
 		capacity?: string
-	}
+	},
+	{
+		package_id: string
+		capacity: string
+		last_modified: string
+	}[]
 ]
 
 type GroupList = [
@@ -103,7 +126,7 @@ type GroupList = [
 		include_groups?: boolean
 		include_users?: boolean
 	},
-	string[]
+	string[] | CkanGroup[]
 ]
 
 type GroupShow = [
@@ -125,7 +148,8 @@ type GroupPackageShow = [
 	{
 		id: string
 		limit?: number
-	}
+	},
+	CkanDataset[]
 ]
 
 type OrganizationList = [
@@ -142,7 +166,8 @@ type OrganizationList = [
 		include_extras?: boolean
 		include_groups?: boolean
 		include_users?: boolean
-	}
+	},
+	string[] | CkanGroup[]
 ]
 
 type OrganizationShow = [
@@ -155,7 +180,8 @@ type OrganizationShow = [
 		include_users?: boolean
 		include_groups?: boolean
 		include_followers?: boolean
-	}
+	},
+	CkanGroup
 ]
 
 type UserList = [
@@ -166,7 +192,20 @@ type UserList = [
 		order_by?: string
 		all_fields?: boolean
 		include_site_user?: boolean
-	}
+	},
+	(
+		| string[]
+		| {
+				id: string
+				name: string
+				fullname: string
+				display_name: string
+				email: string
+				about: string
+				sysadmin: boolean
+				number_created_packages: number
+		  }[]
+	)
 ]
 
 type UserShow = [
@@ -177,11 +216,32 @@ type UserShow = [
 		include_num_followers?: boolean
 		include_password_hash?: boolean
 		include_plugin_extras?: boolean
+	},
+	{
+		id: string
+		name: string
+		fullname: string
+		display_name: string
+		email: string
+		about: string
+		sysadmin: boolean
+		number_created_packages: number
+		number_followers: number
+		email_hash: string
+		apikey: string
 	}
 ]
-
+/**
+ * Return the metadata of a resource.
+ **/
 type ResourceShow = [
+	/**
+	 * Return the metadata of a resource.
+	 **/
 	'resource_show',
+	/**
+	 * Return the metadata of a resource.
+	 **/
 	{
 		id: string
 	},
@@ -195,6 +255,10 @@ type ResourceSearch = [
 		order_by?: string
 		offset?: number
 		limit?: number
+	},
+	{
+		count: number
+		results: CkanResource[]
 	}
 ]
 
@@ -205,7 +269,7 @@ type TagList = [
 		vocabulary_id?: string
 		all_fields?: boolean
 	},
-	CkanTag[]
+	string[] | CkanTag[]
 ]
 
 type TagShow = [
@@ -214,7 +278,8 @@ type TagShow = [
 		id: string
 		vocabulary_id?: string
 		include_datasets?: boolean
-	}
+	},
+	CkanTag
 ]
 
 type FolloweeList = [
@@ -222,38 +287,47 @@ type FolloweeList = [
 	{
 		id: string
 		q?: string
-	}
+	},
+	{
+		id: string
+		type: string
+		display_name: string
+	}[]
 ]
 
 type UserFollowerCount = [
 	'user_follower_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type DatasetFollowerCount = [
 	'dataset_follower_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type GroupFollowerCount = [
 	'group_follower_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type ConfigOptionShow = [
 	'config_option_show',
 	{
 		key: string
-	}
+	},
+	string
 ]
 
-type ConfigOptionList = ['config_option_list', {}]
+type ConfigOptionList = ['config_option_list', undefined, string[]]
 
 type JobList = [
 	'job_list',
@@ -261,13 +335,33 @@ type JobList = [
 		queues?: string[]
 		limit?: number
 		ids_only?: boolean
-	}
+	},
+	{
+		id: string
+		queue: string
+		state: string
+		created: string
+		started: string
+		finished: string
+		worker_name: string
+		result: unknown
+	}[]
 ]
 
 type JobShow = [
 	'job_show',
 	{
 		id: string
+	},
+	{
+		id: string
+		queue: string
+		state: string
+		created: string
+		started: string
+		finished: string
+		worker_name: string
+		result: unknown
 	}
 ]
 
@@ -276,88 +370,142 @@ type ApiTokenList = [
 	{
 		user_id?: string
 		user?: string
-	}
+	},
+	{
+		id: string
+		user_id: string
+		name: string
+		created: string
+		expires: string
+	}[]
 ]
 
-type VocabularyList = ['vocabulary_list', {}]
+type VocabularyList = [
+	'vocabulary_list',
+	undefined,
+	{
+		id: string
+		name: string
+		tags: CkanTag[]
+	}[]
+]
 
 type VocabularyShow = [
 	'vocabulary_show',
 	{
 		id: string
+	},
+	{
+		id: string
+		name: string
+		tags: CkanTag[]
 	}
 ]
 
-type StatusShow = ['status_show', {}]
+type StatusShow = [
+	'status_show',
+	undefined,
+	{
+		ckan_version: string
+		site_id: string
+		site_title: string
+		site_url: string
+		site_description: string
+		state: string
+		plugins: Record<string, unknown>
+	}
+]
 
 type OrganizationFollowerCount = [
 	'organization_follower_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type UserFollowerList = [
 	'user_follower_list',
 	{
 		id: string
-	}
+	},
+	{
+		id: string
+		display_name: string
+	}[]
 ]
 
 type DatasetFollowerList = [
 	'dataset_follower_list',
 	{
 		id: string
-	}
+	},
+	{
+		id: string
+		display_name: string
+	}[]
 ]
 
 type GroupFollowerList = [
 	'group_follower_list',
 	{
 		id: string
-	}
+	},
+	{
+		id: string
+		display_name: string
+	}[]
 ]
 
 type OrganizationFollowerList = [
 	'organization_follower_list',
 	{
 		id: string
-	}
+	},
+	{
+		id: string
+		display_name: string
+	}[]
 ]
 
 type FolloweeCount = [
 	'followee_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type UserFolloweeCount = [
 	'user_followee_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type DatasetFolloweeCount = [
 	'dataset_followee_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type GroupFolloweeCount = [
 	'group_followee_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type OrganizationFolloweeCount = [
 	'organization_followee_count',
 	{
 		id: string
-	}
+	},
+	number
 ]
 
 type UserFolloweeList = [
@@ -371,48 +519,74 @@ type DatasetFolloweeList = [
 	'dataset_followee_list',
 	{
 		id: string
-	}
+	},
+	{
+		id: string
+		name: string
+		title: string
+	}[]
 ]
 
 type GroupFolloweeList = [
 	'group_followee_list',
 	{
 		id: string
-	}
+	},
+	{
+		id: string
+		name: string
+		title: string
+	}[]
 ]
 
 type OrganizationFolloweeList = [
 	'organization_followee_list',
 	{
 		id: string
-	}
+	},
+	{
+		id: string
+		name: string
+		title: string
+	}[]
 ]
 
 type AmFollowingUser = [
 	'am_following_user',
 	{
 		id: string
-	}
+	},
+	boolean
 ]
 
 type AmFollowingDataset = [
 	'am_following_dataset',
 	{
 		id: string
-	}
+	},
+	boolean
 ]
 
 type AmFollowingGroup = [
 	'am_following_group',
 	{
 		id: string
-	}
+	},
+	boolean
 ]
 
 type ResourceViewShow = [
 	'resource_view_show',
 	{
 		id: string
+	},
+	{
+		id: string
+		resource_id: string
+		title: string
+		view_type: string
+		config: string
+		order: number
 	}
 ]
 
@@ -420,7 +594,15 @@ type ResourceViewList = [
 	'resource_view_list',
 	{
 		id: string
-	}
+	},
+	{
+		id: string
+		resource_id: string
+		title: string
+		view_type: string
+		config: string
+		order: number
+	}[]
 ]
 
 type UserAutocomplete = [
@@ -429,7 +611,12 @@ type UserAutocomplete = [
 		q: string
 		limit?: number
 		ignore_self?: boolean
-	}
+	},
+	{
+		id: string
+		name: string
+		fullname: string
+	}[]
 ]
 
 type GroupAutocomplete = [
@@ -437,7 +624,12 @@ type GroupAutocomplete = [
 	{
 		q: string
 		limit?: number
-	}
+	},
+	{
+		id: string
+		name: string
+		title: string
+	}[]
 ]
 
 type OrganizationAutocomplete = [
@@ -445,7 +637,12 @@ type OrganizationAutocomplete = [
 	{
 		q: string
 		limit?: number
-	}
+	},
+	{
+		id: string
+		name: string
+		title: string
+	}[]
 ]
 
 type PackageAutocomplete = [
@@ -453,7 +650,12 @@ type PackageAutocomplete = [
 	{
 		q: string
 		limit?: number
-	}
+	},
+	{
+		id: string
+		name: string
+		title: string
+	}[]
 ]
 
 type FormatAutocomplete = [
@@ -461,7 +663,8 @@ type FormatAutocomplete = [
 	{
 		q: string
 		limit?: number
-	}
+	},
+	string[]
 ]
 
 type TagAutocomplete = [
@@ -472,23 +675,43 @@ type TagAutocomplete = [
 		fields?: Record<string, unknown>
 		limit?: number
 		offset?: number
-	}
+	},
+	string[]
 ]
 
-type LicenseList = ['license_list', {}]
+type LicenseList = [
+	'license_list',
+	undefined,
+	{
+		id: string
+		name: string
+		title: string
+		url: string
+	}[]
+]
 
 type TermTranslationShow = [
 	'term_translation_show',
 	{
 		terms: string | string[]
 		lang_codes?: string | string[]
-	}
+	},
+	{
+		term: string
+		term_translation: string
+		lang_code: string
+	}[]
 ]
 
 type GetSiteUser = [
 	'get_site_user',
 	{
 		defer_commit?: boolean
+	},
+	{
+		id: string
+		name: string
+		email: string
 	}
 ]
 
@@ -496,7 +719,8 @@ type HelpShow = [
 	'help_show',
 	{
 		name: string
-	}
+	},
+	string
 ]
 
 type GroupListAuthz = [
@@ -504,7 +728,8 @@ type GroupListAuthz = [
 	{
 		available_only?: boolean
 		am_member?: boolean
-	}
+	},
+	CkanGroup[]
 ]
 
 type OrganizationListForUser = [
@@ -513,7 +738,8 @@ type OrganizationListForUser = [
 		id?: string
 		permission?: string
 		include_dataset_count?: boolean
-	}
+	},
+	CkanGroup[]
 ]
 
 type PackageRelationshipsList = [
@@ -522,7 +748,13 @@ type PackageRelationshipsList = [
 		id: string
 		id2?: string
 		rel?: string
-	}
+	},
+	{
+		subject: string
+		object: string
+		type: string
+		comment: string
+	}[]
 ]
 
 type TaskStatusShow = [
@@ -532,6 +764,15 @@ type TaskStatusShow = [
 		entity_id?: string
 		task_type?: string
 		key?: string
+	},
+	{
+		id: string
+		entity_id: string
+		task_type: string
+		key: string
+		state: string
+		error: string
+		last_updated: string
 	}
 ]
 
@@ -543,7 +784,8 @@ type TagSearch = [
 		fields?: Record<string, unknown>
 		limit?: number
 		offset?: number
-	}
+	},
+	{ count: number; results: CkanTag[] }
 ]
 type DatastoreInfo = [
 	'datastore_info',

@@ -34,7 +34,7 @@
 
 	@media (min-width: 1280px) {
 		.section-edit[data-open] {
-			grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+			grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
 			gap: 3rem;
 		}
 		.right-col {

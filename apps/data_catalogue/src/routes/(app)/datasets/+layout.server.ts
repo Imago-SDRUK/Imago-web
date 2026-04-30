@@ -1,28 +1,29 @@
-import { ketoCheck } from '$lib/utils/auth/index.js'
-import { get } from '$lib/utils/ckan/ckan.js'
+import { actionCheckController } from '$lib/server/interface/adapters/controllers/actions/get.js'
+import { metadataGroupsGetController } from '$lib/server/interface/adapters/controllers/metadata_groups/get.js'
 import { error } from '@sveltejs/kit'
 
 export const load = async ({ locals }) => {
-	let allow_create = false
-	if (locals.session?.identity.id) {
-		const permissions = await ketoCheck.checkPermission({
-			namespace: 'Endpoint',
-			object: '/api/v1/datasets',
-			relation: 'POST',
-			subjectId: locals.session?.identity.id
+	const [errors_permission, allow_create] = await actionCheckController({
+		object: 'datasets',
+		permits: 'create',
+		configuration: locals.configuration,
+		session: locals.session
+	})
+	if (errors_permission !== null) {
+		error(400, {
+			message: errors_permission.reason,
+			id: errors_permission.reason
 		})
-		allow_create = permissions.allowed
 	}
-	const groups = await locals.ckan.request(
-		get('group_list', {
-			all_fields: true
-		})
-	)
-	if (!groups.success || !Array.isArray(groups.result)) {
+	const [errors, groups] = await metadataGroupsGetController({
+		configuration: locals.configuration,
+		session: locals.session
+	})
+	if (errors) {
 		error(400, { message: `There's been an issue retreiving the groups`, id: 'err' })
 	}
 	return {
-		groups: groups,
-		allow_create
+		allow_create,
+		groups: groups
 	}
 }

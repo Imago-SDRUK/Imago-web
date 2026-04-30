@@ -1,34 +1,16 @@
-import { db } from '$lib/db/index.js'
-import { questions } from '$lib/db/schema/questions.js'
-import { validateUpdate } from '$lib/db/validation/index.js'
-import { authorise } from '$lib/utils/auth/index.js'
-import { handleDBError } from '$lib/utils/db/index.js'
-import { error } from '@sveltejs/kit'
-import { json } from '@sveltejs/kit'
-import { eq } from 'drizzle-orm'
+import { questionUpdateSortController } from '$lib/server/interface/adapters/controllers/questions/update'
+import { error, json } from '@sveltejs/kit'
 
-export const PATCH = async ({ request, locals, params }) => {
-	await authorise({
-		namespace: 'Endpoint',
-		object: '/api/v1/questions',
-		relation: 'PATCH',
-		session: locals.session
+export const POST = async ({ locals, request, params }) => {
+	const payload = (await request.json()) as { sort: string }
+	const [errors, question] = await questionUpdateSortController({
+		session: locals.session,
+		configuration: locals.configuration,
+		sort: payload.sort,
+		id: params.id
 	})
-	const body = await request.json()
-	//TODO: enrich record with updated_by, updated_at
-	const question = validateUpdate(questions, {
-		...body,
-		updated_by: locals.session?.identity.id,
-		group: 'registration'
-	})
-	if (!question.success) {
-		error(400, { message: String(question.errors), id: 'err' })
+	if (errors !== null) {
+		error(500, { message: errors?.message ?? errors.reason, id: errors.reason })
 	}
-	await db
-		.update(questions)
-		.set(question.data)
-		.where(eq(questions.id, params.id))
-		.returning()
-		.catch(handleDBError('Error updating question'))
-	return json({ message: 'ok' })
+	return json({ question })
 }

@@ -217,6 +217,7 @@
 		justify-content: center;
 		align-items: center;
 		border-radius: var(--radius);
+		gap: var(--padding-xl);
 	}
 	.btn[data-style='tag']:hover {
 		border: 1px solid var(--border-muted);

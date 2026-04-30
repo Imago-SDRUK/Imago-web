@@ -1,37 +1,42 @@
 <script lang="ts">
-	import type { Question } from '$lib/db/schema/questions.js'
-	import { getId, jstr } from '@arturoguzman/art-ui'
-	import { BaseSection, Button, Title } from '@imago/ui'
-	import { applyAction, enhance } from '$app/forms'
-	import { notify } from '$lib/stores/notify.js'
+	import { generateKeyBetween } from 'fractional-indexing'
+	import { Button, Title } from '@imago/ui'
+	import { enhance } from '$app/forms'
 	import CardQuestion from '$lib/ui/forms/card_question.svelte'
 	import QuestionInputs from '$lib/ui/forms/question_inputs.svelte'
+	import { handleEnhance } from '$lib/utils/forms/index.js'
+	import { DateTime } from 'luxon'
+	import type { Question } from '$lib/server/entities/models/questions.js'
 	let { data } = $props()
 	let questions = $derived.by(() => {
 		let questions = $state(data.questions)
 		return questions
 	})
 
-	let type: Question['type'] | undefined = $state(undefined)
 	let question: Question = $state({
+		sort: generateKeyBetween(questions.at(-1).sort, null),
+		id: '',
+		conditionals: [],
 		question: '',
-		options: [{ label: '', id: getId(), value: '', error: false }],
+		required: false,
+		status: 'draft',
+		visibility: false,
 		created_by: '',
 		updated_by: '',
+		created_at: DateTime.now().toJSDate(),
+		deleted_at: DateTime.now().toJSDate(),
+		updated_at: DateTime.now().toJSDate(),
 		description: '',
-		conditionals: [],
-		label: ''
+		group: '',
+		label: '',
+		options: [],
+		type: null
 	})
-	const resetQuestion = () => {
-		question = {
-			question: '',
-			options: [{ label: '', id: getId(), value: '', error: false }],
-			created_by: '',
-			updated_by: '',
-			description: '',
-			conditionals: [],
-			label: ''
-		}
+	let sorting: { dragging: string | null } = $state({
+		dragging: null
+	})
+	const resetQuestion = (clean: Question) => {
+		question = clean
 	}
 </script>
 
@@ -41,28 +46,33 @@
 		<form
 			class="form"
 			action="?/create_question"
-			method="post"
-			use:enhance={() => {
-				return async ({ result, update }) => {
-					if ('data' in result && result.data) {
-						if ('errors' in result.data) {
-							notify.send(String(jstr(result.data.errors)))
-						}
-						if ('message' in result.data) {
-							notify.send(String(result.data.message))
-						}
-					}
-					if (result.type === 'redirect') {
-						applyAction(result)
-					}
-
-					await update({ reset: true, invalidateAll: true })
-					resetQuestion()
+			use:enhance={handleEnhance({
+				onsuccess: () => {
+					resetQuestion({
+						sort: generateKeyBetween(questions.at(-1).sort, null),
+						id: '',
+						conditionals: [],
+						question: '',
+						required: false,
+						status: 'draft',
+						visibility: false,
+						created_by: '',
+						updated_by: '',
+						created_at: DateTime.now().toJSDate(),
+						deleted_at: DateTime.now().toJSDate(),
+						updated_at: DateTime.now().toJSDate(),
+						description: '',
+						group: '',
+						label: '',
+						options: [],
+						type: null
+					})
 				}
-			}}
+			})}
+			method="post"
 		>
 			<div class="inputs">
-				<QuestionInputs questions={data.questions} bind:question bind:type></QuestionInputs>
+				<QuestionInputs bind:question questions={data.questions}></QuestionInputs>
 			</div>
 			<div class="buttons">
 				<Button type="reset">Clear</Button>
@@ -73,7 +83,7 @@
 	<div class="right-col">
 		<Title size="md">Existing questions</Title>
 		{#each questions as question, index (question.id)}
-			<CardQuestion {questions} bind:question={questions[index]}></CardQuestion>
+			<CardQuestion {questions} bind:question={questions[index]} bind:sorting></CardQuestion>
 		{/each}
 	</div>
 </div>

@@ -1,18 +1,109 @@
-import { ketoRead } from '$lib/utils/auth'
+import type { PermissionRequest } from '$lib/server/entities/models/permissions.js'
+import { permissionCreateController } from '$lib/server/interface/adapters/controllers/permissions/create'
+import { permissionDeleteController } from '$lib/server/interface/adapters/controllers/permissions/delete.js'
+import { permissionsGetController } from '$lib/server/interface/adapters/controllers/permissions/get.js'
+import { formGetStringOrUndefined, safeJSONParse } from '$lib/utils/forms'
+import { jstr } from '@arturoguzman/art-ui'
+import { error } from '@sveltejs/kit'
+import { fail } from '@sveltejs/kit'
 
-export const load = async () => {
-	const users = await ketoRead.getRelationships({ namespace: 'User' })
-	const groups = await ketoRead.getRelationships({ namespace: 'Group' })
-	const datasets = await ketoRead.getRelationships({ namespace: 'Dataset' })
-	const resources = await ketoRead.getRelationships({ namespace: 'Resource' })
-	const resource_versions = await ketoRead.getRelationships({ namespace: 'ResourceVersion' })
-	const endpoints = await ketoRead.getRelationships({ namespace: 'Endpoint' })
+export const load = async ({ locals }) => {
+	const [permissions, dataset_permissions, group_permissions, resources_permissions] =
+		await Promise.all([
+			permissionsGetController({
+				session: locals.session,
+				configuration: locals.configuration,
+				data: { namespace: 'Action' }
+			}).then(([errors, permissions]) => {
+				if (errors !== null) {
+					error(500, { message: errors.reason, id: errors.reason })
+				}
+				return permissions
+			}),
+			permissionsGetController({
+				session: locals.session,
+				configuration: locals.configuration,
+				data: { namespace: 'Dataset' }
+			}).then(([errors, permissions]) => {
+				if (errors !== null) {
+					error(500, { message: errors.reason, id: errors.reason })
+				}
+				return permissions
+			}),
+			permissionsGetController({
+				session: locals.session,
+				configuration: locals.configuration,
+				data: { namespace: 'Group' }
+			}).then(([errors, permissions]) => {
+				if (errors !== null) {
+					error(500, { message: errors.reason, id: errors.reason })
+				}
+				return permissions
+			}),
+			permissionsGetController({
+				session: locals.session,
+				configuration: locals.configuration,
+				data: { namespace: 'Resource' }
+			}).then(([errors, permissions]) => {
+				if (errors !== null) {
+					error(500, { message: errors.reason, id: errors.reason })
+				}
+				return permissions
+			})
+		])
+
 	return {
-		users,
-		groups,
-		datasets,
-		resources,
-		resource_versions,
-		endpoints
+		permissions,
+		dataset_permissions,
+		group_permissions,
+		resources_permissions
+	}
+}
+
+export const actions = {
+	create: async ({ request, locals }) => {
+		const form = await request.formData()
+		const payload: PermissionRequest = {
+			actor: safeJSONParse(formGetStringOrUndefined({ form, field: 'actor' })),
+			namespace: formGetStringOrUndefined({ form, field: 'namespace' }),
+			object: formGetStringOrUndefined({ form, field: 'object' }),
+			relation: formGetStringOrUndefined({ form, field: 'relation' })
+		}
+		console.log(payload)
+		const [errors, permission] = await permissionCreateController({
+			configuration: locals.configuration,
+			session: locals.session,
+			data: payload
+		})
+		if (errors !== null) {
+			console.log(errors)
+			return fail(500, { message: errors.message ?? errors.reason })
+		}
+		console.log(jstr(permission))
+		return {
+			message: 'ok'
+		}
+	},
+
+	delete: async ({ request, locals }) => {
+		const form = await request.formData()
+		const payload: PermissionRequest = {
+			actor: safeJSONParse(formGetStringOrUndefined({ form, field: 'actor' })),
+			namespace: formGetStringOrUndefined({ form, field: 'namespace' }),
+			object: formGetStringOrUndefined({ form, field: 'object' }),
+			relation: formGetStringOrUndefined({ form, field: 'relation' })
+		}
+		const [errors, permission] = await permissionDeleteController({
+			configuration: locals.configuration,
+			session: locals.session,
+			data: payload
+		})
+		if (errors !== null) {
+			return fail(500, { message: errors.reason })
+		}
+		console.log(jstr(permission))
+		return {
+			message: 'ok'
+		}
 	}
 }

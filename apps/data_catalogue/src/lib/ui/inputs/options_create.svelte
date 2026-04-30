@@ -1,59 +1,35 @@
 <script lang="ts">
-	import { getId, jstr } from '@arturoguzman/art-ui'
+	import { getId } from '@arturoguzman/art-ui'
 	import { Button, Icon, Paragraph } from '@imago/ui'
 	import { notify } from '$lib/stores/notify'
-	import { APP_STATE } from '$lib/globals/state.svelte'
 	import Option from './option.svelte'
+	import type { Question } from '$lib/server/entities/models/questions'
 	let {
-		options = $bindable([{ label: '', id: getId(), value: '', error: false }]),
-		name,
-		handleSave
+		options = $bindable()
 	}: {
-		options?: { label: string; value: string; id: string; error: boolean }[]
-		name?: string
-		handleSave?: (
-			options: { label: string; value: string; id: string; error: boolean }[]
-		) => void | Promise<void>
+		options: Question['options']
 	} = $props()
 	const id = `options-${getId()}`
-	const handleAddOption = (index: number) => {
+	let internal_options: { label: string; value: string; id: string; error: boolean }[] | undefined =
+		$state(options?.map((option) => ({ ...option, id: getId(), error: false })))
+	const handleAddOption = ({
+		index = 0,
+		options = []
+	}: {
+		index?: number
+		options?: { label: string; value: string; id: string; error: boolean }[]
+	}) => {
+		if (options.length === 0) {
+			const new_options = [...options, { label: '', value: '', id: getId(), error: false }]
+			return new_options
+		}
 		if (options[index - 1].label === '' || options[index - 1].value === '') {
 			notify.send(`Please fill out the last entry.`)
-			return
+			return options
 		}
-		options.push({ label: '', value: '', id: getId(), error: false })
-		setTimeout(() => {
-			const el = document.getElementById(`${id}-label-${index + 1}`)
-			if (el) {
-				el.focus()
-			}
-		}, 100)
+		const new_options = [...options, { label: '', value: '', id: getId(), error: false }]
+		return new_options
 	}
-	// const handleSave = async () => {
-	// 	APP_STATE.loading = true
-	// 	const res = await fetch(`/api/v1/datasets/${page.params.id}`, {
-	// 		method: 'PATCH',
-	// 		body: JSON.stringify({
-	// 			options: options
-	// 				.map((x) => ({ ...x, label: x.label.trim(), value: x.value.trim() }))
-	// 				.filter((x) => x.label !== '')
-	// 		})
-	// 	})
-	// 	APP_STATE.loading = false
-	// 	const data = await res.json()
-	// 	if (data?.dataset?.success === true) {
-	// 		notify.send(`Metadata successfully saved.`)
-	// 	} else {
-	// 		notify.send(`There's been an issue saving the metadata, please try again.`)
-	// 	}
-	// 	await invalidateAll()
-	// }
-	// $effect(() => {
-	// 	options =
-	// 		ctx.dataset.options.length === 0
-	// 			? [{ label: '', value: '', id: getId(), error: false }]
-	// 			: ctx.dataset.options.map((x) => ({ ...x, id: getId(), error: false }))
-	// })
 </script>
 
 <div class="field-header">
@@ -62,7 +38,10 @@
 		<Button
 			type="button"
 			onclick={() => {
-				handleAddOption(options.length)
+				internal_options = handleAddOption({
+					index: internal_options?.length,
+					options: internal_options
+				})
 			}}
 		>
 			<Icon icon={{ icon: 'plus', set: 'tabler' }}></Icon>
@@ -71,11 +50,29 @@
 </div>
 
 <div class="options">
-	<input {name} type="text" value={JSON.stringify(options)} hidden />
 	<div class="options-inputs">
-		{#each options as extra, index (extra.id)}
-			<Option {index} {id} bind:option={options[index]} bind:options></Option>
-		{/each}
+		{#if internal_options}
+			{#each internal_options as extra, index (extra.id)}
+				<Option {index} {id} bind:option={internal_options[index]} bind:options={internal_options}>
+					{#snippet button()}
+						<Button
+							style="square"
+							type="button"
+							onclick={() => {
+								if (internal_options) {
+									internal_options = [
+										...internal_options.slice(0, index),
+										...internal_options.slice(index + 1)
+									]
+								}
+							}}
+						>
+							<Icon icon={{ icon: 'minus', set: 'tabler' }}></Icon>
+						</Button>
+					{/snippet}
+				</Option>
+			{/each}
+		{/if}
 	</div>
 </div>
 

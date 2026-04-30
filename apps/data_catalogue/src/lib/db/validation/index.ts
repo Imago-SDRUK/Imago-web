@@ -23,18 +23,22 @@ export const handleArkErrors = (parsed: ArkErrors): ArkFormErrors => {
 
 export const validateSelect = <T extends TableConfig>(
 	schema: PgTableWithColumns<T>,
-	record: Record<PropertyKey, unknown>
+	record: unknown
 ) => {
 	const _schema = createSelectSchema(schema)
+	const parsed = _schema(record)
+	if (parsed instanceof type.errors) {
+		return handleArkErrors(parsed)
+	}
 	return {
-		schema: _schema,
-		data: _schema(record)
+		success: true as const,
+		data: parsed
 	}
 }
 
 export const validateInsert = <T extends TableConfig>(
 	schema: PgTableWithColumns<T>,
-	record: Record<PropertyKey, unknown>
+	record: unknown
 ) => {
 	const _schema = createInsertSchema(schema)
 	const parsed = _schema(record)

@@ -5,8 +5,10 @@
 	import { notify } from '$lib/stores/notify'
 	import { Accordion, Button, Checkbox, Icon, Input, Subtitle, Text, Textarea } from '@imago/ui'
 	import { getDataset } from '$lib/context/dataset.svelte'
-	import Upload from './upload.svelte'
 	import FileInput from './file_input.svelte'
+	import { handleEnhance } from '$lib/utils/forms'
+	import { xhrUpload } from '$lib/utils/files/readers'
+	import VersionUpload from './version_upload.svelte'
 
 	let {
 		file,
@@ -16,18 +18,17 @@
 		index: number
 	} = $props()
 	const ctx = getDataset()
-	let state: 'idle' | 'predelete' = $state('idle')
-	const handleDelete = async () => {
-		const res = await fetch(`/api/v1/resources/${file.id}`, { method: 'DELETE' })
-		if (res.status === 201) {
-			notify.send(`${file.name} has been deleted.`)
-			ctx.dataset.resources = [
-				...ctx.dataset.resources.slice(0, index),
-				...ctx.dataset.resources.slice(index + 1)
-			]
-			return
+	let state: 'idle' | 'predelete' | 'edit' | 'versions' | 'metadata' | 'edit' = $state('idle')
+	const handleOpen = (
+		_state: 'idle' | 'predelete' | 'edit' | 'versions' | 'metadata' | 'edit',
+		fn: () => void
+	) => {
+		if (state === _state) {
+			state = 'idle'
+		} else {
+			state = _state
 		}
-		notify.send(res.statusText)
+		fn()
 	}
 </script>
 
@@ -44,7 +45,7 @@
 			{/snippet}
 			{#snippet buttons({ toggleOpen, open })}
 				<div class="buttons">
-					{#if state === 'predelete' && handleDelete}
+					{#if state === 'predelete'}
 						<Button
 							style="clean"
 							type="button"
@@ -54,18 +55,12 @@
 						>
 							Cancel
 						</Button>
-						<Button
-							active={open}
-							style="clean"
-							type="button"
-							onclick={() => {
-								handleDelete()
-							}}
-						>
-							Confirm
-						</Button>
+						<form action="?/delete_resource" method="post" use:enhance={handleEnhance()}>
+							<input type="hidden" name="resource_id" value={file.id} />
+							<Button active={open} style="clean">Confirm</Button>
+						</form>
 					{/if}
-					{#if state === 'idle'}
+					{#if state === 'edit' || state === 'metadata' || state === 'versions' || state === 'idle'}
 						<Button
 							style="square"
 							type="button"
@@ -79,11 +74,32 @@
 							<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
 						</Button>
 						<Button
-							active={open}
+							active={state === 'versions'}
 							style="square"
 							type="button"
 							onclick={() => {
-								toggleOpen()
+								handleOpen('versions', toggleOpen)
+							}}
+						>
+							<Icon icon={{ icon: 'versions', set: 'tabler' }}></Icon>
+						</Button>
+
+						<Button
+							active={state === 'metadata'}
+							style="square"
+							type="button"
+							onclick={() => {
+								handleOpen('metadata', toggleOpen)
+							}}
+						>
+							<Icon icon={{ icon: 'table-plus', set: 'tabler' }}></Icon>
+						</Button>
+						<Button
+							active={state === 'edit'}
+							style="square"
+							type="button"
+							onclick={() => {
+								handleOpen('edit', toggleOpen)
 							}}
 						>
 							<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
@@ -91,54 +107,45 @@
 					{/if}
 				</div>
 			{/snippet}
-			<div class="forms">
-				<form
-					method="post"
-					action="?/update_resource"
-					use:enhance={() => {
-						return async ({ result }) => {
-							if ('data' in result) {
-								notify.send(String(result.data.message))
-							}
-							await invalidateAll()
-						}
-					}}
-				>
-					<input type="text" hidden bind:value={file.id} name="id" />
+			{#if state === 'edit'}
+				<div class="forms">
+					<form method="post" action="?/update_resource" use:enhance={handleEnhance()}>
+						<input type="text" hidden bind:value={file.id} name="id" />
 
-					<div class="inputs">
-						<Input label="Name">
-							<Text name="name" bind:value={file.name}></Text>
-						</Input>
-						<Input label="Description">
-							<Textarea name="description" bind:value={file.description}></Textarea>
-						</Input>
-						<Input label="Format">
-							<Text name="format" bind:value={file.format}></Text>
-						</Input>
-					</div>
-					<div class="buttons">
-						<Button
-							type="button"
-							onclick={() => {
-								invalidateAll()
-							}}>Cancel</Button
-						>
-						<Button>Submit</Button>
-					</div>
-				</form>
+						<div class="inputs">
+							<Input label="Name">
+								<Text name="name" bind:value={file.name}></Text>
+							</Input>
+							<Input label="Description">
+								<Textarea name="description" bind:value={file.description}></Textarea>
+							</Input>
+							<Input label="Format">
+								<Text name="format" bind:value={file.format}></Text>
+							</Input>
+						</div>
+						<div class="buttons">
+							<Button
+								type="button"
+								onclick={() => {
+									invalidateAll()
+								}}>Cancel</Button
+							>
+							<Button>Submit</Button>
+						</div>
+					</form>
+				</div>
+			{/if}
+			{#if state === 'versions'}
+				<Subtitle>Add a version</Subtitle>
+				<VersionUpload resource_id={file.id}></VersionUpload>
+			{/if}
+			{#if state === 'metadata'}
+				<Subtitle>Add structural metadata</Subtitle>
 				<form
 					method="post"
 					action="?/update_datastore"
 					enctype="multipart/form-data"
-					use:enhance={() => {
-						return async ({ result }) => {
-							if ('data' in result) {
-								notify.send(String(result.data.message))
-							}
-							await invalidateAll()
-						}
-					}}
+					use:enhance={handleEnhance()}
 				>
 					<input type="text" hidden bind:value={file.id} name="id" />
 					<div class="inputs">
@@ -157,7 +164,8 @@
 						<Button>Submit</Button>
 					</div>
 				</form>
-			</div>
+			{/if}
+			<div class="forms"></div>
 			<!-- <Button -->
 			<!-- 	onclick={async () => { -->
 			<!-- 		await fetch(`/api/v1/resources/${file.id}/datastore`, { method: 'POST' }) -->

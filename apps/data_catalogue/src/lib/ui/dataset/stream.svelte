@@ -16,11 +16,11 @@
 
 		return Boolean(
 			are_objects &&
-				Object.keys(a).filter((a) => !skip_keys.includes(a)).length ===
-					Object.keys(b).filter((b) => !skip_keys.includes(b)).length &&
-				Object.entries(a).every(([k, v]) =>
-					skip_keys.includes(k) ? true : isEqual(v, b[k as keyof T])
-				)
+			Object.keys(a).filter((a) => !skip_keys.includes(a)).length ===
+				Object.keys(b).filter((b) => !skip_keys.includes(b)).length &&
+			Object.entries(a).every(([k, v]) =>
+				skip_keys.includes(k) ? true : isEqual(v, b[k as keyof T])
+			)
 		)
 	}
 	const diff = <T extends Record<PropertyKey, unknown>>({
@@ -78,7 +78,7 @@
 	}
 </script>
 
-{#if activities.length > 1}
+{#if Array.isArray(activities) && activities.length > 1}
 	<div class="stream">
 		<Subtitle size="md">Activity stream</Subtitle>
 		{#each activities
