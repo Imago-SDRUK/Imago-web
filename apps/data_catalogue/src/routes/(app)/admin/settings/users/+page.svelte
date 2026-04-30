@@ -10,21 +10,18 @@
 		Paragraph,
 		Icon,
 		ActionBar,
-		handleSearchParams,
-		Select,
-		Input
+		handleSearchParams
 	} from '@imago/ui'
 	import { onMount } from 'svelte'
 	import CellText from '$lib/ui/tables/cell_text.svelte'
-	import { capitalise, jstr } from '@arturoguzman/art-ui'
-	import CellGroups from '$lib/ui/tables/cell_groups.svelte'
+	import { jstr } from '@arturoguzman/art-ui'
 	import CellEditor from '$lib/ui/tables/cell_editor.svelte'
 	import { page } from '$app/state'
-	import { DateTime } from 'luxon'
 	import Dialog from '$lib/ui/cards/dialog.svelte'
 	import { toggleDialog } from '$lib/utils/ui/index.js'
 	import { applyAction, enhance } from '$app/forms'
 	import { notify } from '$lib/stores/notify.js'
+	import Facts from '$lib/ui/cards/facts.svelte'
 	let { data } = $props()
 	const columns: (IColumnConfig & {
 		id: 'first_name' | 'last_name' | 'id' | 'email' | 'groups'
@@ -45,12 +42,7 @@
 			cell: CellText,
 			width: 300
 		},
-		{
-			id: 'groups',
-			header: 'Groups',
-			cell: CellGroups,
-			width: 300
-		},
+
 		{
 			id: 'id',
 			header: 'ID',
@@ -64,40 +56,20 @@
 	let selected = $derived(
 		data.users.items.findIndex((group) => group.id === page.url.searchParams.get('edit')) ?? -1
 	)
-	let show_groups = $state(false)
 </script>
 
-<form
-	action="?/create"
-	method="post"
-	use:enhance={() => {
-		return async ({ result }) => {
-			console.log(result)
-		}
-	}}
->
-	<Input label="Status">
-		<Select name="status">
-			{#each ['preregister', 'active', 'archived', 'draft', 'suspended'] as v}
-				<option value={v}>{v}</option>
-			{/each}
-		</Select>
-	</Input>
-	<Button>Create user</Button>
-</form>
 <SectionEdit open={selected > -1 ? true : undefined}>
 	{#snippet leftCol()}
 		<div class="section">
 			<Title>Users</Title>
 			<BaseTable data={data.users.items} {columns}></BaseTable>
 			<div class="buttons">
-				<pre>{jstr(data.users)}</pre>
-				{#if data.users.first}
+				{#if data.users.items}
 					<Button
 						href={handleSearchParams({
 							add: [
-								{ key: 'page_size', value: data.users.first.page_size, set: true },
-								{ key: 'page_token', value: data.users.first.page_token, set: true }
+								{ key: 'page', value: 1, set: true },
+								{ key: 'limit', value: 20, set: true }
 							],
 							remove: ['edit'],
 							url: page.url
@@ -105,17 +77,37 @@
 					>
 				{/if}
 
-				{#if data.users.next}
-					<Button
-						href={handleSearchParams({
-							add: [
-								{ key: 'page_size', value: data.users.next.page_size, set: true },
-								{ key: 'page_token', value: data.users.next.page_token, set: true }
-							],
-							remove: ['edit'],
-							url: page.url
-						})}>Next</Button
-					>
+				{#if data.users.total > 0}
+					<div class="buttons">
+						<div class="buttons">
+							<Paragraph>Total: {data.users.total}</Paragraph>
+							{#if Number(page.url.searchParams.get('page')) > 1}
+								<Button
+									href={handleSearchParams({
+										add: [
+											{
+												key: 'page',
+												value: Number(page.url.searchParams.get('page')) - 1,
+												set: true
+											},
+											{ key: 'limit', value: data.users.limit, set: true }
+										],
+										remove: ['edit'],
+										url: page.url
+									})}>Previous</Button
+								>{/if}
+						</div>
+						<Button
+							href={handleSearchParams({
+								add: [
+									{ key: 'page', value: Number(page.url.searchParams.get('page')) + 1, set: true },
+									{ key: 'limit', value: data.users.limit, set: true }
+								],
+								remove: ['edit'],
+								url: page.url
+							})}>Next</Button
+						>
+					</div>
 				{/if}
 			</div>
 		</div>
@@ -153,139 +145,11 @@
 				</ActionBar>
 				<div class="section">
 					<Subtitle>User details</Subtitle>
-					<div class="details">
-						<Paragraph>First name: {data.user.first_name}</Paragraph>
-						<Paragraph>Last name: {data.user.last_name}</Paragraph>
-						<Paragraph>Email: {data.user.email}</Paragraph>
-						{#if data.user?.created_at}
-							<Paragraph
-								>Created at: {DateTime.fromISO(data.user?.created_at)
-									.setLocale('en-gb')
-									.toLocaleString(DateTime.DATETIME_MED)}</Paragraph
-							>
-						{/if}
-						{#if data.user?.updated_at}
-							<Paragraph
-								>Updated at: {DateTime.fromISO(data.user?.updated_at)
-									.setLocale('en-gb')
-									.toLocaleString(DateTime.DATETIME_MED)}</Paragraph
-							>
-						{/if}
-					</div>
+					<Facts
+						record={data.user}
+						keys={['first_name', 'last_name', 'email', 'created_at', 'updated_at', 'status']}
+					></Facts>
 				</div>
-
-				<div class="section">
-					<ActionBar>
-						{#snippet left()}
-							<Subtitle>Groups</Subtitle>
-						{/snippet}
-						{#snippet right()}
-							<Button
-								active={show_groups}
-								onclick={() => {
-									show_groups = !show_groups
-								}}
-							>
-								<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
-							</Button>
-						{/snippet}
-					</ActionBar>
-					{#if !show_groups}
-						<div class="groups">
-							{#each data.users.items[selected]?.groups as group}
-								<div class="wrapper">
-									<Paragraph style="label">{capitalise(group)}</Paragraph>
-								</div>
-							{/each}
-						</div>
-					{/if}
-					{#if show_groups}
-						<div class="editing-groups">
-							<Paragraph>Existing groups</Paragraph>
-							<div class="groups">
-								{#each data.user.groups as group}
-									<div class="wrapper">
-										<form
-											action="?/remove_group"
-											method="post"
-											use:enhance={() => {
-												return async ({ result, update }) => {
-													if ('data' in result && result.data) {
-														if ('errors' in result.data) {
-															notify.send(String(jstr(result.data.errors)))
-														}
-														if ('message' in result.data) {
-															notify.send(String(result.data.message))
-														}
-													}
-													if (result.type === 'redirect') {
-														applyAction(result)
-													}
-
-													await update({ reset: true, invalidateAll: true })
-												}
-											}}
-										>
-											<input type="hidden" value={group} name="object" />
-											<input type="hidden" value={data.user.id} name="subject_id" />
-											<Button style="tag" onclick={async () => {}}>{capitalise(group)}</Button>
-										</form>
-									</div>
-								{/each}
-							</div>
-						</div>
-						<div class="editing-groups">
-							<Paragraph>Available groups</Paragraph>
-							<div class="groups">
-								{#each data.groups.filter((group) => !data.user?.groups?.find((ug) => ug === group)) as group}
-									<div class="wrapper">
-										<form
-											action="?/add_group"
-											method="post"
-											use:enhance={() => {
-												return async ({ result, update }) => {
-													if ('data' in result && result.data) {
-														if ('errors' in result.data) {
-															notify.send(String(jstr(result.data.errors)))
-														}
-														if ('message' in result.data) {
-															notify.send(String(result.data.message))
-														}
-													}
-													if (result.type === 'redirect') {
-														applyAction(result)
-													}
-
-													await update({ reset: true, invalidateAll: true })
-												}
-											}}
-										>
-											<input type="hidden" value={group} name="object" />
-											<input type="hidden" value={data.user.id} name="subject_id" />
-											<Button style="tag">{capitalise(group)}</Button>
-										</form>
-									</div>
-								{/each}
-							</div>
-						</div>
-					{/if}
-				</div>
-
-				{#if data.answers?.filter((answer) => answer.answer !== null && answer.question !== null).length ?? 0 > 0}
-					<div class="section">
-						<Subtitle>Answers</Subtitle>
-						{#each data.answers as answer}
-							<div class="details">
-								{#if answer.question}
-									<Paragraph>Question: {answer.question.title}</Paragraph>
-								{/if}
-								{#if answer.answer}
-									<Paragraph>Answer: {answer.answer}</Paragraph>
-								{/if}
-							</div>
-						{/each}
-					</div>
-				{/if}
 			</div>
 		{/if}
 	{/snippet}
@@ -345,11 +209,6 @@
 		gap: 0.5rem;
 	}
 
-	.details {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
 	form {
 		display: flex;
 		flex-direction: column;
@@ -359,18 +218,5 @@
 		display: flex;
 		gap: 1rem;
 		justify-content: space-between;
-	}
-	.groups {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
-	.editing-groups {
-		background-color: var(--background-muted);
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 1rem;
-		border-radius: var(--radius);
 	}
 </style>
