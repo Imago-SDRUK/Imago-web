@@ -3,12 +3,11 @@
 	import { page } from '$app/state'
 	import type { ResourceVersionRequest } from '$lib/server/entities/models/resources'
 	// import { invalidateAll } from '$app/navigation'
-	import { xhrUpload, type FilePreUpload, type FileUpload } from '$lib/utils/files/readers'
+	import { xhrUpload, type FileUpload } from '$lib/utils/files/readers'
 	import { handleEnhance } from '$lib/utils/forms'
-	import { Accordion, Button, Icon, Input, Subtitle, Text, Textarea } from '@imago/ui'
+	import { Button, Input, Text, Textarea } from '@imago/ui'
 	import { Tween } from 'svelte/motion'
 	import FileInput from './file_input.svelte'
-	import { jstr } from '@arturoguzman/art-ui'
 	let { resource_id }: { resource_id: string } = $props()
 	const r_id = () => resource_id
 	let file: File | null = $state(null)
