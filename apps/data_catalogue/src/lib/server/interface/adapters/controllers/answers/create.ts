@@ -7,6 +7,7 @@ import {
 import { getServerContext } from '$lib/server/application/context'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { log } from '$lib/utils/server/logger'
+import { getQuestionsModule } from '$lib/server/modules/questions'
 
 export const answerCreateController = async ({
 	data,
@@ -36,7 +37,7 @@ export const answersCreateController = async ({
 	session,
 	configuration
 }: {
-	data: unknown[]
+	data: { question_id: string; answer: string }[]
 	session: App.Locals['session']
 	configuration: Configuration
 }) => {
@@ -49,6 +50,7 @@ export const answersCreateController = async ({
 	const [errors, answer] = await answersCreateUseCase({
 		data,
 		answers_repository: getAnswersModule(),
+		question_repository: getQuestionsModule(),
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {

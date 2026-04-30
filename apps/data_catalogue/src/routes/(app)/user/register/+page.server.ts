@@ -26,31 +26,13 @@ export const load = async ({ locals }: PageServerLoadEvent) => {
 		return error(500, { message: errs.reason, id: errs.reason })
 	}
 	return { questions }
-	// await authorise({
-	// 	session: locals.session,
-	// 	namespace: 'Endpoint',
-	// 	relation: 'GET',
-	// 	object: '/api/v1/questions'
-	// })
-	// const records = await db
-	// 	.select()
-	// 	.from(questions)
-	// 	.orderBy(questions.created_at)
-	// 	.catch(handleDBError('Error fetching questions'))
-	// if (records.length === 0) {
-	// 	await db.update(users).set({ status: 'active' }).where(eq(users.id, locals.session.identity.id))
-	// 	return redirect(307, '/')
-	// }
-	// return {
-	// 	questions: records
-	// }
 }
 
 export const actions = {
 	create: async ({ request, locals }) => {
 		const form = parseForm(await request.formData())
 		const body = Object.entries(form).map(([key, value]) => ({
-			question: key,
+			question_id: key,
 			answer: value
 		}))
 		const [errors] = await answersCreateController({
@@ -59,7 +41,8 @@ export const actions = {
 			session: locals.session
 		})
 		if (errors !== null) {
-			return fail(400, { message: errors.reason, id: errors.reason })
+			console.log(errors)
+			return fail(400, { message: errors.message ?? errors.reason, id: errors.reason })
 		}
 		const [errs] = await userUpdateController({
 			configuration: locals.configuration,
@@ -68,25 +51,9 @@ export const actions = {
 			payload: { status: 'active' }
 		})
 		if (errs !== null) {
-			return fail(400, { message: errs.reason, id: errs.reason })
+			console.log(errs)
+			return fail(400, { message: errs.message ?? errs.reason, id: errs.reason })
 		}
 		return redirect(307, '/')
-		// if (!locals.session) {
-		// 	redirect(307, '/')
-		// }
-		// const form = parseForm(await request.formData())
-		// const body = Object.entries(form).map(([key, value]) => ({ question: key, answer: value }))
-		// const res = await fetch(`/api/v1/answers`, {
-		// 	method: 'POST',
-		// 	headers: {
-		// 		'content-type': 'application/json'
-		// 	},
-		// 	body: JSON.stringify(body)
-		// }).catch(() => error(500, { message: 'Error saving answers', id: 'err' }))
-		// if (!res.ok) {
-		// 	error(400, { message: 'Error saving your answers, please try again', id: 'err' })
-		// }
-		// await db.update(users).set({ status: 'active' }).where(eq(users.id, locals.session.identity.id))
-		// return redirect(307, '/')
 	}
 }
