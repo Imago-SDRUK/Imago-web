@@ -105,10 +105,14 @@ export const userGetGroupsController = async ({
 
 export const usersGetController = async ({
 	session,
-	configuration
+	configuration,
+	limit = 25,
+	offset = 0
 }: {
 	session?: Session
 	configuration: Configuration
+	limit: number
+	offset: number
 }) => {
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
@@ -117,6 +121,8 @@ export const usersGetController = async ({
 	const [errors, users] = await usersGetUseCase({
 		user_repository: getUserModule(),
 		identity_service: getIdentityModule(),
+		limit,
+		offset,
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {

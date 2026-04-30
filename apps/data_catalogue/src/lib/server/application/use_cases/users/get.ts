@@ -1,9 +1,11 @@
 import type { UsersRepository } from '$lib/server/application/repositories/users'
 import type { IdentityService } from '$lib/server/application/services/identity'
-import { err, ok } from '$lib/server/entities/errors'
+import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import type { Session } from '$lib/server/entities/models/identity'
+import type { User } from '$lib/server/entities/models/users'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import type { Identity } from '@ory/client-fetch'
 
 export const userGetUseCase = async ({
 	id,
@@ -90,7 +92,7 @@ export const userGetMeUseCase = async ({
 		return err(errs)
 	}
 	if (!user) {
-		return err({ reason: 'Not Found' })
+		return err({ reason: 'Not Found', message: 'User not found' })
 	}
 	const [errs_identity, identity] = await identity_service.getIdentity({ id: session.identity.id })
 	if (errs_identity !== null) {
@@ -149,10 +151,10 @@ export const userGetGroupsUseCase = async ({
 }
 
 export const usersGetUseCase = async ({
-	limit = 250,
+	limit = 25,
 	offset = 0,
 	user_repository,
-	// identity_service,
+	identity_service,
 	session,
 	configuration
 }: {
@@ -178,16 +180,45 @@ export const usersGetUseCase = async ({
 	}
 	const [errs, users] = await user_repository.getUsers({ limit, offset })
 	if (errs !== null) {
+		console.log('users repo errors')
 		return err(errs)
 	}
 	if (!users) {
-		return err({ reason: 'Unexpected' })
+		return err({ reason: 'Unexpected', error: users })
 	}
-	// const identity = await identity_service.getIdentity({ id })
-	// if (!identity) {
-	// 	return err({ reason: 'Unauthorised' })
-	// }
-	return ok(users)
+	const users_identities = await Promise.all(
+		users.items.map((user) =>
+			identity_service.getIdentity({ id: user.id }).then(([errors, data]) => {
+				if (errors !== null) {
+					if (errors.reason === 'Not Found') {
+						console.log(errors)
+
+						return ok({ ...user })
+					}
+					return err(errors)
+				}
+				return ok({ ...user, ...data })
+			})
+		)
+	)
+	const joined = users_identities.reduce(
+		(acc, [errors, user]) => {
+			if (errors !== null) {
+				acc.errors.push(errors)
+				return acc
+			}
+			acc.identities.push(user)
+			return acc
+		},
+		{ errors: [], identities: [] } as {
+			errors: ErrTypes[]
+			identities: (User & { first_name?: string; last_name?: string })[]
+		}
+	)
+	if (joined.errors.length > 0) {
+		return err(joined.errors[0])
+	}
+	return ok({ ...users, items: joined.identities })
 }
 
 export const usersSearchUseCase = async ({
