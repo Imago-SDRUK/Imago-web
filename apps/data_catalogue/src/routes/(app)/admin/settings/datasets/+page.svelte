@@ -159,6 +159,62 @@
 							}
 						}}
 					></BaseTable>
+					<div class="footer">
+						{#if data.datasets.total > 0}
+							{#if page.url.searchParams.get('offset')}
+								{@const offset = Number(page.url.searchParams.get('offset'))}
+								<!-- HACK: replace fixed dataset with fn to strip required searchparams -->
+								<Button
+									href={handleSearchParams({
+										url: page.url,
+										add: [{ key: 'offset', value: offset - 10, set: true }],
+										remove: offset - 10 <= 0 ? ['offset'] : undefined
+									})}
+								>
+									<!-- <Button href={offset - 10 <= 0 ? '/datasets' : `?offset=${offset - 10}`}> -->
+									<Icon icon={{ icon: 'arrow-narrow-left', set: 'tabler' }}></Icon>
+								</Button>
+								<div class="page-count">
+									<Paragraph>
+										Page {(offset / 10 + 1).toFixed(0)} of
+										{Math.ceil(Number(data.datasets.total) / 10)}
+									</Paragraph>
+								</div>
+								{#if offset + 10 < data.datasets.total}
+									<Button
+										href={handleSearchParams({
+											url: page.url,
+											add: [{ key: 'offset', value: offset + 10, set: true }]
+										})}
+									>
+										<!-- <Button href={`?offset=${offset + 10}`}> -->
+										<Icon icon={{ icon: 'arrow-narrow-right', set: 'tabler' }}></Icon>
+									</Button>
+								{/if}
+							{:else}
+								<div class="page-count">
+									<Paragraph>
+										Page 1 of
+										{Math.ceil(Number(data.datasets.total) / 10).toFixed(0) === '0'
+											? 1
+											: Math.ceil(Number(data.datasets.total) / 10)}
+									</Paragraph>
+								</div>
+								{#if data.datasets.total > 10}
+									<div class="button-wrapper">
+										<Button
+											href={handleSearchParams({
+												add: [{ key: 'offset', value: 10 }],
+												url: page.url
+											})}
+										>
+											<Icon icon={{ icon: 'arrow-narrow-right', set: 'tabler' }}></Icon>
+										</Button>
+									</div>
+								{/if}
+							{/if}
+						{/if}
+					</div>
 				</div>
 			</div>
 			<div class="section">
@@ -354,5 +410,14 @@
 		display: flex;
 		justify-content: space-between;
 		gap: 1rem;
+	}
+	.footer {
+		display: flex;
+		justify-content: space-between;
+		position: sticky;
+		bottom: 0;
+		left: 0;
+		background-color: var(--background-muted);
+		padding: 1rem;
 	}
 </style>

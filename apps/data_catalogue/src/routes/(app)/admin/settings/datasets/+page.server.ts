@@ -25,7 +25,14 @@ import { permissionUpdateController } from '$lib/server/interface/adapters/contr
 import { permissionDeleteController } from '$lib/server/interface/adapters/controllers/permissions/delete.js'
 import { metadataGroupCreateController } from '$lib/server/interface/adapters/controllers/metadata_groups/create.js'
 export const load = async ({ locals, url }) => {
+	const offset = url.searchParams.get('offset') ? Number(url.searchParams.get('offset')) : 0
+	const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : 10
+	if (offset === 0) {
+		url.searchParams.delete('offset')
+	}
 	const datasets = await datasetsGetController({
+		offset,
+		page_size: limit,
 		session: locals.session,
 		url,
 		configuration: locals.configuration
