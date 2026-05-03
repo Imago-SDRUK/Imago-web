@@ -383,7 +383,7 @@
 						<div class="section">
 							<form action="?/toggle_autoenroll" method="post" use:enhance={handleEnhance()}>
 								<input type="hidden" value={group.id} name="id" />
-								<Input label="Autoenroll">
+								<Input label="Autoenroll" layout="horizontal">
 									<Checkbox name="autoenroll"></Checkbox>
 								</Input>
 								<Button>
