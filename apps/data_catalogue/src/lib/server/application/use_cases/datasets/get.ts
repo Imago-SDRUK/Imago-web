@@ -127,11 +127,9 @@ export const datasetsGetPaginatedUseCase = async ({
 				})
 		)
 	)
-	const filtered = datasets.items.filter((dataset) => permissions.includes(dataset.id))
 	return ok({
 		...datasets,
-		total: filtered.length,
-		items: filtered
+		items: datasets.items.filter((dataset) => permissions.includes(dataset.id))
 	})
 }
 
