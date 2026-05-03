@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
+	import CardBlock from '$lib/ui/cards/card_block.svelte'
 	import { handleEnhance } from '$lib/utils/forms/index.js'
 	import { jstr } from '@arturoguzman/art-ui'
 	import {
+		ActionBar,
 		BaseCard,
 		BaseSection,
 		Button,
@@ -34,110 +36,154 @@
 	<div class="section">
 		<div class="left-col">
 			<div class="cards">
-				<Subtitle>Actions</Subtitle>
-				{#each data.permissions.relation_tuples as permission (permission)}
-					<BaseCard border>
-						<form class="card" method="post" action="?/delete" use:enhance={handleEnhance()}>
-							<input type="hidden" value={permission.namespace} name="namespace" />
-							<input type="hidden" value={permission.object} name="object" />
-							<input type="hidden" value={permission.relation} name="relation" />
-							<input
-								type="hidden"
-								value={JSON.stringify(permission.subject_id ?? permission.subject_set)}
-								name="actor"
-							/>
-							<Paragraph>Namespace: {permission.namespace}</Paragraph>
-							<Paragraph>Object: {permission.object}</Paragraph>
-							<Paragraph>Relation: {permission.relation}</Paragraph>
-							{#if permission.subject_set}
-								<Paragraph>Subject namespace: {permission.subject_set.namespace}</Paragraph>
-								<Paragraph>Subject object: {permission.subject_set.object}</Paragraph>
-								<Paragraph>Subject relation: {permission.subject_set.relation}</Paragraph>
-							{:else}
-								<Paragraph>Subject: {permission.subject_id}</Paragraph>
-							{/if}
-							<Button>Delete</Button>
-						</form>
-					</BaseCard>
-				{/each}
-				<Subtitle>Dataset</Subtitle>
-				{#each data.dataset_permissions.relation_tuples as permission (permission)}
-					<BaseCard border>
-						<form class="card" method="post" action="?/delete" use:enhance={handleEnhance()}>
-							<input type="hidden" value={permission.namespace} name="namespace" />
-							<input type="hidden" value={permission.object} name="object" />
-							<input type="hidden" value={permission.relation} name="relation" />
-							<input
-								type="hidden"
-								value={JSON.stringify(permission.subject_id ?? permission.subject_set)}
-								name="actor"
-							/>
-							<Paragraph>Namespace: {permission.namespace}</Paragraph>
-							<Paragraph>Object: {permission.object}</Paragraph>
-							<Paragraph>Relation: {permission.relation}</Paragraph>
-							{#if permission.subject_set}
-								<Paragraph>Subject namespace: {permission.subject_set.namespace}</Paragraph>
-								<Paragraph>Subject object: {permission.subject_set.object}</Paragraph>
-								<Paragraph>Subject relation: {permission.subject_set.relation}</Paragraph>
-							{:else}
-								<Paragraph>Subject: {permission.subject_id}</Paragraph>
-							{/if}
-							<Button>Delete</Button>
-						</form>
-					</BaseCard>
-				{/each}
-				<Subtitle>Resources</Subtitle>
-				{#each data.resources_permissions.relation_tuples as permission (permission)}
-					<BaseCard border>
-						<form class="card" method="post" action="?/delete" use:enhance={handleEnhance()}>
-							<input type="hidden" value={permission.namespace} name="namespace" />
-							<input type="hidden" value={permission.object} name="object" />
-							<input type="hidden" value={permission.relation} name="relation" />
-							<input
-								type="hidden"
-								value={JSON.stringify(permission.subject_id ?? permission.subject_set)}
-								name="actor"
-							/>
-							<Paragraph>Namespace: {permission.namespace}</Paragraph>
-							<Paragraph>Object: {permission.object}</Paragraph>
-							<Paragraph>Relation: {permission.relation}</Paragraph>
-							{#if permission.subject_set}
-								<Paragraph>Subject namespace: {permission.subject_set.namespace}</Paragraph>
-								<Paragraph>Subject object: {permission.subject_set.object}</Paragraph>
-								<Paragraph>Subject relation: {permission.subject_set.relation}</Paragraph>
-							{:else}
-								<Paragraph>Subject: {permission.subject_id}</Paragraph>
-							{/if}
-							<Button>Delete</Button>
-						</form>
-					</BaseCard>
-				{/each}
-				<Subtitle>Groups</Subtitle>
-				{#each data.group_permissions.relation_tuples as permission (permission)}
-					<BaseCard border>
-						<form class="card" method="post" action="?/delete" use:enhance={handleEnhance()}>
-							<input type="hidden" value={permission.namespace} name="namespace" />
-							<input type="hidden" value={permission.object} name="object" />
-							<input type="hidden" value={permission.relation} name="relation" />
-							<input
-								type="hidden"
-								value={JSON.stringify(permission.subject_id ?? permission.subject_set)}
-								name="actor"
-							/>
-							<Paragraph>Namespace: {permission.namespace}</Paragraph>
-							<Paragraph>Object: {permission.object}</Paragraph>
-							<Paragraph>Relation: {permission.relation}</Paragraph>
-							{#if permission.subject_set}
-								<Paragraph>Subject namespace: {permission.subject_set.namespace}</Paragraph>
-								<Paragraph>Subject object: {permission.subject_set.object}</Paragraph>
-								<Paragraph>Subject relation: {permission.subject_set.relation}</Paragraph>
-							{:else}
-								<Paragraph>Subject: {permission.subject_id}</Paragraph>
-							{/if}
-							<Button>Delete</Button>
-						</form>
-					</BaseCard>
-				{/each}
+				<CardBlock>
+					{#snippet header()}
+						<Subtitle>Actions</Subtitle>
+					{/snippet}
+					{#snippet content()}
+						{#each data.permissions.relation_tuples as permission (permission)}
+							<BaseCard border>
+								<form class="card" method="post" action="?/delete" use:enhance={handleEnhance()}>
+									<input type="hidden" value={permission.namespace} name="namespace" />
+									<input type="hidden" value={permission.object} name="object" />
+									<input type="hidden" value={permission.relation} name="relation" />
+									<input
+										type="hidden"
+										value={JSON.stringify(permission.subject_id ?? permission.subject_set)}
+										name="actor"
+									/>
+									<Paragraph>Namespace: {permission.namespace}</Paragraph>
+									<Paragraph>Object: {permission.object}</Paragraph>
+									<Paragraph>Relation: {permission.relation}</Paragraph>
+									{#if permission.subject_set}
+										<Paragraph>Subject namespace: {permission.subject_set.namespace}</Paragraph>
+										<Paragraph>Subject object: {permission.subject_set.object}</Paragraph>
+										<Paragraph>Subject relation: {permission.subject_set.relation}</Paragraph>
+									{:else}
+										<Paragraph>Subject: {permission.subject_id}</Paragraph>
+									{/if}
+									<Button>Delete</Button>
+								</form>
+							</BaseCard>
+						{/each}
+					{/snippet}
+				</CardBlock>
+				<CardBlock>
+					{#snippet header()}
+						<ActionBar>
+							{#snippet left()}
+								<Subtitle>Dataset</Subtitle>
+							{/snippet}
+							{#snippet right()}
+								<form action="?/reset" method="post" use:enhance={handleEnhance()}>
+									<input type="hidden" value="Dataset" name="namespace" />
+									<Button>Reset</Button>
+								</form>
+							{/snippet}
+						</ActionBar>
+					{/snippet}
+					{#snippet content()}
+						{#each data.dataset_permissions.relation_tuples as permission (permission)}
+							<BaseCard border>
+								<form class="card" method="post" action="?/delete" use:enhance={handleEnhance()}>
+									<input type="hidden" value={permission.namespace} name="namespace" />
+									<input type="hidden" value={permission.object} name="object" />
+									<input type="hidden" value={permission.relation} name="relation" />
+									<input
+										type="hidden"
+										value={JSON.stringify(permission.subject_id ?? permission.subject_set)}
+										name="actor"
+									/>
+									<Paragraph>Namespace: {permission.namespace}</Paragraph>
+									<Paragraph>Object: {permission.object}</Paragraph>
+									<Paragraph>Relation: {permission.relation}</Paragraph>
+									{#if permission.subject_set}
+										<Paragraph>Subject namespace: {permission.subject_set.namespace}</Paragraph>
+										<Paragraph>Subject object: {permission.subject_set.object}</Paragraph>
+										<Paragraph>Subject relation: {permission.subject_set.relation}</Paragraph>
+									{:else}
+										<Paragraph>Subject: {permission.subject_id}</Paragraph>
+									{/if}
+									<Button>Delete</Button>
+								</form>
+							</BaseCard>
+						{/each}
+					{/snippet}
+				</CardBlock>
+				<CardBlock>
+					{#snippet header()}
+						<ActionBar>
+							{#snippet left()}
+								<Subtitle>Resources</Subtitle>
+							{/snippet}
+							{#snippet right()}
+								<form action="?/reset" method="post" use:enhance={handleEnhance()}>
+									<input type="hidden" value="Resource" name="namespace" />
+									<Button>Reset</Button>
+								</form>
+							{/snippet}
+						</ActionBar>
+					{/snippet}
+					{#snippet content()}
+						{#each data.resources_permissions.relation_tuples as permission (permission)}
+							<BaseCard border>
+								<form class="card" method="post" action="?/delete" use:enhance={handleEnhance()}>
+									<input type="hidden" value={permission.namespace} name="namespace" />
+									<input type="hidden" value={permission.object} name="object" />
+									<input type="hidden" value={permission.relation} name="relation" />
+									<input
+										type="hidden"
+										value={JSON.stringify(permission.subject_id ?? permission.subject_set)}
+										name="actor"
+									/>
+									<Paragraph>Namespace: {permission.namespace}</Paragraph>
+									<Paragraph>Object: {permission.object}</Paragraph>
+									<Paragraph>Relation: {permission.relation}</Paragraph>
+									{#if permission.subject_set}
+										<Paragraph>Subject namespace: {permission.subject_set.namespace}</Paragraph>
+										<Paragraph>Subject object: {permission.subject_set.object}</Paragraph>
+										<Paragraph>Subject relation: {permission.subject_set.relation}</Paragraph>
+									{:else}
+										<Paragraph>Subject: {permission.subject_id}</Paragraph>
+									{/if}
+									<Button>Delete</Button>
+								</form>
+							</BaseCard>
+						{/each}
+					{/snippet}
+				</CardBlock>
+				<CardBlock>
+					{#snippet header()}
+						<Subtitle>Groups</Subtitle>
+					{/snippet}
+					{#snippet content()}
+						{#each data.group_permissions.relation_tuples as permission (permission)}
+							<BaseCard border>
+								<form class="card" method="post" action="?/delete" use:enhance={handleEnhance()}>
+									<input type="hidden" value={permission.namespace} name="namespace" />
+									<input type="hidden" value={permission.object} name="object" />
+									<input type="hidden" value={permission.relation} name="relation" />
+									<input
+										type="hidden"
+										value={JSON.stringify(permission.subject_id ?? permission.subject_set)}
+										name="actor"
+									/>
+									<Paragraph>Namespace: {permission.namespace}</Paragraph>
+									<Paragraph>Object: {permission.object}</Paragraph>
+									<Paragraph>Relation: {permission.relation}</Paragraph>
+									{#if permission.subject_set}
+										<Paragraph>Subject namespace: {permission.subject_set.namespace}</Paragraph>
+										<Paragraph>Subject object: {permission.subject_set.object}</Paragraph>
+										<Paragraph>Subject relation: {permission.subject_set.relation}</Paragraph>
+									{:else}
+										<Paragraph>Subject: {permission.subject_id}</Paragraph>
+									{/if}
+									<Button>Delete</Button>
+								</form>
+							</BaseCard>
+						{/each}
+					{/snippet}
+				</CardBlock>
 			</div>
 		</div>
 		<div class="right-col">
