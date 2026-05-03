@@ -14,6 +14,7 @@
 	import { handleEnhance } from '$lib/utils/forms'
 	import BaseTable from '../tables/base_table.svelte'
 	import type { IColumnConfig } from '@svar-ui/svelte-grid'
+	import CardBlock from './card_block.svelte'
 
 	let {
 		dataset,
@@ -67,8 +68,33 @@
 	{#if resources.length > 0}
 		<div class="section">
 			<div class="resources">
-				<Subtitle>Resources</Subtitle>
-				<BaseTable onopeneditor={() => {}} data={resources} columns={resources_columns}></BaseTable>
+				<CardBlock>
+					{#snippet header()}
+						<Subtitle>Resources</Subtitle>
+					{/snippet}
+					{#snippet content()}
+						<BaseTable onopeneditor={() => {}} data={resources} columns={resources_columns}
+						></BaseTable>
+					{/snippet}
+				</CardBlock>
+				<CardBlock>
+					{#snippet header()}
+						<Subtitle>Sync permissions</Subtitle>
+					{/snippet}
+					{#snippet content()}
+						<form action="?/sync_resources_permissions" method="post" use:enhance={handleEnhance()}>
+							<input
+								type="hidden"
+								value={JSON.stringify(
+									dataset.resources.map((resource) => ({ resource_id: resource.id }))
+								)}
+								name="resources"
+							/>
+							<input type="hidden" value={dataset.id} name="dataset_id" />
+							<Button>Sync permissions</Button>
+						</form>
+					{/snippet}
+				</CardBlock>
 			</div>
 		</div>
 	{/if}
