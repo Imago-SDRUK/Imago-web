@@ -30,6 +30,8 @@
 	import type { Group } from '$lib/server/entities/models/groups.js'
 	import { handleEnhance } from '$lib/utils/forms'
 	import type { PermissionRequest } from '$lib/server/entities/models/permissions'
+	import CardBlock from '$lib/ui/cards/card_block.svelte'
+	import Facts from '$lib/ui/cards/facts.svelte'
 
 	let { data } = $props()
 	let delete_group = $state('')
@@ -157,265 +159,317 @@
 						{/snippet}
 					</ActionBar>
 					<div class="section">
-						<ActionBar>
-							{#snippet left()}
-								<Subtitle>{group.title}</Subtitle>
-							{/snippet}
-							{#snippet right()}
-								<Button
-									active={edit}
-									onclick={() => {
-										edit = !edit
-									}}
-								>
-									<Icon icon={{ icon: 'edit', set: 'tabler' }} />
-								</Button>
-							{/snippet}
-						</ActionBar>
-						{#if !edit}
-							<div class="card">
-								<Paragraph>Title: {group.title}</Paragraph>
-								<Paragraph
-									>Created at: {DateTime.fromJSDate(group.created_at)
-										.setLocale('en-gb')
-										.toLocaleString(DateTime.DATETIME_MED)}</Paragraph
-								>
-								<Paragraph>Visibility: {group.visibility}</Paragraph>
-								<Paragraph>Description: {group.description}</Paragraph>
-							</div>
-						{/if}
-
-						{#if edit}
-							<div class="card">
-								<form
-									action="?/edit"
-									method="post"
-									use:enhance={() => {
-										return async ({ result, update }) => {
-											if (result.type === 'error') {
-												console.log(result)
-												notify.send({ message: result.error.message })
-											}
-											if ('data' in result && result.data) {
-												if ('errors' in result.data) {
-													notify.send(String(jstr(result.data.errors)))
-												}
-												if ('message' in result.data) {
-													notify.send(String(result.data.message))
-												}
-											}
-											if (result.type === 'redirect') {
-												applyAction(result)
-											}
-											update({ reset: true, invalidateAll: true })
-										}
-									}}
-								>
-									<input type="hidden" name="id" value={group.id} />
-									<Input label="Title">
-										<Text value={group.title} name="title"></Text>
-									</Input>
-
-									<Input label="Visibility">
-										<Select
-											name="visibility"
-											value={group.visibility}
-											options={[
-												{ label: 'Public', value: 'public' },
-												{ label: 'Private', value: 'private' }
-											]}
-										></Select>
-									</Input>
-									{#key group}
-										<Input label="Description">
-											<Textarea name="description" bind:value={group.description}></Textarea>
-										</Input>
-									{/key}
-
-									<div class="buttons">
+						<CardBlock>
+							{#snippet header()}
+								<ActionBar>
+									{#snippet left()}
+										<Subtitle>{group.title}</Subtitle>
+									{/snippet}
+									{#snippet right()}
 										<Button
-											type="button"
+											active={edit}
 											onclick={() => {
-												edit = false
-											}}>Cancel</Button
-										>
-										<Button>Save</Button>
-									</div>
-								</form>
-							</div>
-						{/if}
-					</div>
-					<div class="section">
-						<ActionBar>
-							{#snippet left()}
-								<Subtitle>Members</Subtitle>
-							{/snippet}
-							{#snippet right()}
-								<Paragraph>Current: {data.group_users.length}</Paragraph>
-							{/snippet}
-						</ActionBar>
-						{#if data.group_users.length === 0}
-							<Notice level="info">
-								<Paragraph size="xs">This group doesn't have any members.</Paragraph>
-							</Notice>
-						{/if}
-						<div class="buttons-multiple">
-							{#each data.group_users as user}
-								{#if !edit}
-									<Paragraph style="label" size="xs">
-										{user?.email}
-									</Paragraph>
-								{/if}
-							{/each}
-						</div>
-						{#if edit}
-							<div class="card">
-								<Subtitle>Add users</Subtitle>
-								<form
-									action="?/search_users"
-									method="post"
-									use:enhance={() => {
-										return async ({ result }) => {
-											if (result.type === 'success') {
-												if (result.data?.users && Array.isArray(result.data.users)) {
-													const filtered = result.data.users.filter(
-														(au) => !data.group_users.find((gu) => gu.id === au.id)
-													)
-													// available_users = [...filtered]
-													search_results = result.data.users
-												}
-											}
-										}
-									}}
-								>
-									<div class="search-bar">
-										<Input>
-											<Text name="identifier"></Text>
-										</Input>
-										<Button>Search</Button>
-									</div>
-								</form>
-
-								{#if selected_user !== ''}
-									{@const user = available_users.find((user) => user.id === selected_user)}
-									<div class="relation-card">
-										<form
-											action="?/add_user"
-											method="post"
-											use:enhance={handleEnhance({
-												onsuccess: () => {
-													selected_user = ''
-												}
-											})}
-										>
-											<input type="hidden" name="user_id" value={user.id} />
-											<input type="hidden" name="group_id" value={group.id} />
-											<Paragraph>Add {user.email}?</Paragraph>
-											<div class="buttons">
-												<Button
-													type="button"
-													onclick={() => {
-														selected_user = ''
-													}}>Cancel</Button
-												>
-												<Button>Add</Button>
-											</div>
-										</form>
-									</div>
-								{/if}
-								<div class="buttons-multiple">
-									{#each available_users as user}
-										<Button
-											onclick={() => {
-												selected_user = user.id
-											}}>{user.email}</Button
-										>
-									{/each}
-								</div>
-							</div>
-
-							{#if selected_user_delete !== ''}
-								{@const user = data.group_users.find((user) => user.id === selected_user_delete)}
-								{#if user}
-									<div class="relation-card">
-										<form
-											action="?/remove_user"
-											method="post"
-											use:enhance={handleEnhance({
-												onsuccess: () => {
-													selected_user_delete = ''
-												}
-											})}
-										>
-											<input type="hidden" name="user_id" value={user.id} />
-											<input type="hidden" name="group_id" value={group.id} />
-											<Paragraph>{user.email}</Paragraph>
-											<div class="buttons">
-												<Button
-													type="button"
-													onclick={() => {
-														selected_user_delete = ''
-													}}>Cancel</Button
-												>
-												<Button>Remove</Button>
-											</div>
-										</form>
-									</div>
-								{/if}
-							{/if}
-							<div class="buttons-multiple">
-								{#each data.group_users as user}
-									{#if selected_user_delete !== user.id}
-										<Button
-											onclick={() => {
-												selected_user_delete = user.id
+												edit = !edit
 											}}
 										>
-											<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
-											{user.email}</Button
+											<Icon icon={{ icon: 'edit', set: 'tabler' }} />
+										</Button>
+									{/snippet}
+								</ActionBar>
+							{/snippet}
+							{#snippet content()}
+								{#if !edit}
+									<Facts
+										record={group}
+										keys={['title', 'created_at', 'updated_at', 'visibility', 'description']}
+									></Facts>
+								{/if}
+
+								{#if edit}
+									<div class="card">
+										<form
+											action="?/edit"
+											method="post"
+											use:enhance={() => {
+												return async ({ result, update }) => {
+													if (result.type === 'error') {
+														console.log(result)
+														notify.send({ message: result.error.message })
+													}
+													if ('data' in result && result.data) {
+														if ('errors' in result.data) {
+															notify.send(String(jstr(result.data.errors)))
+														}
+														if ('message' in result.data) {
+															notify.send(String(result.data.message))
+														}
+													}
+													if (result.type === 'redirect') {
+														applyAction(result)
+													}
+													update({ reset: true, invalidateAll: true })
+												}
+											}}
 										>
+											<input type="hidden" name="id" value={group.id} />
+											<Input label="Title">
+												<Text value={group.title} name="title"></Text>
+											</Input>
+
+											<Input label="Visibility">
+												<Select
+													name="visibility"
+													value={group.visibility}
+													options={[
+														{ label: 'Public', value: 'public' },
+														{ label: 'Private', value: 'private' }
+													]}
+												></Select>
+											</Input>
+											{#key group}
+												<Input label="Description">
+													<Textarea name="description" bind:value={group.description}></Textarea>
+												</Input>
+											{/key}
+
+											<div class="buttons">
+												<Button
+													type="button"
+													onclick={() => {
+														edit = false
+													}}>Cancel</Button
+												>
+												<Button>Save</Button>
+											</div>
+										</form>
+									</div>
+								{/if}
+							{/snippet}
+						</CardBlock>
+					</div>
+					<div class="section">
+						<CardBlock>
+							{#snippet header()}
+								<ActionBar>
+									{#snippet left()}
+										<Subtitle>Members</Subtitle>
+									{/snippet}
+									{#snippet right()}
+										<Paragraph>Current: {data.group_users.length}</Paragraph>
+									{/snippet}
+								</ActionBar>
+							{/snippet}
+							{#snippet content()}
+								<div class="buttons-multiple">
+									{#each data.group_users as user}
+										{#if !edit}
+											<Paragraph style="label" size="xs">
+												{user?.email}
+											</Paragraph>
+										{/if}
+									{/each}
+								</div>
+								<div class="card">
+									{#if edit}
+										<CardBlock>
+											{#snippet header()}
+												<Subtitle>Add users</Subtitle>
+											{/snippet}
+											{#snippet content()}
+												<form
+													action="?/search_users"
+													method="post"
+													use:enhance={() => {
+														return async ({ result }) => {
+															if (result.type === 'success') {
+																if (result.data?.users && Array.isArray(result.data.users)) {
+																	const filtered = result.data.users.filter(
+																		(au) => !data.group_users.find((gu) => gu.id === au.id)
+																	)
+																	// available_users = [...filtered]
+																	search_results = result.data.users
+																}
+															}
+														}
+													}}
+												>
+													<div class="search-bar">
+														<Input>
+															<Text name="identifier"></Text>
+														</Input>
+														<Button>Search</Button>
+													</div>
+												</form>
+											{/snippet}
+										</CardBlock>
 									{/if}
-								{/each}
-							</div>
-						{/if}
+									{#if available_users.length > 0}
+										<CardBlock>
+											{#snippet header()}
+												<Paragraph>Seach results</Paragraph>
+											{/snippet}
+											{#snippet content()}
+												{#if selected_user !== ''}
+													{@const user = available_users.find((user) => user.id === selected_user)}
+													<div class="relation-card">
+														<form
+															action="?/add_user"
+															method="post"
+															use:enhance={handleEnhance({
+																onsuccess: () => {
+																	selected_user = ''
+																}
+															})}
+														>
+															<input type="hidden" name="user_id" value={user.id} />
+															<input type="hidden" name="group_id" value={group.id} />
+															<Paragraph>Add {user.email}?</Paragraph>
+															<div class="buttons">
+																<Button
+																	type="button"
+																	onclick={() => {
+																		selected_user = ''
+																	}}>Cancel</Button
+																>
+																<Button>Add</Button>
+															</div>
+														</form>
+													</div>
+												{/if}
+												<div class="buttons-multiple">
+													{#each available_users as user}
+														<Button
+															onclick={() => {
+																selected_user = user.id
+															}}>{user.email}</Button
+														>
+													{/each}
+												</div>
+											{/snippet}
+										</CardBlock>
+									{/if}
+									{#if edit}
+										<CardBlock>
+											{#snippet header()}
+												<Paragraph>Existing members</Paragraph>
+											{/snippet}
+											{#snippet content()}
+												{#if data.group_users.length === 0}
+													<Notice level="info">
+														<Paragraph size="xs">This group doesn't have any members.</Paragraph>
+													</Notice>
+												{/if}
+												{#if selected_user_delete !== ''}
+													{@const user = data.group_users.find(
+														(user) => user.id === selected_user_delete
+													)}
+													{#if user}
+														<div class="relation-card">
+															<form
+																action="?/remove_user"
+																method="post"
+																use:enhance={handleEnhance({
+																	onsuccess: () => {
+																		selected_user_delete = ''
+																	}
+																})}
+															>
+																<input type="hidden" name="user_id" value={user.id} />
+																<input type="hidden" name="group_id" value={group.id} />
+																<Paragraph>{user.email}</Paragraph>
+																<div class="buttons">
+																	<Button
+																		type="button"
+																		onclick={() => {
+																			selected_user_delete = ''
+																		}}>Cancel</Button
+																	>
+																	<Button>Remove</Button>
+																</div>
+															</form>
+														</div>
+													{/if}
+												{/if}
+												<div class="buttons-multiple">
+													{#each data.group_users as user}
+														{#if selected_user_delete !== user.id}
+															<Button
+																onclick={() => {
+																	selected_user_delete = user.id
+																}}
+															>
+																<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
+																{user.email}</Button
+															>
+														{/if}
+													{/each}
+												</div>
+											{/snippet}
+										</CardBlock>
+									{/if}
+									{#if edit}
+										<CardBlock>
+											{#snippet header()}
+												<Subtitle>Add all users</Subtitle>
+											{/snippet}
+											{#snippet content()}
+												<Button
+													onclick={() => {
+														toggleDialog('add-all-users')
+													}}>Add all existing users</Button
+												>
+											{/snippet}
+										</CardBlock>
+									{/if}
+								</div>
+							{/snippet}
+						</CardBlock>
 					</div>
 					{#if edit}
 						<div class="section">
-							<form action="?/toggle_autoenroll" method="post" use:enhance={handleEnhance()}>
-								<input type="hidden" value={group.id} name="id" />
-								<Input label="Autoenroll" layout="horizontal">
-									<Checkbox name="autoenroll"></Checkbox>
-								</Input>
-								<Button>
-									<Paragraph>Save</Paragraph>
-								</Button>
-							</form>
-						</div>
-					{/if}
-					{#if edit}
-						<div class="section">
-							<Subtitle>Permissions</Subtitle>
-							{#each available_actions( { namespace: 'Group', relation: 'members', object: group.id } ) as action (action)}
-								<div class="card">
-									{#if data.group_permissions?.relation_tuples?.find((rt) => rt.subject_set?.object === group.id && rt.object === action.object)}
-										<form action="?/remove_action" method="post" use:enhance={handleEnhance()}>
-											<input type="hidden" name="group_id" value={group.id} />
-											<input type="hidden" name="object" value={action.object} />
-											<Input label="Disable create {action.object}" layout="horizontal">
-												<Button active style="alt">Enabled</Button>
+							<CardBlock>
+								{#snippet header()}
+									<Subtitle>Permissions</Subtitle>
+								{/snippet}
+								{#snippet content()}
+									<div class="section">
+										<form action="?/toggle_autoenroll" method="post" use:enhance={handleEnhance()}>
+											<input type="hidden" value={group.id} name="id" />
+											<Input label="Autoenroll" layout="horizontal">
+												<Checkbox name="autoenroll"></Checkbox>
 											</Input>
+											<Button>
+												<Paragraph>Save</Paragraph>
+											</Button>
 										</form>
-									{:else}
-										<form action="?/add_action" method="post" use:enhance={handleEnhance()}>
-											<input type="hidden" name="group_id" value={group.id} />
-											<input type="hidden" name="object" value={action.object} />
-											<Input label="Enable create {action.object}" layout="horizontal">
-												<Button style="alt">Disabled</Button>
-											</Input>
-										</form>
-									{/if}
-								</div>
-							{/each}
+										{#each available_actions( { namespace: 'Group', relation: 'members', object: group.id } ) as action (action)}
+											<div class="card">
+												{#if data.group_permissions?.relation_tuples?.find((rt) => rt.subject_set?.object === group.id && rt.object === action.object)}
+													<form
+														action="?/remove_action"
+														method="post"
+														use:enhance={handleEnhance()}
+													>
+														<input type="hidden" name="group_id" value={group.id} />
+														<input type="hidden" name="object" value={action.object} />
+														<Input label="Disable create {action.object}" layout="horizontal">
+															<Button active style="alt">Enabled</Button>
+														</Input>
+													</form>
+												{:else}
+													<form action="?/add_action" method="post" use:enhance={handleEnhance()}>
+														<input type="hidden" name="group_id" value={group.id} />
+														<input type="hidden" name="object" value={action.object} />
+														<Input label="Enable create {action.object}" layout="horizontal">
+															<Button style="alt">Disabled</Button>
+														</Input>
+													</form>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								{/snippet}
+							</CardBlock>
 						</div>
 					{/if}
 				{/if}
@@ -476,6 +530,29 @@
 		</div>
 	</form>
 </Dialog>
+<Dialog id="add-all-users">
+	<form
+		action="?/add_all_users"
+		method="post"
+		use:enhance={handleEnhance({
+			onsuccess: () => {
+				toggleDialog('add-all-users')
+			}
+		})}
+	>
+		<input type="hidden" name="group_id" value={data.group?.id} />
+		<Subtitle>Are you sure you want to add all existing users to this group?</Subtitle>
+		<div class="buttons">
+			<Button
+				type="button"
+				onclick={() => {
+					toggleDialog('add-all-users')
+				}}>Cancel</Button
+			>
+			<Button>Confirm</Button>
+		</div>
+	</form>
+</Dialog>
 
 <style>
 	.tables {
@@ -493,8 +570,8 @@
 	.card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-		padding: 0.5rem;
+		gap: 0.5rem;
+		/* padding: 0.5rem; */
 	}
 	.buttons {
 		display: flex;
