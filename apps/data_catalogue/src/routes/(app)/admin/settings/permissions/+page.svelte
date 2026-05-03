@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms'
 	import CardBlock from '$lib/ui/cards/card_block.svelte'
 	import { handleEnhance } from '$lib/utils/forms/index.js'
-	import { jstr } from '@arturoguzman/art-ui'
 	import {
 		ActionBar,
 		BaseCard,

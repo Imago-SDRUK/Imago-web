@@ -198,13 +198,21 @@ export const actions = {
 						namespace: 'Resource' as const,
 						object: resource.resource.id,
 						relation: 'datasets',
-						actor: dataset_id ?? ''
+						actor: {
+							namespace: 'Dataset' as const,
+							object: dataset_id ?? '',
+							relation: ''
+						}
 					},
 					...resource.versions.map((version) => ({
 						namespace: 'ResourceVersion' as const,
 						object: version.id,
 						relation: 'resources',
-						actor: resource.resource.id
+						actor: {
+							namespace: 'Resource' as const,
+							object: resource.resource.id,
+							relation: ''
+						}
 					}))
 				])
 			]
