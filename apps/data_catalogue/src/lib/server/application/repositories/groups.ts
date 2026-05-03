@@ -1,3 +1,4 @@
+import type { Transaction } from '$lib/db'
 import type { ErrTypes } from '$lib/server/entities/errors'
 import type {
 	Group,
@@ -56,6 +57,7 @@ export type GroupsRepository = {
 		data
 	}: {
 		data: UsersGroupsRequest
+		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, UsersGroups | null]>
 	removeUserFromGroup: ({
 		user_id,

@@ -4,6 +4,7 @@ import { formGetStringOrUndefined, parseForm } from '$lib/utils/forms/index.js'
 import { groupCreateController } from '$lib/server/interface/adapters/controllers/groups/create.js'
 import { groupDeleteController } from '$lib/server/interface/adapters/controllers/groups/delete.js'
 import {
+	groupAddAllUsersController,
 	groupAddUserController,
 	groupRemoveUserController,
 	groupToggleAutoenrollController,
@@ -159,6 +160,23 @@ export const actions = {
 			configuration: locals.configuration,
 			session: locals.session,
 			data: payload
+		})
+		if (errors !== null) {
+			console.log(errors)
+			return fail(500, { message: errors.reason })
+		}
+		return {
+			message: `User successfully added`
+		}
+	},
+
+	add_all_users: async ({ locals, request }) => {
+		const form = await request.formData()
+		const group_id = formGetStringOrUndefined({ form, field: 'group_id' })
+		const [errors] = await groupAddAllUsersController({
+			group_id,
+			configuration: locals.configuration,
+			session: locals.session
 		})
 		if (errors !== null) {
 			console.log(errors)

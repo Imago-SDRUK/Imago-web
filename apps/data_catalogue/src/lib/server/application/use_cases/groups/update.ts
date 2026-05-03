@@ -2,15 +2,17 @@ import type { Session } from '$lib/server/entities/models/identity'
 // import type { GroupsService } from '$lib/server/application/services/groups'
 import type { GroupsRepository } from '$lib/server/application/repositories/groups'
 import { type } from 'arktype'
-import { err, ok } from '$lib/server/entities/errors'
+import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import { getAuthorisationModule } from '$lib/server/modules/authorisation'
 import { groups, users_groups } from '$lib/db/schema'
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-arktype'
 import slugify from '@sindresorhus/slugify'
-import type { UsersGroupsRequest } from '$lib/server/entities/models/groups'
+import type { UsersGroups, UsersGroupsRequest } from '$lib/server/entities/models/groups'
 import type { AppContext } from '$lib/server/application/context'
 import type { QuestionsRepository } from '$lib/server/application/repositories/questions'
 import type { PermissionRequest } from '$lib/server/entities/models/permissions'
+import type { UsersRepository } from '$lib/server/application/repositories/users'
+import { log } from '$lib/utils/server/logger'
 
 export const groupUpdateUseCase = async ({
 	id,
@@ -263,6 +265,86 @@ export const groupAddUserUseCase = async ({
 		return err({ reason: 'Unexpected' })
 	}
 	return ok(user_group)
+}
+
+export const groupAddAllUsersUseCase = async ({
+	group_id,
+	session,
+	groups_repository,
+	configuration,
+	authorisation_module,
+	users_repository,
+	tx
+}: {
+	group_id: string
+	groups_repository: GroupsRepository
+	users_repository: UsersRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		namespace: 'Group',
+		object: configuration.admin_group ?? undefined,
+		permits: 'members',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [users_errors, users] = await users_repository.getUsers({ limit: 250, offset: 0 })
+	if (users_errors !== null) {
+		return err(users_errors)
+	}
+	const pairs = users.items.map((user) => ({
+		user_id: user.id,
+		group_id,
+		created_by: session.identity.id,
+		updated_by: session.identity.id
+	}))
+	const created = await Promise.all(
+		pairs.map((data) => groups_repository.addUserToGroup({ data, tx }))
+	)
+	const { gr_err, users_groups } = created.reduce(
+		(acc, [errors, data]) => {
+			if (errors !== null) {
+				acc.gr_err.push(errors)
+				return acc
+			}
+			if (data) {
+				acc.users_groups.push(data)
+			}
+			return acc
+		},
+		{
+			gr_err: [],
+			users_groups: []
+		} as { gr_err: ErrTypes[]; users_groups: UsersGroups[] }
+	)
+
+	if (gr_err.length > 0) {
+		try {
+			tx?.rollback()
+		} catch (_) {
+			log.error({ message: `Rolled back registering all users to group` })
+		}
+		return err(gr_err[0])
+	}
+	const [permissions_errors] = await authorisation_module.createPermissions({
+		permissions: users_groups.map(({ group_id, user_id }) => ({
+			actor: user_id,
+			object: group_id,
+			relation: 'members',
+			namespace: 'Group'
+		}))
+	})
+
+	if (permissions_errors !== null) {
+		return err(permissions_errors)
+	}
+
+	return ok(users_groups)
 }
 
 export const groupRemoveUserUseCase = async ({

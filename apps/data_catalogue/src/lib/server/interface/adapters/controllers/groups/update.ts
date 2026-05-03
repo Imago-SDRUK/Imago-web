@@ -1,6 +1,7 @@
 import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
 import { err } from '$lib/server/entities/errors'
 import {
+	groupAddAllUsersUseCase,
 	groupAddUserUseCase,
 	groupRemoveUserUseCase,
 	groupsSyncUseCase,
@@ -12,6 +13,7 @@ import type { UsersGroupsRequest } from '$lib/server/entities/models/groups'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
 import { getQuestionsModule } from '$lib/server/modules/questions'
+import { getUserModule } from '$lib/server/modules/user'
 
 export const groupUpdateController = async ({
 	id,
@@ -94,6 +96,29 @@ export const groupAddUserController = async ({
 	}
 	return await groupAddUserUseCase({
 		data: { ...data, created_by: session.identity.id, updated_by: session.identity.id },
+		groups_repository: getGroupsRepositoryModule(),
+		...getServerContext({ session, configuration })
+	})
+}
+
+export const groupAddAllUsersController = async ({
+	group_id,
+	session,
+	configuration
+}: {
+	group_id?: string
+	session?: Session
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	if (!group_id) {
+		return err({ reason: 'Missing ID' })
+	}
+	return await groupAddAllUsersUseCase({
+		group_id,
+		users_repository: getUserModule(),
 		groups_repository: getGroupsRepositoryModule(),
 		...getServerContext({ session, configuration })
 	})
