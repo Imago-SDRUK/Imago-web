@@ -1,5 +1,10 @@
 # @imago/ui
 
+## 1.0.18
+### Patch Changes
+
+- 21fcceb: Fixes on empty css variables. Update dependencies. Upgrade UI components and new features. Implements an experimental select with melt ui.
+
 ## 1.0.17
 ### Patch Changes
 
