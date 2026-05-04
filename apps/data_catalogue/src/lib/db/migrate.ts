@@ -4,16 +4,20 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator'
 
 export async function runMigration() {
 	if (!process.env.DATABASE_URL) {
-		log.info('no database has been setup')
-		return
+		log.error('no database has been setup')
+		throw Error('no database has been setup')
 	}
 	const db = drizzle(String(process.env.DATABASE_URL))
-	log.info('migration will start now')
-	// return await migrate(db, { migrationsFolder: './src/lib/db/migrations' })
-	await migrate(db, { migrationsFolder: '/app/apps/data_catalogue/migrations' })
-		.then(() => log.info('migration completed'))
+	log.info('Migration will start now')
+	const folder = '/app/apps/data_catalogue/migrations'
+	// const folder = './src/lib/db/migrations'
+	// const folder = '/app/apps/data_catalogue/migrations'
+	// return await migrate(db, { migrationsFolder: folder })
+	await migrate(db, { migrationsFolder: folder })
+		.then(() => log.info('Migration completed'))
 		.catch((err) => {
-			log.info(`migration failed ${err}`)
+			log.error(`Migration failed`)
+			log.error(err)
 			return err
 		})
 }
