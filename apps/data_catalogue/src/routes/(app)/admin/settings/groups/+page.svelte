@@ -2,77 +2,45 @@
 	import { type IColumnConfig } from '@svar-ui/svelte-grid'
 	import { applyAction, enhance } from '$app/forms'
 	import { debug } from '$lib/globals/dev.svelte.js'
-	import { capitalise, jstr } from '@arturoguzman/art-ui'
+	import { jstr } from '@arturoguzman/art-ui'
 	import {
 		ActionBar,
 		Button,
-		handleSearchParams,
+		Checkbox,
 		Icon,
 		Input,
+		Notice,
 		Paragraph,
 		SectionEdit,
+		Select,
 		Subtitle,
 		Text,
 		Textarea,
 		Title
 	} from '@imago/ui'
-	import type { Relationship } from '@ory/client-fetch'
 	import { onMount } from 'svelte'
 	import Dialog from '$lib/ui/cards/dialog.svelte'
 	import { toggleDialog } from '$lib/utils/ui/index.js'
 	import { notify } from '$lib/stores/notify.js'
 	import BaseTable from '$lib/ui/tables/base_table.svelte'
-	import type { CkanGroup } from '$lib/types/ckan/index.js'
 	import CellText from '$lib/ui/tables/cell_text.svelte'
 	import { page } from '$app/state'
 	import CellEditor from '$lib/ui/tables/cell_editor.svelte'
-	import CellDate from '$lib/ui/tables/cell_date.svelte'
-	import CellGroupToUser from '$lib/ui/tables/cell_group_to_user.svelte'
 	import { DateTime } from 'luxon'
+	import type { Group } from '$lib/server/entities/models/groups.js'
+	import { handleEnhance } from '$lib/utils/forms'
+	import type { PermissionRequest } from '$lib/server/entities/models/permissions'
+	import CardBlock from '$lib/ui/cards/card_block.svelte'
+	import Facts from '$lib/ui/cards/facts.svelte'
 
 	let { data } = $props()
 	let delete_group = $state('')
-	const auth_groups = $derived(
-		data.auth_groups.relation_tuples?.reduce(
-			(acc, relation) => {
-				if (relation.object in acc) {
-					acc[relation.object].push(relation)
-					return acc
-				}
 
-				acc[relation.object] = [relation]
-				return acc
-			},
-			{} as { [k: string]: Relationship[] }
-		)
-	)
 	onMount(() => {
 		debug.data = data
 	})
-	let auth_groups_columns: (IColumnConfig & { id: keyof Relationship })[] = [
-		// {
-		// 	id: 'namespace',
-		// 	header: 'Namespace',
-		// 	cell: CellText
-		// },
-		// {
-		// 	id: 'object',
-		// 	header: 'Object',
-		// 	cell: CellEditorGroup
-		// },
-		{
-			id: 'relation',
-			header: 'Relation',
-			cell: CellText
-		},
-		{
-			id: 'subject_id',
-			header: 'Subject ID',
-			cell: CellGroupToUser,
-			width: 400
-		}
-	]
-	let ckan_groups_columns: (IColumnConfig & { id: keyof CkanGroup })[] = [
+
+	let columns: (IColumnConfig & { id: keyof Group })[] = [
 		{
 			id: 'title',
 			header: 'Title',
@@ -84,36 +52,75 @@
 			cell: CellText
 		},
 		{
-			id: 'created',
+			id: 'created_at',
 			header: 'Created at',
-			cell: CellDate,
+			cell: CellText,
+			width: 400
+		},
+		{
+			id: 'updated_at',
+			header: 'Updated at',
+			cell: CellText,
 			width: 400
 		}
 	]
 
-	let ckan_groups_selected = $derived(
-		data.ckan_groups.result?.findIndex((group) => group.id === page.url.searchParams.get('edit')) ??
-			-1
+	let selected = $derived(
+		data.groups.findIndex((group) => group.id === page.url.searchParams.get('edit')) ?? -1
 	)
 
-	let ory_groups_selected = $derived(
-		auth_groups &&
-			page.url.searchParams.get('group') &&
-			String(page.url.searchParams.get('group')) in auth_groups
-			? auth_groups[String(page.url.searchParams.get('group'))]
-			: undefined
-	)
 	let edit = $state(false)
+	let selected_user = $state('')
+	let selected_user_delete = $state('')
+	let search_results = $state([])
+	let available_users = $derived(
+		search_results.filter((au) => !data.group_users.find((gu) => gu.id === au.id))
+	)
+	const available_actions = (actor: PermissionRequest['actor']): PermissionRequest[] => [
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'permissions',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'users',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'groups',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'datasets',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'answers',
+			actor
+		},
+		{
+			namespace: 'Action',
+			relation: 'groups',
+			object: 'questions',
+			actor
+		}
+	]
 </script>
 
 <Title>Groups</Title>
 <div class="tables">
-	<SectionEdit open={ckan_groups_selected !== -1 ? true : undefined}>
+	<SectionEdit open={selected !== -1 ? true : undefined}>
 		{#snippet leftCol()}
 			<ActionBar>
-				{#snippet left()}
-					<Subtitle>CKAN</Subtitle>
-				{/snippet}
 				{#snippet right()}
 					<Button
 						width="auto"
@@ -126,12 +133,13 @@
 				{/snippet}
 			</ActionBar>
 			<div class="groups">
-				<BaseTable data={data.ckan_groups.result} columns={ckan_groups_columns}></BaseTable>
+				<BaseTable data={data.groups} {columns}></BaseTable>
 			</div>
 		{/snippet}
 		{#snippet rightCol()}
 			<div class="edit">
-				{#if data.ckan_groups.result[ckan_groups_selected]}
+				{#if data.group}
+					{@const group = data.group}
 					<ActionBar>
 						{#snippet left()}
 							<Button width="auto" href={page.url.pathname}>
@@ -150,95 +158,322 @@
 							</Button>
 						{/snippet}
 					</ActionBar>
-					{@const group = data.ckan_groups.result[ckan_groups_selected]}
-					<ActionBar>
-						{#snippet left()}
-							<Subtitle>{group.title}</Subtitle>
-						{/snippet}
-						{#snippet right()}
-							<Button
-								active={edit}
-								onclick={() => {
-									edit = !edit
-								}}
-							>
-								<Icon icon={{ icon: 'edit', set: 'tabler' }} />
-							</Button>
-						{/snippet}
-					</ActionBar>
-					{#if !edit}
-						<div class="card">
-							<Paragraph>Title: {group.title}</Paragraph>
-							<Paragraph
-								>Created at: {DateTime.fromISO(group.created)
-									.setLocale('en-gb')
-									.toLocaleString(DateTime.DATETIME_MED)}</Paragraph
-							>
-							<Paragraph>Description: {group.description}</Paragraph>
-						</div>
-					{/if}
-					{#if edit}
-						<div class="card">
-							<form action="?/edit" method="post" use:enhance>
-								<Input label="Title">
-									<Text value={group.title}></Text>
-								</Input>
-								{#key group}
-									<Input label="Description">
-										<Textarea name="description" bind:value={group.description}></Textarea>
-									</Input>
-								{/key}
-								<div class="buttons">
-									<Button
-										type="button"
-										onclick={() => {
-											edit = false
-										}}>Cancel</Button
-									>
-									<Button>Save</Button>
+					<div class="section">
+						<CardBlock>
+							{#snippet header()}
+								<ActionBar>
+									{#snippet left()}
+										<Subtitle>{group.title}</Subtitle>
+									{/snippet}
+									{#snippet right()}
+										<Button
+											active={edit}
+											onclick={() => {
+												edit = !edit
+											}}
+										>
+											<Icon icon={{ icon: 'edit', set: 'tabler' }} />
+										</Button>
+									{/snippet}
+								</ActionBar>
+							{/snippet}
+							{#snippet content()}
+								{#if !edit}
+									<Facts
+										record={group}
+										keys={['title', 'created_at', 'updated_at', 'visibility', 'description']}
+									></Facts>
+								{/if}
+
+								{#if edit}
+									<div class="card">
+										<form
+											action="?/edit"
+											method="post"
+											use:enhance={() => {
+												return async ({ result, update }) => {
+													if (result.type === 'error') {
+														console.log(result)
+														notify.send({ message: result.error.message })
+													}
+													if ('data' in result && result.data) {
+														if ('errors' in result.data) {
+															notify.send(String(jstr(result.data.errors)))
+														}
+														if ('message' in result.data) {
+															notify.send(String(result.data.message))
+														}
+													}
+													if (result.type === 'redirect') {
+														applyAction(result)
+													}
+													update({ reset: true, invalidateAll: true })
+												}
+											}}
+										>
+											<input type="hidden" name="id" value={group.id} />
+											<Input label="Title">
+												<Text value={group.title} name="title"></Text>
+											</Input>
+
+											<Input label="Visibility">
+												<Select
+													name="visibility"
+													value={group.visibility}
+													options={[
+														{ label: 'Public', value: 'public' },
+														{ label: 'Private', value: 'private' }
+													]}
+												></Select>
+											</Input>
+											{#key group}
+												<Input label="Description">
+													<Textarea name="description" bind:value={group.description}></Textarea>
+												</Input>
+											{/key}
+
+											<div class="buttons">
+												<Button
+													type="button"
+													onclick={() => {
+														edit = false
+													}}>Cancel</Button
+												>
+												<Button>Save</Button>
+											</div>
+										</form>
+									</div>
+								{/if}
+							{/snippet}
+						</CardBlock>
+					</div>
+					<div class="section">
+						<CardBlock>
+							{#snippet header()}
+								<ActionBar>
+									{#snippet left()}
+										<Subtitle>Members</Subtitle>
+									{/snippet}
+									{#snippet right()}
+										<Paragraph>Current: {data.group_users.length}</Paragraph>
+									{/snippet}
+								</ActionBar>
+							{/snippet}
+							{#snippet content()}
+								<div class="buttons-multiple">
+									{#each data.group_users as user}
+										{#if !edit}
+											<Paragraph style="label" size="xs">
+												{user?.email}
+											</Paragraph>
+										{/if}
+									{/each}
 								</div>
-							</form>
+								<div class="card">
+									{#if edit}
+										<CardBlock>
+											{#snippet header()}
+												<Subtitle>Add users</Subtitle>
+											{/snippet}
+											{#snippet content()}
+												<form
+													action="?/search_users"
+													method="post"
+													use:enhance={() => {
+														return async ({ result }) => {
+															if (result.type === 'success') {
+																if (result.data?.users && Array.isArray(result.data.users)) {
+																	const filtered = result.data.users.filter(
+																		(au) => !data.group_users.find((gu) => gu.id === au.id)
+																	)
+																	// available_users = [...filtered]
+																	search_results = result.data.users
+																}
+															}
+														}
+													}}
+												>
+													<div class="search-bar">
+														<Input>
+															<Text name="identifier"></Text>
+														</Input>
+														<Button>Search</Button>
+													</div>
+												</form>
+											{/snippet}
+										</CardBlock>
+									{/if}
+									{#if available_users.length > 0}
+										<CardBlock>
+											{#snippet header()}
+												<Paragraph>Seach results</Paragraph>
+											{/snippet}
+											{#snippet content()}
+												{#if selected_user !== ''}
+													{@const user = available_users.find((user) => user.id === selected_user)}
+													<div class="relation-card">
+														<form
+															action="?/add_user"
+															method="post"
+															use:enhance={handleEnhance({
+																onsuccess: () => {
+																	selected_user = ''
+																}
+															})}
+														>
+															<input type="hidden" name="user_id" value={user.id} />
+															<input type="hidden" name="group_id" value={group.id} />
+															<Paragraph>Add {user.email}?</Paragraph>
+															<div class="buttons">
+																<Button
+																	type="button"
+																	onclick={() => {
+																		selected_user = ''
+																	}}>Cancel</Button
+																>
+																<Button>Add</Button>
+															</div>
+														</form>
+													</div>
+												{/if}
+												<div class="buttons-multiple">
+													{#each available_users as user}
+														<Button
+															onclick={() => {
+																selected_user = user.id
+															}}>{user.email}</Button
+														>
+													{/each}
+												</div>
+											{/snippet}
+										</CardBlock>
+									{/if}
+									{#if edit}
+										<CardBlock>
+											{#snippet header()}
+												<Paragraph>Existing members</Paragraph>
+											{/snippet}
+											{#snippet content()}
+												{#if data.group_users.length === 0}
+													<Notice level="info">
+														<Paragraph size="xs">This group doesn't have any members.</Paragraph>
+													</Notice>
+												{/if}
+												{#if selected_user_delete !== ''}
+													{@const user = data.group_users.find(
+														(user) => user.id === selected_user_delete
+													)}
+													{#if user}
+														<div class="relation-card">
+															<form
+																action="?/remove_user"
+																method="post"
+																use:enhance={handleEnhance({
+																	onsuccess: () => {
+																		selected_user_delete = ''
+																	}
+																})}
+															>
+																<input type="hidden" name="user_id" value={user.id} />
+																<input type="hidden" name="group_id" value={group.id} />
+																<Paragraph>{user.email}</Paragraph>
+																<div class="buttons">
+																	<Button
+																		type="button"
+																		onclick={() => {
+																			selected_user_delete = ''
+																		}}>Cancel</Button
+																	>
+																	<Button>Remove</Button>
+																</div>
+															</form>
+														</div>
+													{/if}
+												{/if}
+												<div class="buttons-multiple">
+													{#each data.group_users as user}
+														{#if selected_user_delete !== user.id}
+															<Button
+																onclick={() => {
+																	selected_user_delete = user.id
+																}}
+															>
+																<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
+																{user.email}</Button
+															>
+														{/if}
+													{/each}
+												</div>
+											{/snippet}
+										</CardBlock>
+									{/if}
+									{#if edit}
+										<CardBlock>
+											{#snippet header()}
+												<Subtitle>Add all users</Subtitle>
+											{/snippet}
+											{#snippet content()}
+												<Button
+													onclick={() => {
+														toggleDialog('add-all-users')
+													}}>Add all existing users</Button
+												>
+											{/snippet}
+										</CardBlock>
+									{/if}
+								</div>
+							{/snippet}
+						</CardBlock>
+					</div>
+					{#if edit}
+						<div class="section">
+							<CardBlock>
+								{#snippet header()}
+									<Subtitle>Permissions</Subtitle>
+								{/snippet}
+								{#snippet content()}
+									<div class="section">
+										<form action="?/toggle_autoenroll" method="post" use:enhance={handleEnhance()}>
+											<input type="hidden" value={group.id} name="id" />
+											<Input label="Autoenroll" layout="horizontal">
+												<Checkbox name="autoenroll"></Checkbox>
+											</Input>
+											<Button>
+												<Paragraph>Save</Paragraph>
+											</Button>
+										</form>
+										{#each available_actions( { namespace: 'Group', relation: 'members', object: group.id } ) as action (action)}
+											<div class="card">
+												{#if data.group_permissions?.relation_tuples?.find((rt) => rt.subject_set?.object === group.id && rt.object === action.object)}
+													<form
+														action="?/remove_action"
+														method="post"
+														use:enhance={handleEnhance()}
+													>
+														<input type="hidden" name="group_id" value={group.id} />
+														<input type="hidden" name="object" value={action.object} />
+														<Input label="Disable create {action.object}" layout="horizontal">
+															<Button active style="alt">Enabled</Button>
+														</Input>
+													</form>
+												{:else}
+													<form action="?/add_action" method="post" use:enhance={handleEnhance()}>
+														<input type="hidden" name="group_id" value={group.id} />
+														<input type="hidden" name="object" value={action.object} />
+														<Input label="Enable create {action.object}" layout="horizontal">
+															<Button style="alt">Disabled</Button>
+														</Input>
+													</form>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								{/snippet}
+							</CardBlock>
 						</div>
 					{/if}
 				{/if}
 			</div>
-		{/snippet}
-	</SectionEdit>
-
-	<SectionEdit open={ory_groups_selected ? true : undefined}>
-		{#snippet leftCol()}
-			<Subtitle>Auth groups</Subtitle>
-			{#if auth_groups}
-				<div class="groups">
-					{#each Object.entries(auth_groups) as [group, relations]}
-						<!-- <Button -->
-						<!-- 	active={page.url.searchParams.get('group') === group} -->
-						<!-- 	href={handleSearchParams({ -->
-						<!-- 		toggle: [{ key: 'group', value: group }], -->
-						<!-- 		url: page.url -->
-						<!-- 	})} -->
-						<!-- > -->
-						<Subtitle>{capitalise(group)}</Subtitle>
-						<!-- </Button> -->
-						<BaseTable data={relations} columns={auth_groups_columns}></BaseTable>
-					{/each}
-					{#if data.auth_groups.next_page_token}
-						<Button
-							href={handleSearchParams({
-								add: [{ key: 'page_token', value: data.auth_groups.next_page_token, set: true }],
-								url: page.url
-							})}>Next</Button
-						>
-					{/if}
-				</div>
-			{/if}
-		{/snippet}
-		{#snippet rightCol()}
-			{#if ory_groups_selected}
-				<div class="edit">
-					<pre>{jstr(ory_groups_selected)}</pre>
-				</div>
-			{/if}
 		{/snippet}
 	</SectionEdit>
 </div>
@@ -257,28 +492,12 @@
 		<form
 			action="?/delete"
 			method="post"
-			use:enhance={() => {
-				return async ({ result, update }) => {
-					if (result.type === 'error') {
-						console.log(result)
-						notify.send({ message: result.error.message })
-					}
-					if ('data' in result && result.data) {
-						if ('errors' in result.data) {
-							notify.send(String(jstr(result.data.errors)))
-						}
-						if ('message' in result.data) {
-							notify.send(String(result.data.message))
-						}
-					}
-					if (result.type === 'redirect') {
-						applyAction(result)
-					}
-					update({ reset: true, invalidateAll: true })
+			use:enhance={handleEnhance({
+				onsuccess: () => {
 					delete_group = ''
 					toggleDialog('delete-group')
 				}
-			}}
+			})}
 		>
 			<input name="id" type="text" value={delete_group} hidden />
 			<Button>Delete</Button>
@@ -286,34 +505,11 @@
 	</div>
 </Dialog>
 <Dialog id="add-group">
-	<form
-		action="?/create"
-		method="post"
-		use:enhance={() => {
-			return async ({ result, update }) => {
-				if (result.type === 'error') {
-					console.log(result)
-					notify.send({ message: result.error.message })
-				}
-				if ('data' in result && result.data) {
-					if ('errors' in result.data) {
-						notify.send(String(jstr(result.data.errors)))
-					}
-					if ('message' in result.data) {
-						notify.send(String(result.data.message))
-					}
-				}
-				if (result.type === 'redirect') {
-					applyAction(result)
-				}
-				update({ reset: true, invalidateAll: true })
-			}
-		}}
-	>
+	<form action="?/create" method="post" use:enhance={handleEnhance()}>
 		<Subtitle>Add group</Subtitle>
 		<div class="inputs">
 			<Input label="Title">
-				<Text name="display_name"></Text>
+				<Text name="title"></Text>
 			</Input>
 			<Input label="Description">
 				<Textarea name="description"></Textarea>
@@ -334,6 +530,29 @@
 		</div>
 	</form>
 </Dialog>
+<Dialog id="add-all-users">
+	<form
+		action="?/add_all_users"
+		method="post"
+		use:enhance={handleEnhance({
+			onsuccess: () => {
+				toggleDialog('add-all-users')
+			}
+		})}
+	>
+		<input type="hidden" name="group_id" value={data.group?.id} />
+		<Subtitle>Are you sure you want to add all existing users to this group?</Subtitle>
+		<div class="buttons">
+			<Button
+				type="button"
+				onclick={() => {
+					toggleDialog('add-all-users')
+				}}>Cancel</Button
+			>
+			<Button>Confirm</Button>
+		</div>
+	</form>
+</Dialog>
 
 <style>
 	.tables {
@@ -351,17 +570,45 @@
 	.card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-		padding: 0.5rem;
+		gap: 0.5rem;
+		/* padding: 0.5rem; */
 	}
 	.buttons {
 		display: flex;
 		justify-content: space-between;
 		gap: 1rem;
 	}
+
+	.buttons-multiple {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
 	form {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+	}
+	.search-bar {
+		display: flex;
+		gap: 1rem;
+	}
+	.edit {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+	}
+	.section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.relation-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		background-color: var(--background-muted);
+		padding: 1rem;
+		border: 1px solid var(--border);
 	}
 </style>

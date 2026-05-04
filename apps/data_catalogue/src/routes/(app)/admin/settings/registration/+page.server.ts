@@ -1,118 +1,72 @@
-import { db } from '$lib/db/index.js'
-import { questions } from '$lib/db/schema/questions.js'
-import { SERVER_ERRORS } from '$lib/globals/server.js'
-import { handleDBError } from '$lib/utils/db/index.js'
-import { parseForm } from '$lib/utils/forms/index.js'
-import { log } from '$lib/utils/server/logger.js'
-import { jstr } from '@arturoguzman/art-ui'
+import { formGetStringOrUndefined, safeJSONParse } from '$lib/utils/forms/index.js'
 import { error, fail } from '@sveltejs/kit'
-import { redirect } from '@sveltejs/kit'
-import { asc, eq } from 'drizzle-orm'
+import { questionsGetController } from '$lib/server/interface/adapters/controllers/questions/get.js'
+import { questionCreateController } from '$lib/server/interface/adapters/controllers/questions/create.js'
+import { questionUpdateController } from '$lib/server/interface/adapters/controllers/questions/update.js'
+import { questionDeleteController } from '$lib/server/interface/adapters/controllers/questions/delete.js'
 
-export const load = async () => {
-	const records = await db
-		.select()
-		.from(questions)
-		.orderBy(asc(questions.created_at))
-		.catch((err) => {
-			log.debug(err)
-			error(...SERVER_ERRORS[500])
-		})
-
+export const load = async ({ locals }) => {
+	const [errors, questions] = await questionsGetController({
+		session: locals.session,
+		configuration: locals.configuration
+	})
+	if (errors !== null) {
+		error(500, { message: errors.reason, id: errors.reason })
+	}
 	return {
-		questions: records ?? []
+		questions
 	}
 }
 
 export const actions = {
-	create_question: async ({ request, locals, fetch }) => {
-		if (!locals.session) {
-			redirect(307, '/')
+	create_question: async ({ request, locals }) => {
+		const form = await request.formData()
+		const data = safeJSONParse(formGetStringOrUndefined({ form, field: 'question_data' }))
+		const [errors, question] = await questionCreateController({
+			configuration: locals.configuration,
+			session: locals.session,
+			data
+		})
+		if (errors !== null) {
+			return fail(400, { message: errors.message ?? errors.reason })
 		}
-		const form = {
-			...parseForm(await request.formData()),
-			created_by: locals.session.identity.id,
-			updated_by: locals.session.identity.id,
-			group: 'registration'
-		}
-		if ('required' in form && form.required === 'on') {
-			form.required = true
-		} else {
-			form['required'] = false
-		}
-		if ('visibility' in form && form.visibility === 'on') {
-			form.visibility = true
-		} else {
-			form['visibility'] = false
-		}
-		if ('options' in form && typeof form.options === 'string') {
-			form.options = JSON.parse(form.options)
-		}
-
-		if (
-			'conditionals' in form &&
-			typeof form.conditionals === 'string' &&
-			form.conditionals === '[]'
-		) {
-			form.conditionals = []
-		}
-
-		const res = await fetch('/api/v1/questions', { method: 'POST', body: JSON.stringify(form) })
-		const data = await res.json()
+		console.log(question)
 		return {
 			message: `Question created`
 		}
 	},
-	update_question: async ({ request, locals, fetch }) => {
-		if (!locals.session) {
-			redirect(307, '/')
-		}
-		const form = parseForm(await request.formData())
-
-		if ('id' in form == false) {
-			return fail(400, { message: 'You need to provide an ID' })
-		}
-		if ('required' in form && form.required === 'on') {
-			form.required = true
-		} else {
-			form['required'] = false
-		}
-		if ('visibility' in form && form.visibility === 'on') {
-			form.visibility = true
-		} else {
-			form['visibility'] = false
-		}
-		if ('options' in form && typeof form.options === 'string') {
-			form.options = JSON.parse(form.options)
-		}
-		if (
-			'conditionals' in form &&
-			typeof form.conditionals === 'string' &&
-			form.conditionals === '[]'
-		) {
-			form.conditionals = []
-		}
-		const res = await fetch(`/api/v1/questions/${form.id}`, {
-			method: 'PATCH',
-			body: JSON.stringify(form)
+	update_question: async ({ request, locals }) => {
+		const form = await request.formData()
+		const id = formGetStringOrUndefined({ form, field: 'id' })
+		const data = safeJSONParse(formGetStringOrUndefined({ form, field: 'question_data' }))
+		const [errors, question] = await questionUpdateController({
+			configuration: locals.configuration,
+			session: locals.session,
+			data,
+			id
 		})
-		const data = await res.json()
-		log.debug(data)
+		if (errors !== null) {
+			return fail(400, { message: errors.message ?? errors.reason })
+		}
+		console.log(question)
 		return {
 			message: `Question updated`
 		}
 	},
 	delete_question: async ({ request, locals }) => {
-		if (!locals.session) {
-			redirect(307, '/')
+		const form = await request.formData()
+		const id = formGetStringOrUndefined({ form, field: 'id' })
+		const [errors, question] = await questionDeleteController({
+			configuration: locals.configuration,
+			session: locals.session,
+			id
+		})
+		if (errors !== null) {
+			return fail(400, { message: errors.message ?? errors.reason })
 		}
-		const form = parseForm(await request.formData())
-		if ('id' in form) {
-			await db.delete(questions).where(eq(questions.id, form.id)).catch(handleDBError)
-			return {
-				message: `Question deleted`
-			}
+		console.log(question)
+		return {
+			message: `Question deleted`
 		}
-		return fail(400, { message: `There's been an issue deleting this question` })
 	}
 }

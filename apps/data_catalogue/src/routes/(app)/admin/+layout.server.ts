@@ -1,28 +1,15 @@
-import { SERVER_ERRORS } from '$lib/globals/server.js'
-import { ketoCheck } from '$lib/utils/auth'
-import { log } from '$lib/utils/server/logger.js'
-import { error } from '@sveltejs/kit'
+import { redirect } from '@sveltejs/kit'
 
 export const load = async ({ locals }) => {
-	if (!locals.session) {
-		error(...SERVER_ERRORS[401])
+	if (!locals.session?.identity.id) {
+		redirect(307, '/')
 	}
-	const permissions = await ketoCheck
-		.checkPermission({
-			namespace: 'Group',
-			object: 'admin',
-			relation: 'users',
-			subjectId: locals.session?.identity.id
-		})
-		.catch((err) => {
-			log.debug(err)
-			return {
-				allowed: false
-			}
-		})
-	if (!permissions.allowed) {
-		error(...SERVER_ERRORS[401])
+	if (locals.configuration.superusers === null) {
+		redirect(307, '/')
 	}
-	return {}
+	//HACK: add admin permissions
+	if (!locals.configuration.superusers.includes(locals.session?.identity.id)) {
+		redirect(307, '/')
+	}
 }
 // https://svelte.dev/docs/kit/load#Layout-data

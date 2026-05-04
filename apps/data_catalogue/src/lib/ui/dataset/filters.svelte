@@ -1,19 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import type { CkanGroup, CkanResource, CkanTag } from '$lib/types/ckan'
 	import type { CkanResult, CkanTextError } from '$lib/utils/ckan/actions'
 	import { jstr } from '@arturoguzman/art-ui'
 	import { Accordion, Button, handleSearchParams, Icon, Subtitle } from '@imago/ui'
 	let {
-		organisations,
+		// organisations,
 		groups,
 		tags,
 		resources,
 		licenses
 	}: {
-		organisations: CkanResult | CkanTextError
-		groups: CkanResult | CkanTextError
-		tags: CkanResult | CkanTextError
-		resources: CkanResult | CkanTextError
+		// organisations: CkanResult | CkanTextError
+		groups: CkanGroup[]
+		tags: CkanTag[]
+		resources: CkanResource[]
 		licenses: CkanResult | CkanTextError
 	} = $props()
 	let filters = $state([
@@ -38,9 +39,9 @@
 		},
 		{
 			title: 'Tags',
-			filters: tags,
+			filters: { result: tags.map((tag) => tag.name) },
 			// query: 'vocab_Topics',
-			query: 'tags',
+			query: 'vocab_general',
 			limit: 10,
 			field: 'id',
 			transform: (id: string) => {

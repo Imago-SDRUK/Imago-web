@@ -1,6 +1,6 @@
 import { db } from '$lib/db'
 import { answers, questions } from '$lib/db/schema'
-import type { Answer } from '$lib/db/schema/questions'
+import type { Answer } from '$lib/server/entities/models/questions'
 import { handleArkErrors, type ArkFormErrors } from '$lib/db/validation'
 import { handleDBError } from '$lib/utils/db'
 import { COUNTRIES } from '$lib/utils/forms/countries'

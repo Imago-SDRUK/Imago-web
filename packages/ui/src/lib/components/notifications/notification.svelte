@@ -41,7 +41,7 @@
 <style>
 	.notification {
 		border: 1px solid var(--highlight);
-		color: var(text);
+		color: var(--text);
 		background-color: var(--background);
 		padding: 1rem;
 		border-radius: 0.35rem;

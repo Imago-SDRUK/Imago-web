@@ -14,7 +14,7 @@
 		align?: 'left' | 'centre' | 'right'
 		children?: Snippet
 		current_colour?: boolean
-		style?: 'base' | 'label'
+		style?: 'base' | 'label' | 'full-width'
 	} = $props()
 </script>
 
@@ -74,6 +74,9 @@
 	.prose {
 		line-height: 1.5rem;
 		width: min(100%, 600px);
+	}
+	.paragraph[data-style='full-width'] {
+		width: 100%;
 	}
 	:global(span.prose *:not(:last-child)) {
 		margin-bottom: 1rem;

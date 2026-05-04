@@ -1,77 +1,38 @@
 <script lang="ts">
+	import type { Tag } from '$lib/server/entities/models/datasets'
 	import { enhance } from '$app/forms'
 	import { invalidateAll } from '$app/navigation'
 	import { getDataset } from '$lib/context/dataset.svelte'
 	import { APP_STATE } from '$lib/globals/state.svelte'
 	import { notify } from '$lib/stores/notify'
-	import type { CkanTag } from '$lib/types/ckan'
-	import { fuzzy, getId, jstr } from '@arturoguzman/art-ui'
-	import { Subtitle, Button, Paragraph, Input, Text, Icon } from '@imago/ui'
+	import { handleEnhance } from '$lib/utils/forms'
+	import { fuzzy } from '@arturoguzman/art-ui'
+	import { Subtitle, Button, Paragraph, Input, Text, Icon, Notice } from '@imago/ui'
+	import slugify from '@sindresorhus/slugify'
 	const ctx = getDataset()
-	let { existing_tags }: { existing_tags: CkanTag[] } = $props()
-	let tags: { display_name: string; id: string }[] = $state([])
+	let { existing_tags }: { existing_tags: (Tag | string)[] } = $props()
 	let search = $state('')
 	let search_results = $derived(
 		existing_tags
 			.filter(() => search !== '')
+			.filter((tag) => typeof tag !== 'string')
 			.filter((tag) => !ctx.dataset.tags.find((_tag) => tag.id === _tag.id))
 			.filter((tag) => fuzzy(search, tag.display_name))
 	)
-	const handleCreateTag = (name: string) => {
-		ctx.dataset.tags.push({
-			display_name: name,
-			state: 'active',
-			name,
-			vocabulary_id: null
-		})
-	}
 </script>
 
 <div class="field-header">
 	<Subtitle size="lg">Tags</Subtitle>
-	<div class="wrapper">
-		<!-- <Button -->
-		<!-- 	type="button" -->
-		<!-- 	onclick={() => { -->
-		<!-- 		tags.push({ display_name: '', id: getId() }) -->
-		<!-- 	}} -->
-		<!-- > -->
-		<!-- 	<Icon icon={{ icon: 'plus', set: 'tabler' }}></Icon> -->
-		<!-- </Button> -->
-	</div>
+	<div class="wrapper"></div>
 </div>
-<form
-	action="?/save_tags"
-	method="POST"
-	use:enhance={() => {
-		APP_STATE.loading = true
-		return async ({ result }) => {
-			APP_STATE.loading = false
-			if ('data' in result) {
-				notify.send(String(result.data?.message))
-			}
-			search = ''
-			invalidateAll()
-		}
-	}}
->
+<form action="?/add_tag" method="POST" use:enhance={handleEnhance()}>
 	<div class="fields">
-		<input type="text" value={JSON.stringify(ctx.dataset.tags)} hidden name="tags" />
 		<div class="search">
 			<Input label="Search or add a tag">
 				<Text
 					onkeydown={(e) => {
 						if (e.key === ',') {
 							e.preventDefault()
-						}
-						if (e.key === 'Enter') {
-							e.preventDefault()
-							if (search_results.length === 1) {
-								ctx.dataset.tags.push(search_results[0])
-								return
-							}
-							handleCreateTag(search)
-							search = ''
 						}
 					}}
 					bind:value={search}
@@ -81,63 +42,75 @@
 			{#if search !== ''}
 				<div class="search-results">
 					{#each search_results as tag, index (tag)}
-						<div class="tag">
-							<Button
-								type="button"
-								onclick={() => {
-									ctx.dataset.tags.push(tag)
-								}}
-							>
-								<Paragraph>{tag.display_name}</Paragraph>
-							</Button>
-						</div>
+						{#if typeof tag !== 'string'}
+							<input type="hidden" name="tag" value={tag.name} />
+							<div class="tag">
+								<Button>
+									<Paragraph>{tag.display_name}</Paragraph>
+								</Button>
+							</div>
+						{/if}
 					{/each}
+					<input type="hidden" name="tag" value={search} />
+					<Button>
+						<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon>
+						<Paragraph>{search}</Paragraph>
+					</Button>
+
+					<!-- {#if !existing_tags.find( (tag) => fuzzy(search, typeof tag === 'string' ? tag : tag.display_name) )} -->
+					<!-- 	<input type="hidden" name="tag" value={search} /> -->
+					<!-- 	<Button> -->
+					<!-- 		<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon> -->
+					<!-- 		<Paragraph>{search}</Paragraph> -->
+					<!-- 	</Button> -->
+					<!-- {/if} -->
 					{#if search_results.length === 0}
-						<Button
-							type="button"
-							onclick={() => {
-								handleCreateTag(search)
-								search = ''
-							}}
-						>
-							<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon>
-							<Paragraph>{search}</Paragraph>
-						</Button>
+						{#if ctx.dataset.tags.find((tag) => tag.name === slugify(search))}
+							<Notice level="info">
+								<Paragraph>Tag {search} has already been added to the dataset.</Paragraph>
+							</Notice>
+							<!-- <input type="hidden" name="tag" value={search} /> -->
+							<!-- <Button> -->
+							<!-- 	<Icon icon={{ icon: 'plus', set: 'tabler', size: 'lg' }}></Icon> -->
+							<!-- 	<Paragraph>{search}</Paragraph> -->
+							<!-- </Button> -->
+						{/if}
 					{/if}
 				</div>
 			{/if}
 		</div>
-		<div class="tags">
-			{#each ctx.dataset.tags as tag, index (tag)}
-				<div class="tag">
-					<Button
-						hover_label={`Click to delete ${tag.display_name}`}
-						style="tag"
-						type="button"
-						onclick={() => {
-							ctx.dataset.tags = [
-								...ctx.dataset.tags.slice(0, index),
-								...ctx.dataset.tags.slice(index + 1)
-							]
-						}}
-					>
-						<Paragraph>{tag.display_name}</Paragraph>
-					</Button>
-				</div>
-			{/each}
-		</div>
-	</div>
-	<div class="buttons">
-		<Button
-			type="button"
-			onclick={() => {
-				invalidateAll()
-			}}
-			style="alt">Cancel</Button
-		>
-		<Button style="alt">Save</Button>
 	</div>
 </form>
+
+<div class="tags">
+	{#each ctx.dataset.tags as tag (tag)}
+		<form
+			action="?/remove_tag"
+			method="POST"
+			use:enhance={({ cancel }) => {
+				if (APP_STATE.loading) {
+					cancel()
+				}
+				APP_STATE.loading = true
+				return async ({ result }) => {
+					APP_STATE.loading = false
+					if ('data' in result) {
+						notify.send(String(result.data?.message))
+					}
+					search = ''
+					invalidateAll()
+				}
+			}}
+		>
+			<div class="tag">
+				<input type="hidden" hidden value={tag.display_name} name="tag" />
+				<Button hover_label={`Click to delete ${tag.display_name}`} style="tag">
+					<Paragraph>{tag.display_name}</Paragraph>
+				</Button>
+			</div>
+		</form>
+	{/each}
+</div>
 
 <style>
 	form {
@@ -165,6 +138,7 @@
 		gap: 0.5rem;
 		background-color: var(--background);
 		border-radius: 0 0 var(--radius) var(--radius);
+		flex-wrap: wrap;
 	}
 	.tags {
 		display: flex;

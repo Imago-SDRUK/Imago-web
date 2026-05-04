@@ -2,21 +2,27 @@
 	import { onMount, type Snippet } from 'svelte'
 	import type { ChangeEventHandler } from 'svelte/elements'
 	import { Input, Subtitle } from '@imago/ui'
-	import { getId, jstr } from '@arturoguzman/art-ui'
-	import { addFiles, readFile, type FilePreUpload } from '$lib/utils/files/readers'
-	import FilePreview from './file_preview.svelte'
+	import { getId } from '@arturoguzman/art-ui'
+	import { type FilePreUpload } from '$lib/utils/files/readers'
+	import { Tween } from 'svelte/motion'
+	import { linear } from 'svelte/easing'
 	let {
 		label,
 		name,
 		value = null,
-		status = $bindable('idle')
+		status = $bindable('idle'),
+		multiple = false,
+		children
 	}: {
 		label?: string
 		name?: string
-		children?: Snippet
+		children?: Snippet<
+			[{ files: FilePreUpload[]; removeFile: ({ index }: { index: number }) => void }]
+		>
 		onchange?: ChangeEventHandler<HTMLInputElement>
 		value?: string | null
 		status?: 'idle' | 'completed' | 'error' | 'uploading'
+		multiple?: boolean
 	} = $props()
 	const id = getId()
 	let dropping = $state(false)
@@ -36,8 +42,44 @@
 	const handleChange = async (e: EventTarget & HTMLInputElement) => {
 		const files = e.files
 		if (files) {
-			for (const file of files) {
-				readFile({ file, handleFileReader: addFiles({ previews }) })
+			for (const file of Array.from(files)) {
+				if (multiple) {
+					previews.push({
+						file,
+						thumbnail: '',
+						size: file.size,
+						filename: file.name,
+						last_modified: file.lastModified,
+						type: file.type,
+						description: '',
+						upload: {
+							status: 'idle',
+							progress: new Tween(0, {
+								easing: linear
+							}),
+							value: ''
+						}
+					})
+				} else {
+					previews = [
+						{
+							file,
+							thumbnail: '',
+							size: file.size,
+							filename: file.name,
+							last_modified: file.lastModified,
+							type: file.type,
+							description: '',
+							upload: {
+								status: 'idle',
+								progress: new Tween(0, {
+									easing: linear
+								}),
+								value: ''
+							}
+						}
+					]
+				}
 			}
 		}
 	}
@@ -93,7 +135,7 @@
 					<Subtitle text="Drop your file here or"></Subtitle>
 					<input
 						id="drop-{name}-{id}"
-						multiple
+						{multiple}
 						onchange={async (e) => {
 							handleChange(e.currentTarget)
 						}}
@@ -103,18 +145,9 @@
 				</div>
 			</div>
 		</div>
-		{#if previews.length > 0}
-			<div class="previews">
-				{#each previews as file, index}
-					<FilePreview
-						{file}
-						handleDelete={() => {
-							removeFile({ index })
-						}}
-					></FilePreview>
-				{/each}
-			</div>
-		{/if}
+		<div class="previews">
+			{@render children?.({ files: previews, removeFile })}
+		</div>
 	</div>
 </Input>
 
@@ -154,11 +187,7 @@
 		color: var(--text);
 		font-family: var(--paragraph);
 	}
-	.drop {
-		color: var(--background);
-		font-family: var(--title);
-		font-weight: 600;
-	}
+
 	.drop-zone {
 		margin: 0.5rem 0 1rem 0;
 	}

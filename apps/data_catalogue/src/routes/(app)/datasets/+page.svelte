@@ -5,7 +5,7 @@
 	import Filters from '$lib/ui/dataset/filters.svelte'
 	import CardProduct from '$lib/ui/cards/card_product.svelte'
 	let { data } = $props()
-	let datasets = $derived(data.datasets)
+	let datasets = $derived(data.datasets.items)
 	debug.data = data
 </script>
 
@@ -29,8 +29,9 @@
 				{#each datasets as dataset}
 					<CardProduct {dataset}></CardProduct>
 				{/each}
+
 				<div class="footer">
-					{#if datasets.length > 0}
+					{#if data.datasets.total > 0}
 						{#if page.url.searchParams.get('offset')}
 							{@const offset = Number(page.url.searchParams.get('offset'))}
 							<!-- HACK: replace fixed dataset with fn to strip required searchparams -->
@@ -47,29 +48,30 @@
 							<div class="page-count">
 								<Paragraph>
 									Page {(offset / 10 + 1).toFixed(0)} of
-									{(Number(data.datasets_count) / 10).toFixed(0)}
+									{Math.ceil(Number(data.datasets.total) / 10)}
 								</Paragraph>
 							</div>
-							<Button
-								href={handleSearchParams({
-									url: page.url,
-									add: [{ key: 'offset', value: offset + 10, set: true }]
-								})}
-							>
-								<!-- <Button href={`?offset=${offset + 10}`}> -->
-								<Icon icon={{ icon: 'arrow-narrow-right', set: 'tabler' }}></Icon>
-							</Button>
+							{#if offset + 10 < data.datasets.total}
+								<Button
+									href={handleSearchParams({
+										url: page.url,
+										add: [{ key: 'offset', value: offset + 10, set: true }]
+									})}
+								>
+									<!-- <Button href={`?offset=${offset + 10}`}> -->
+									<Icon icon={{ icon: 'arrow-narrow-right', set: 'tabler' }}></Icon>
+								</Button>
+							{/if}
 						{:else}
-							<div class="no-button"></div>
 							<div class="page-count">
 								<Paragraph>
 									Page 1 of
-									{(Number(data.datasets_count) / 10).toFixed(0) === '0'
+									{Math.ceil(Number(data.datasets.total) / 10).toFixed(0) === '0'
 										? 1
-										: (Number(data.datasets_count) / 10).toFixed(0)}
+										: Math.ceil(Number(data.datasets.total) / 10)}
 								</Paragraph>
 							</div>
-							{#if datasets.length > 10}
+							{#if data.datasets.total > 10}
 								<div class="button-wrapper">
 									<Button
 										href={handleSearchParams({

@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { getId } from '@arturoguzman/art-ui'
-	import { Input, Text, Paragraph, Icon, Button } from '@imago/ui'
+	import { Input, Text, Paragraph, Notice } from '@imago/ui'
+	import type { Snippet } from 'svelte'
 
 	let {
 		id,
 		index,
 		option = $bindable(),
-		options = $bindable()
+		options = $bindable(),
+		button
 	}: {
 		id: string
 		index: number
 		option: { id: string; label: string; value: string; error: boolean }
 		options: { id: string; label: string; value: string; error: boolean }[]
+		button: Snippet
 	} = $props()
 	const findDuplicates = (label: string) => {
 		const existing = options.filter((x) => x.label.toLowerCase() === label.toLowerCase())
@@ -84,14 +87,14 @@
 	}
 </script>
 
-<div class="option">
+<div class="option" id={`option-${id}`}>
 	<div class="option-inputs">
 		<Input label="Label">
 			{#snippet message()}
 				{#if option.error}
-					<div class="error">
-						<Paragraph>You can't have the same label twice</Paragraph>
-					</div>
+					<Notice level="negative">
+						<Paragraph size="xs">You can't have the same label twice</Paragraph>
+					</Notice>
 				{/if}
 			{/snippet}
 			<Text
@@ -139,17 +142,7 @@
 			></Text>
 		</Input>
 	</div>
-	<Button
-		style="square"
-		type="button"
-		onclick={() => {
-			if (index > 0) {
-				options = [...options.slice(0, index), ...options.slice(index + 1)]
-			}
-		}}
-	>
-		<Icon icon={{ icon: 'minus', set: 'tabler' }}></Icon>
-	</Button>
+	{@render button?.()}
 </div>
 
 <style>
@@ -164,14 +157,5 @@
 		justify-content: space-between;
 		align-items: flex-end;
 		gap: 0.5rem;
-	}
-	.error {
-		/* color: var(--background); */
-		background-color: var(--negative);
-	}
-	.button-wrapper {
-		display: flex;
-		justify-content: center;
-		align-items: center;
 	}
 </style>

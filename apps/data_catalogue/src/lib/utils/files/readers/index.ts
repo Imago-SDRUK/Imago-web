@@ -1,5 +1,4 @@
 import { page } from '$app/state'
-import type { CkanResource } from '$lib/types/ckan'
 import { linear } from 'svelte/easing'
 import { Tween } from 'svelte/motion'
 
@@ -12,17 +11,25 @@ export type FileMetadata = {
 	id?: string
 }
 
+export type FilePreview = FileMetadata & {
+	id?: number
+	thumbnail: string | ArrayBuffer
+	url?: string
+}
+
+export type FileUpload = {
+	status: 'idle' | 'completed' | 'error' | 'uploading'
+	progress: Tween<number>
+	value: string
+	// fn: ({
+	// 	file,
+	// 	headers
+	// }: FilePreUpload & { headers?: Record<string, string> }) => Promise<CkanResource>
+}
+
 export type FilePreUpload = FilePreview & {
 	file: File
-	upload?: {
-		status: 'idle' | 'completed' | 'error' | 'uploading'
-		progress: Tween<number>
-		value: string
-		fn: ({
-			file,
-			headers
-		}: FilePreUpload & { headers?: Record<string, string> }) => Promise<CkanResource>
-	}
+	upload?: FileUpload
 }
 
 export type FileReaderHandler = ({
@@ -34,12 +41,6 @@ export type FileReaderHandler = ({
 }: {
 	file: File
 } & FileMetadata) => (this: FileReader, ev: ProgressEvent<FileReader>) => unknown
-
-export type FilePreview = FileMetadata & {
-	id?: number
-	thumbnail: string | ArrayBuffer
-	url?: string
-}
 
 export const readURL = (file: File) => {
 	return new Promise((res, rej) => {
@@ -131,13 +132,17 @@ export const upload = async ({
 }
 
 export const xhrUpload = ({
-	file,
+	file_preupload,
 	url,
-	upload,
 	headers = {}
-}: FilePreUpload & { url: string; headers?: Record<string, string> }): Promise<{ url: string }> => {
+}: {
+	file_preupload: FilePreUpload
+	url: string
+	headers?: Record<string, string>
+}): Promise<{ url: string }> => {
 	let xhr: XMLHttpRequest | undefined = undefined
 	return new Promise((resolve, reject) => {
+		const { file, upload } = file_preupload
 		if (!url) {
 			return reject({
 				error: `Url is missing`

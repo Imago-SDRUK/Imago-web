@@ -3,9 +3,9 @@ import type {
 	CkanDatasetRequest,
 	CkanDatastore,
 	CkanDatastoreCreate,
-	CkanDatastoreField,
 	CkanGroup,
-	CkanResource
+	CkanResource,
+	CkanTag
 } from '$lib/types/ckan'
 
 type PackageCreate = ['package_create', CkanDatasetRequest, CkanDataset]
@@ -29,7 +29,8 @@ type ResourceCreate = [
 		last_modified?: string // iso date string
 		cache_last_updated?: string // iso date string
 		upload?: unknown // FieldStorage (needs multipart/form-data)
-	}
+	},
+	CkanResource
 ]
 
 type ResourceViewCreate = [
@@ -70,8 +71,19 @@ type UserInvite = [
 type VocabularyCreate = [
 	'vocabulary_create',
 	{
-		name: string // the name of the new vocabulary, e.g. 'Genre'
-		tags?: Array<unknown> // the new tags to add to the new vocabulary
+		/**
+		 * the name of the new vocabulary, e.g. 'Genre'
+		 **/
+		name: string
+		/**
+		 * the new tags to add to the new vocabulary
+		 **/
+		tags?: CkanTag[]
+	},
+	{
+		id: string
+		name: string
+		tags: CkanTag[]
 	}
 ]
 
@@ -80,7 +92,8 @@ type TagCreate = [
 	{
 		name: string // between 2 and 100 characters long containing only alphanumeric characters, spaces and -, _ and .
 		vocabulary_id: string // the id of the vocabulary that the new tag should be added to
-	}
+	},
+	CkanTag
 ]
 
 type GroupCreate = [
@@ -94,10 +107,10 @@ type GroupCreate = [
 		type?: string // default: 'group'
 		state?: string // e.g. 'active' or 'deleted'
 		approval_status?: string
-		extras?: Array<unknown> // arbitrary (key: value) metadata items
-		packages?: Array<{ name: string; title?: string }> // datasets that belong to the group
-		groups?: Array<{ name: string; capacity?: string }> // groups that belong to the group
-		users?: Array<{ name: string; capacity?: string }> // users that belong to the group
+		extras?: unknown[] // arbitrary (key: value) metadata items
+		packages?: { name: string; title?: string }[] // datasets that belong to the group
+		groups?: { name: string; capacity?: string }[] // groups that belong to the group
+		users?: { name: string; capacity?: string }[] // users that belong to the group
 	},
 	CkanGroup
 ]
@@ -112,9 +125,9 @@ type OrganizationCreate = [
 		image_url?: string
 		state?: string // e.g. 'active' or 'deleted'
 		approval_status?: string
-		extras?: Array<unknown> // arbitrary (key: value) metadata items
-		packages?: Array<{ name: string; title?: string }> // datasets that belong to the organization
-		users?: Array<{ name: string; capacity?: string }> // users that belong to the organization
+		extras?: unknown[] // arbitrary (key: value) metadata items
+		packages?: { name: string; title?: string }[] // datasets that belong to the organization
+		users?: { name: string; capacity?: string }[] // users that belong to the organization
 	}
 ]
 
@@ -165,7 +178,7 @@ type ApiTokenCreate = [
 	}
 ]
 
-export type DatastoreCreate = ['datastore_create', CkanDatastoreCreate, undefined]
+export type DatastoreCreate = ['datastore_create', CkanDatastoreCreate, CkanDatastore]
 
 export type CkanCreateActions =
 	| PackageCreate

@@ -4,7 +4,6 @@
 	import { notify } from '$lib/stores/notify'
 	import Dialog from '$lib/ui/cards/dialog.svelte'
 	import FileInput from '$lib/ui/inputs/file_input.svelte'
-	import FileUploaded from '$lib/ui/inputs/file_uploaded.svelte'
 	import { Button, Input, Paragraph, Select, Subtitle, Text, Title } from '@imago/ui'
 	let { data, children } = $props()
 	const toggleDialog = (id: string) => {
@@ -63,13 +62,15 @@
 					<Input required={manual_form_required} label="Title">
 						<Text name="title"></Text>
 					</Input>
-					{#if Array.isArray(data.groups.result)}
+					{#if Array.isArray(data.groups)}
 						<Input required={manual_form_required} label="Group">
 							<Select
+								value=""
 								name="group"
-								options={data.groups.result.map((result) => ({
-									label: result.title,
-									value: JSON.stringify({ id: result.id, name: result.name })
+								options={data.groups.map((result) => ({
+									label: typeof result === 'string' ? result : result.title,
+									value: typeof result === 'string' ? result : result.name
+									// value: JSON.stringify({ id: result.id, name: result.name })
 								}))}
 							></Select>
 						</Input>

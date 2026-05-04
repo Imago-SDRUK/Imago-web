@@ -12,6 +12,7 @@ export type InputComponentProps = {
 	information?: string
 	message?: Snippet
 	icon?: IconsSets
+	subgrid?: boolean
 }
 
 export type InputTextareaProps = Omit<HTMLTextareaAttributes, 'popover'> & InputComponentProps
@@ -40,5 +41,7 @@ export type InputSelectProps = {
 	placeholder?: string
 	design_type?: 'dropdown' | 'list'
 	debug?: boolean
+	multiple?: boolean
+	value?: string | string[]
 } & Omit<HTMLInputAttributes, 'popover'> &
 	InputComponentProps

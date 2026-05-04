@@ -1,17 +1,58 @@
 <script lang="ts">
-	import { applyAction, enhance } from '$app/forms'
+	import { enhance } from '$app/forms'
+	import { goto } from '$app/navigation'
+	import { APP_STATE } from '$lib/globals/state.svelte.js'
 	import { notify } from '$lib/stores/notify.js'
 	import Answer from '$lib/ui/forms/answer.svelte'
-	import { jstr } from '@arturoguzman/art-ui'
-	import { BaseSection, BaseCard, Button, Input, Text, Title } from '@imago/ui'
+	import { handleEnhance } from '$lib/utils/forms/index.js'
+	import { BaseSection, BaseCard, Button, Title } from '@imago/ui'
 	let { data } = $props()
-	let tags = [1, 2]
-	let answers = $state(
-		data.questions.map((question) => ({
-			question: String(question.id),
-			answer: ''
-		}))
-	)
+	let answers = $derived.by(() => {
+		let value = $state(
+			data.questions.map((question) => ({
+				question: String(question.id),
+				answer: ''
+			}))
+		)
+		return value
+	})
+	// () => {
+	// 					return async ({ result }) => {
+	// 						if (result.type === 'error') {
+	// 							notify.send(String(result.error.message))
+	// 						}
+	// 						if ('data' in result && result.data) {
+	// 							if ('errors' in result.data) {
+	// 								if (typeof result.data.errors === 'string') {
+	// 									notify.send(String(jstr(result.data.errors)))
+	// 								}
+	// 								if (
+	// 									typeof result.data.errors === 'object' &&
+	// 									result.data.errors &&
+	// 									!Array.isArray(result.data.errors)
+	// 								) {
+	// 									Object.entries(result.data.errors).forEach((entry) =>
+	// 										notify.send({ message: `${entry[1]}` })
+	// 									)
+	// 								}
+	// 								if (
+	// 									typeof result.data.errors === 'object' &&
+	// 									result.data.errors &&
+	// 									Array.isArray(result.data.errors)
+	// 								) {
+	// 									result.data.errors.forEach((error) =>
+	// 										Object.entries(error).forEach((entry) =>
+	// 											notify.send({ message: `${entry[0]}: ${entry[1]}` })
+	// 										)
+	// 									)
+	// 								}
+	// 							}
+	// 						}
+	// 						if (result.type === 'redirect') {
+	// 							applyAction(result)
+	// 						}
+	// 					}
+	// 				}
 </script>
 
 <BaseSection>
@@ -25,39 +66,25 @@
 						action="?/create"
 						method="post"
 						use:enhance={() => {
+							APP_STATE.loading = true
 							return async ({ result }) => {
+								APP_STATE.loading = false
 								if (result.type === 'error') {
-									notify.send(String(result.error.message))
+									notify.send({ message: result.error.message })
 								}
-								if ('data' in result && result.data) {
-									if ('errors' in result.data) {
-										if (typeof result.data.errors === 'string') {
-											notify.send(String(jstr(result.data.errors)))
-										}
-										if (
-											typeof result.data.errors === 'object' &&
-											result.data.errors &&
-											!Array.isArray(result.data.errors)
-										) {
-											Object.entries(result.data.errors).forEach((entry) =>
-												notify.send({ message: `${entry[1]}` })
-											)
-										}
-										if (
-											typeof result.data.errors === 'object' &&
-											result.data.errors &&
-											Array.isArray(result.data.errors)
-										) {
-											result.data.errors.forEach((error) =>
-												Object.entries(error).forEach((entry) =>
-													notify.send({ message: `${entry[0]}: ${entry[1]}` })
-												)
-											)
-										}
+								if (result.type === 'failure') {
+									if (result.data?.message && typeof result.data.message === 'string') {
+										notify.send({ message: result.data?.message })
+									}
+								}
+								if (result.type === 'success') {
+									if (result.data?.message && typeof result.data.message === 'string') {
+										notify.send({ message: result.data?.message })
 									}
 								}
 								if (result.type === 'redirect') {
-									applyAction(result)
+									goto(result.location)
+									return
 								}
 							}
 						}}

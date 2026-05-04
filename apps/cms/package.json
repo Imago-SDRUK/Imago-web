@@ -17,21 +17,21 @@
 	"description": "",
 	"dependencies": {
 		"@bicou/directus-extension-tiptap": "^1.18.6",
-		"@tiptap/core": "^2.26.2",
-		"@tiptap/extension-character-count": "^2.26.2",
-		"@tiptap/extension-font-family": "^2.26.2",
-		"@tiptap/extension-text-style": "^2.26.2",
-		"@tiptap/extension-typography": "^2.26.2",
-		"@tiptap/pm": "^2.26.2",
-		"@tiptap/starter-kit": "^2.26.1",
-		"directus": "^11.12.0",
+		"@tiptap/core": "^2.27.2",
+		"@tiptap/extension-character-count": "^2.27.2",
+		"@tiptap/extension-font-family": "^2.27.2",
+		"@tiptap/extension-text-style": "^2.27.2",
+		"@tiptap/extension-typography": "^2.27.2",
+		"@tiptap/pm": "^2.27.2",
+		"@tiptap/starter-kit": "^2.27.2",
+		"directus": "^11.17.2",
 		"directus-extension-models": "^2.5.2",
-		"pg": "^8.16.3"
+		"pg": "^8.20.0"
 	},
 	"engines": {
 		"runtime": {
 			"name": "node",
-			"version": "^22.21.1",
+			"version": "^22.22.2",
 			"onFail": "download"
 		}
 	}

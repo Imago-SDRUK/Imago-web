@@ -1,19 +1,30 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
 	import { invalidateAll } from '$app/navigation'
-	import { notify } from '$lib/stores/notify.js'
 	import licenses from '$lib/utils/ckan/licenses.json'
 	import { BaseSection, Button, Editor, Input, InputBlock, Select, Subtitle, Text } from '@imago/ui'
-	import Resources from '$lib/ui/dataset/resource/resources.svelte'
 	import { getDataset, setDataset } from '$lib/context/dataset.svelte.js'
 	import { debug } from '$lib/globals/dev.svelte.js'
 	import Tags from '$lib/ui/dataset/tags.svelte'
 	import { onMount } from 'svelte'
-	import { APP_STATE } from '$lib/globals/state.svelte.js'
-	import Metadata from '$lib/ui/dataset/metadata.svelte'
-
+	import { handleEnhance } from '$lib/utils/forms/index.js'
+	const labels = {
+		source: 'Source',
+		content: 'Content',
+		file_id: 'File ID',
+		constraints: 'Constraints',
+		crs: 'CRS',
+		spatial_coverage: 'Spatial coverage',
+		spatial_resolution: 'Spatial resolution',
+		temporal_coverage: 'Temporal coverage',
+		temporal_resolution: 'Temporal resolution',
+		size: 'Size',
+		lineage: 'Lineage',
+		data_source: 'Data source',
+		data_quality: 'Data quality'
+	}
 	let { data } = $props()
-	setDataset(data.dataset.result)
+	setDataset(data.dataset)
 	const ctx = getDataset()
 	let editor_enabled = $state(false)
 	onMount(() => {
@@ -21,7 +32,7 @@
 	})
 	$effect(() => {
 		editor_enabled = false
-		ctx.dataset = data.dataset.result
+		ctx.dataset = data.dataset
 		setTimeout(() => {
 			editor_enabled = true
 		}, 1)
@@ -34,37 +45,9 @@
 			<div class="left-col">
 				<div class="form">
 					<Subtitle size="lg">Dataset information</Subtitle>
-					<form
-						action="?/update"
-						method="POST"
-						use:enhance={() => {
-							APP_STATE.loading = true
-							return async ({ result }) => {
-								APP_STATE.loading = false
-								if ('data' in result) {
-									notify.send(String(result.data?.message))
-								}
-								invalidateAll()
-							}
-						}}
-					>
+					<form action="?/update" method="POST" use:enhance={handleEnhance()}>
+						<input type="hidden" value={JSON.stringify(ctx.dataset)} name="dataset" />
 						<div class="fields">
-							<InputBlock design="row">
-								<Input label="State">
-									<Select name="state" bind:value={ctx.dataset.state}>
-										<option value="draft">Draft</option>
-										<option value="active">Published</option>
-									</Select>
-								</Input>
-
-								<Input label="Visibility">
-									<Select name="private" bind:value={ctx.dataset.private}>
-										<option value={true}>Private</option>
-										<option value={false}>Public</option>
-									</Select>
-								</Input>
-							</InputBlock>
-
 							<InputBlock>
 								<Input label="Title" required>
 									<Text name="title" bind:value={ctx.dataset.title} required></Text>
@@ -101,17 +84,26 @@
 							</InputBlock>
 							<InputBlock design="row">
 								<Input label="License">
-									<Select name="license_id" bind:value={ctx.dataset.license_id}>
-										{#each licenses as license}
-											<option value={license.id}>{license.title}</option>
-										{/each}
-									</Select>
+									<Select
+										name="license_id"
+										bind:value={ctx.dataset.license_id}
+										options={licenses.map((license) => ({
+											label: license.title,
+											value: license.id
+										}))}
+									></Select>
 								</Input>
 
 								<Input label="Version">
 									<Text name="version" bind:value={ctx.dataset.version}></Text>
 								</Input>
 							</InputBlock>
+							<Subtitle>Metadata</Subtitle>
+							{#each ctx.dataset.extras as extra (extra)}
+								<Input label={labels[extra.key]}>
+									<Text name={extra.key} bind:value={extra.value}></Text>
+								</Input>
+							{/each}
 						</div>
 						<div class="buttons">
 							<Button
@@ -125,17 +117,10 @@
 						</div>
 					</form>
 				</div>
-				<div class="form">
-					<Metadata></Metadata>
-				</div>
-				<div class="form">
-					<Tags existing_tags={data.tags.result}></Tags>
-				</div>
 			</div>
 			<div class="right-col">
 				<div class="form">
-					<Subtitle size="lg">Resources</Subtitle>
-					<Resources></Resources>
+					<Tags existing_tags={data.tags}></Tags>
 				</div>
 			</div>
 		</div>

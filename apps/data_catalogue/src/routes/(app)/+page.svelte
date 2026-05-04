@@ -15,10 +15,10 @@
 	let { data } = $props()
 	let search = $state()
 	const search_icon: IconsSets = { icon: 'search', set: 'tabler' }
-	const stats: { label: string; count: number }[] = [
+	const stats: { label: string; count: number }[] = $derived([
 		{ label: 'Datasets', count: Number(data.package_count) },
 		{ label: 'Topics', count: Number(data.tag_count) }
-	]
+	])
 </script>
 
 <div class="hero-section">

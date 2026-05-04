@@ -1,42 +1,53 @@
 <script lang="ts">
-	import type { Question } from '$lib/db/schema/questions'
 	import { COUNTRIES } from '$lib/utils/forms/countries'
-	import { jstr } from '@arturoguzman/art-ui'
 	import { Select, Input, Text, Checkbox, Button, Icon } from '@imago/ui'
 	import Notes from '../text/notes.svelte'
+	import type { Question } from '$lib/server/entities/models/questions'
 	let {
 		answers = $bindable(),
 		question
 	}: { answers: { question: string; answer: string }[]; question: Question } = $props()
 	let answer = $derived(answers.find((answer) => answer.question === question.id))
-	let visibility = $state(question.visibility)
+	let visibility = $derived.by(() => {
+		let value = $state(question.visibility)
+		return value
+	})
+	let required = $derived.by(() => {
+		let value = $state(question.required === true ? true : false)
+		return value
+	})
 	let desctiption_open = $state(false)
+
 	$effect(() => {
 		if (answers && question && question.conditionals && Array.isArray(question.conditionals)) {
 			question.conditionals?.forEach((conditional) => {
 				const _val = answers.find((_answer) => _answer.question === conditional.question)?.answer
 				if (conditional.operator === 'equal') {
 					if (_val === conditional.value) {
-						if (conditional.action === 'hidden') {
+						if (conditional.action.includes('required')) {
+							required = true
+						}
+						if (conditional.action.includes('hidden')) {
 							visibility = false
-							return
 						}
-						if (conditional.action === 'visible') {
+						if (conditional.action.includes('visible')) {
 							visibility = true
-							return
 						}
+						return
 					}
 				}
 				if (conditional.operator === 'not_equal') {
 					if (_val !== conditional.value) {
-						if (conditional.action === 'hidden') {
+						if (conditional.action.includes('required')) {
+							required = true
+						}
+						if (conditional.action.includes('hidden')) {
 							visibility = false
-							return
 						}
-						if (conditional.action === 'visible') {
+						if (conditional.action.includes('visible')) {
 							visibility = true
-							return
 						}
+						return
 					}
 				}
 				visibility = question.visibility
@@ -47,33 +58,21 @@
 
 {#if answer && visibility}
 	<div class="answer-card">
-		<Input label={question.question} required={question.required ? true : false}>
+		<Input label={question.question} {required}>
 			{#if question.type === 'countries'}
-				<Select
-					name={question.id}
-					required={question.required ? true : false}
-					options={COUNTRIES}
-					bind:value={answer.answer}
+				<Select name={question.id} options={COUNTRIES} bind:value={answer.answer} {required}
 				></Select>
 			{/if}
 			{#if question.type === 'string'}
-				<Text
-					name={question.id}
-					required={question.required ? true : false}
-					bind:value={answer.answer}
-				></Text>
+				<Text name={question.id} bind:value={answer.answer} {required}></Text>
 			{/if}
 			{#if question.type === 'number'}
-				<Text
-					name={question.id}
-					required={question.required ? true : false}
-					bind:value={answer.answer}
-				></Text>
+				<Text name={question.id} bind:value={answer.answer} {required}></Text>
 			{/if}
 			{#if question.type === 'bool'}
 				<div class="anti-wrap">
 					<Checkbox
-						required={question.required ? true : false}
+						{required}
 						name={question.id}
 						onchange={(e) => {
 							answer.answer = `${e.currentTarget.checked}`
@@ -82,16 +81,12 @@
 				</div>
 			{/if}
 			{#if question.type === 'select' && question.options}
-				<Select
-					name={question.id}
-					required={question.required ? true : false}
-					options={question.options}
-					bind:value={answer.answer}
+				<Select {required} name={question.id} options={question.options} bind:value={answer.answer}
 				></Select>
 			{/if}
 			{#if question.type === 'multiple_select' && question.options}
 				<Select
-					required={question.required ? true : false}
+					{required}
 					multiple
 					name={question.id}
 					options={question.options}

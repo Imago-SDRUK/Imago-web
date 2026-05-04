@@ -1,22 +1,39 @@
 <script lang="ts">
 	import { Grid, type IColumnConfig, type IRow, type IApi } from '@svar-ui/svelte-grid'
 	import { browser } from '$app/environment'
-	import type { Snippet } from 'svelte'
+	import { onMount, type Snippet } from 'svelte'
 	import { fuzzy } from '@arturoguzman/art-ui'
 	import { Text, Input } from '@imago/ui'
+	import { setTableContext } from './table_ctx.svelte'
+	import { page } from '$app/state'
 	let {
+		active,
+		query,
 		columns,
 		data,
 		children,
 		apiFn,
-		enable_search
+		enable_search,
+		onopeneditor
 	}: {
+		active?: string
+		query?: string
 		columns: IColumnConfig[]
 		data: IRow[]
 		children?: Snippet
 		apiFn?: (api: IApi) => void
 		enable_search?: boolean
+		onopeneditor?: (ev: { [key: string]: unknown }) => void
 	} = $props()
+	const table_state = $state({
+		active: query ? (page.url.searchParams.get(query) ?? '') : ''
+	})
+
+	setTableContext({
+		state: table_state
+	})
+
+	let enabled = $state(false)
 	let search_term = $state('')
 	let filtered = $derived(
 		search_term === ''
@@ -34,9 +51,13 @@
 	const init = (api: IApi) => {
 		apiFn?.(api)
 	}
+
+	onMount(() => {
+		enabled = true
+	})
 </script>
 
-{#if browser}
+{#if browser && enabled}
 	<div class="table-header">
 		<div class="left-col">
 			{@render children?.()}
@@ -50,8 +71,9 @@
 			{/if}
 		</div>
 	</div>
+
 	<div class="table">
-		<Grid {columns} data={filtered} {init}></Grid>
+		<Grid {columns} data={filtered} {init} {onopeneditor}></Grid>
 	</div>
 {/if}
 
