@@ -1,6 +1,12 @@
+import { permissionsCreateUseCase } from '$lib/server/application/use_cases/permissions/create.js'
+import { permissionsDeleteUseCase } from '$lib/server/application/use_cases/permissions/delete.js'
 import type { PermissionRequest } from '$lib/server/entities/models/permissions.js'
 import { permissionCreateController } from '$lib/server/interface/adapters/controllers/permissions/create'
-import { permissionDeleteController } from '$lib/server/interface/adapters/controllers/permissions/delete.js'
+import {
+	permissionDeleteController,
+	permissionResetNamespaceController,
+	permissionsDeleteController
+} from '$lib/server/interface/adapters/controllers/permissions/delete.js'
 import { permissionsGetController } from '$lib/server/interface/adapters/controllers/permissions/get.js'
 import { formGetStringOrUndefined, safeJSONParse } from '$lib/utils/forms'
 import { jstr } from '@arturoguzman/art-ui'
@@ -99,7 +105,24 @@ export const actions = {
 			data: payload
 		})
 		if (errors !== null) {
-			return fail(500, { message: errors.reason })
+			return fail(500, { message: errors.message ?? errors.reason })
+		}
+		console.log(jstr(permission))
+		return {
+			message: 'ok'
+		}
+	},
+
+	reset: async ({ request, locals }) => {
+		const form = await request.formData()
+		const namespace = formGetStringOrUndefined({ form, field: 'namespace' })
+		const [errors, permission] = await permissionResetNamespaceController({
+			configuration: locals.configuration,
+			session: locals.session,
+			namespace
+		})
+		if (errors !== null) {
+			return fail(500, { message: errors.message ?? errors.reason })
 		}
 		console.log(jstr(permission))
 		return {

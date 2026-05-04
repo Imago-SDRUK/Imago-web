@@ -45,8 +45,7 @@ export const load = async ({ locals, url }: PageServerLoadEvent) => {
 	}
 
 	return {
-		datasets: datasets.items,
-		datasets_count: datasets.total,
+		datasets: datasets,
 		package_count: 0,
 		tags: tags.items,
 		resources: {

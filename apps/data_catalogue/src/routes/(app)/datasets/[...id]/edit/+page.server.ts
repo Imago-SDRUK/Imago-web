@@ -29,11 +29,13 @@ export const load = async ({ locals, parent }) => {
 	})
 
 	if (tags_err !== null) {
-		error(400, { message: tags_err.reason, id: tags_err.reason })
+		if (tags_err.reason !== 'Not Found') {
+			error(400, { message: tags_err.reason, id: tags_err.reason })
+		}
 	}
 	return {
 		dataset,
-		tags: tags.items
+		tags: tags?.items ?? []
 	}
 }
 

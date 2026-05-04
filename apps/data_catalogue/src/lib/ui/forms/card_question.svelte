@@ -15,6 +15,9 @@
 	const index = $derived(questions.findIndex((q) => q.id === question.id))
 	const handleSort = async () => {
 		const current = structuredClone($state.snapshot(sorting))
+		if (current.dragging === question.id) {
+			return
+		}
 		const sort = generateKeyBetween(questions[index - 1]?.sort, question.sort)
 		if (current.dragging) {
 			await fetch(`/api/v1/questions/${current.dragging}`, {
@@ -81,6 +84,8 @@
 				<form class="form" action="?/update_question" method="post" use:enhance={handleEnhance()}>
 					<div class="inputs">
 						<input type="text" hidden bind:value={question.id} name="id" />
+						<input type="text" bind:value={question.sort} name="sort" />
+
 						<QuestionInputs {questions} bind:question></QuestionInputs>
 					</div>
 					<div class="buttons">

@@ -9,7 +9,10 @@ import {
 } from '$lib/server/interface/adapters/controllers/datasets/get.js'
 import { permissionsGetActorsController } from '$lib/server/interface/adapters/controllers/permissions/get.js'
 import { donwloadsGetByDatasetController } from '$lib/server/interface/adapters/controllers/downloads/get.js'
-import { permissionCreateController } from '$lib/server/interface/adapters/controllers/permissions/create.js'
+import {
+	permissionCreateController,
+	permissionsCreateController
+} from '$lib/server/interface/adapters/controllers/permissions/create.js'
 import {
 	datasetAddGroupController,
 	datasetRemoveGroupController
@@ -24,8 +27,22 @@ import { metadataGroupDeleteController } from '$lib/server/interface/adapters/co
 import { permissionUpdateController } from '$lib/server/interface/adapters/controllers/permissions/update.js'
 import { permissionDeleteController } from '$lib/server/interface/adapters/controllers/permissions/delete.js'
 import { metadataGroupCreateController } from '$lib/server/interface/adapters/controllers/metadata_groups/create.js'
+import { resourcesGetController } from '$lib/server/interface/adapters/controllers/resources/get.js'
+import type { ErrTypes } from '$lib/server/entities/errors.js'
+import type {
+	ResourceVersion,
+	Resource as ResourceRepo
+} from '$lib/server/entities/models/resources.js'
+import type { CSVW } from '$lib/server/entities/models/datastore.js'
 export const load = async ({ locals, url }) => {
+	const offset = url.searchParams.get('offset') ? Number(url.searchParams.get('offset')) : 0
+	const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : 10
+	if (offset === 0) {
+		url.searchParams.delete('offset')
+	}
 	const datasets = await datasetsGetController({
+		offset,
+		page_size: limit,
 		session: locals.session,
 		url,
 		configuration: locals.configuration
@@ -133,6 +150,78 @@ export const actions = {
 		}
 		return {
 			message: `Permission created`
+		}
+	},
+	sync_resources_permissions: async ({ request, locals }) => {
+		const form = await request.formData()
+		const dataset_id = formGetStringOrUndefined({ form, field: 'dataset_id' })
+		const resources = safeJSONParse(formGetStringOrUndefined({ form, field: 'resources' })) as {
+			resource_id: string
+		}[]
+		const res = await Promise.all(
+			resources.map((resource) =>
+				resourcesGetController({
+					configuration: locals.configuration,
+					session: locals.session,
+					id: resource.resource_id
+				})
+			)
+		)
+		const { resources_errors, resources_results } = res.reduce(
+			(acc, [errors, data]) => {
+				if (errors !== null) {
+					acc.resources_errors.push(errors)
+					return acc
+				}
+
+				acc.resources_results.push(data)
+				return acc
+			},
+			{ resources_errors: [], resources_results: [] } as {
+				resources_errors: ErrTypes[]
+				resources_results: {
+					resource: ResourceRepo
+					versions: ResourceVersion[]
+					metadata: CSVW | null
+				}[]
+			}
+		)
+		if (resources_errors.length > 0) {
+			return fail(400, { message: resources_errors[0].message ?? resources_errors[0].reason })
+		}
+		const [permissions_errors] = await permissionsCreateController({
+			configuration: locals.configuration,
+			session: locals.session,
+			data: [
+				...resources_results.flatMap((resource) => [
+					{
+						namespace: 'Resource' as const,
+						object: resource.resource.id,
+						relation: 'datasets',
+						actor: {
+							namespace: 'Dataset' as const,
+							object: dataset_id ?? '',
+							relation: ''
+						}
+					},
+					...resource.versions.map((version) => ({
+						namespace: 'ResourceVersion' as const,
+						object: version.id,
+						relation: 'resources',
+						actor: {
+							namespace: 'Resource' as const,
+							object: resource.resource.id,
+							relation: ''
+						}
+					}))
+				])
+			]
+		})
+		if (permissions_errors !== null) {
+			return fail(400, { message: permissions_errors?.message ?? permissions_errors.reason })
+		}
+		return {
+			message: 'Permissions synced'
 		}
 	},
 	edit_permission: async ({ request, locals }) => {
@@ -245,7 +334,6 @@ export const actions = {
 			message: `Metadata group deleted`
 		}
 	},
-
 	create_metadata_group: async ({ request, locals }) => {
 		const form = await request.formData()
 		const title = formGetStringOrUndefined({ form, field: 'title' })

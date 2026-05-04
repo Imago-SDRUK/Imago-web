@@ -119,9 +119,10 @@ const removeDatasetFromGroup: GroupsRepository['removeDatasetFromGroup'] = async
 	}
 }
 
-const addUserToGroup: GroupsRepository['addUserToGroup'] = async ({ data }) => {
+const addUserToGroup: GroupsRepository['addUserToGroup'] = async ({ data, tx }) => {
 	try {
-		const user_group = await db.insert(users_groups).values(data).returning()
+		const _db = tx ?? db
+		const user_group = await _db.insert(users_groups).values(data).returning()
 		if (user_group[0]) {
 			return ok(user_group[0])
 		}

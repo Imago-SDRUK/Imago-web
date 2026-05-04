@@ -74,18 +74,18 @@
 												<Icon icon={{ icon: 'arrow-up-right-01', set: 'hugeicons' }}></Icon>
 											{/snippet}
 										</Button>
-									{:else}
-										<Button
-											umami_event="Download resource"
-											href={resource.url}
-											download={resource.name}
-											>{#snippet leftCol()}
-												<span>Download</span>
-											{/snippet}
-											{#snippet rightCol()}
-												<Icon icon={getFileFormatIcon(resource.format)}></Icon>
-											{/snippet}
-										</Button>
+										<!-- {:else} -->
+										<!-- 	<Button -->
+										<!-- 		umami_event="Download resource" -->
+										<!-- 		href={resource.url} -->
+										<!-- 		download={resource.name} -->
+										<!-- 		>{#snippet leftCol()} -->
+										<!-- 			<span>Download</span> -->
+										<!-- 		{/snippet} -->
+										<!-- 		{#snippet rightCol()} -->
+										<!-- 			<Icon icon={getFileFormatIcon(resource.format)}></Icon> -->
+										<!-- 		{/snippet} -->
+										<!-- 	</Button> -->
 									{/if}
 								</div>
 							</div>

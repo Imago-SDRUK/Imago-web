@@ -47,24 +47,26 @@
 </script>
 
 <BaseSection>
+	<div class="header">
+		{#if 'name' in result}
+			<Title size="md">{result.name}</Title>
+		{/if}
+	</div>
 	<div class="resource-section">
 		<div class="left-col">
 			<div class="file-metadata">
-				<div class="header">
-					{#if 'name' in result}
-						<Title size="md">{result.name}</Title>
-					{/if}
-					{#if 'description' in result}
+				{#if 'description' in result}
+					<div class="header">
 						<Notes note={String(result.description)}></Notes>
-					{/if}
-				</div>
+					</div>
+				{/if}
 				<Subtitle>Metadata</Subtitle>
-				<Facts record={result} keys={['format', 'mimetype', 'created', 'size', 'last_modified']}
+				<Facts record={result} keys={['format', 'mimetype', 'size', 'created', 'last_modified']}
 				></Facts>
 			</div>
 		</div>
 		<div class="right-col">
-			<Subtitle size="md">Downloads</Subtitle>
+			<Subtitle>Downloads</Subtitle>
 			<!-- {#if result.versions.length > 0} -->
 			<div class="latest">
 				<Subtitle>Latest:</Subtitle>
@@ -110,7 +112,7 @@
 <style>
 	.resource-section {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-columns: minmax(0, 1fr);
 		min-height: 70lvh;
 		gap: 2rem;
 	}
@@ -152,6 +154,11 @@
 	@media (min-width: 1024px) {
 		.resource-section {
 			grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+		}
+
+		.right-col {
+			gap: 2rem;
+			padding: 2rem 0;
 		}
 	}
 </style>

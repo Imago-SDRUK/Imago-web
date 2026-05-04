@@ -1,4 +1,3 @@
-import { tagsGetController } from '$lib/server/interface/adapters/controllers/tags/get.js'
 import { formGetStringOrUndefined, safeJSONParse } from '$lib/utils/forms/index.js'
 import { datastoreUpdateController } from '$lib/server/interface/adapters/controllers/datastore/update.js'
 import {
@@ -29,15 +28,6 @@ export const load = async ({ locals, parent, url }) => {
 		error(401, { message: 'Unauthorised', id: 'Unauthorised' })
 	}
 
-	const [tags_err, tags] = await tagsGetController({
-		configuration: locals.configuration,
-		session: locals.session,
-		vocabulary_id: 'general'
-	})
-
-	if (tags_err !== null) {
-		error(400, { message: tags_err.reason, id: tags_err.reason })
-	}
 	let resource:
 		| (ResourceServiceDto & {
 				resource: Resource
@@ -60,7 +50,6 @@ export const load = async ({ locals, parent, url }) => {
 	}
 	return {
 		dataset,
-		tags: tags.items,
 		resource
 	}
 }

@@ -200,6 +200,7 @@ const handleProfile: Handle = async ({ event, resolve }) => {
 }
 
 export const hooksErrorHandler: HandleServerError = async ({ event, status, message, error }) => {
+	console.log(error)
 	if (status !== 404) {
 		log.error({
 			error,
