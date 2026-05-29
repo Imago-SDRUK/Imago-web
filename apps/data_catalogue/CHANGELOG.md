@@ -1,5 +1,12 @@
 # data-catalogue
 
+## 3.0.14
+### Patch Changes
+
+- 001ac53: add option to select vocabulary on tag creation, add delete tag
+- b5af729: add option to reset datastore metadata
+- 102ed16: add session token login
+
 ## 3.0.13
 ### Patch Changes
 
