@@ -107,6 +107,7 @@ export const verifyMastodonRequest = async (
 		fetch,
 		user
 	})
+	console.log(jstr(enriched_actor))
 	const public_key = enriched_actor.publicKey.publicKeyPem
 	const built_signature_string = buildSignatureString(request, signature_params.headers.split(' '))
 	const verified = validateDigitalSignature(
@@ -384,7 +385,6 @@ export const createHeadersGetRequest = ({
 	const host_header = new URL(actor).hostname
 	console.log(`RECEIVED ACTOR, ${jstr(actor)}`)
 	const date_header = DateTime.now().toHTTP()
-
 	const to_sign = [
 		`(request-target): get ${new URL(actor).pathname}`,
 		`host: ${host_header}`,
@@ -393,7 +393,7 @@ export const createHeadersGetRequest = ({
 	console.log(`TO SIGN REQUEST ${to_sign}`)
 	const signature_header = generateDigitalSignature(to_sign)
 	const signature_params = {
-		key_id: `${endpoint}/@${user}#main-key`,
+		key_id: `${endpoint}${user.startsWith('/') ? user : `/@${user}`}#main-key`,
 		algorithm: 'rsa-sha256',
 		headers: '(request-target) host date',
 		signature: signature_header
