@@ -1,5 +1,10 @@
 # website
 
+## 2.0.43
+### Patch Changes
+
+- 171fba9: conditional key sign
+
 ## 2.0.42
 ### Patch Changes
 
