@@ -371,6 +371,11 @@ export const getIncomingActorInformation = async ({
 		error(400, { message: `Couldn't get the actor information`, id: '' })
 	})
 	const result = await res_actor.json()
+	if ('error' in result || res_actor.status > 399) {
+		console.log(result)
+		console.log(res_actor.status)
+		error(400, { message: `Couldn't get the actor information`, id: '' })
+	}
 	return result as MastodonActor
 }
 export const createHeadersGetRequest = ({
