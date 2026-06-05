@@ -1,15 +1,14 @@
 import type { MastodonActor, MastodonBroadcastNote, MastodonItem } from '$lib/types/mastodon.js'
-import {
-	createHeaders,
-	generateDigitalSignature,
-	getIncomingActorInformation
-} from '$lib/utils/mastodon'
 import { jstr } from '@arturoguzman/art-ui'
 import { error, json } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { readItems } from '@directus/sdk'
 import { directusSDKWithToken, handleDirectusError } from '$lib/utils/directus.js'
 import { DateTime } from 'luxon'
+import { generateDigitalSignature } from '$lib/mastodon/signature/create.js'
+import { getIncomingActorInformation } from '$lib/mastodon/actor/read.js'
+import { type ErrTypes } from '$lib/utils/errors.js'
+import { createHeadersPostRequest } from '$lib/mastodon/signature/headers.js'
 
 const hostname = env.MASTODON_HOSTNAME
 const endpoint = `https://${hostname}`
@@ -53,18 +52,30 @@ export async function GET({ params, fetch }) {
 	).then((results) =>
 		results.reduce(
 			(acc, el) => {
-				if (el.status === 'fulfilled') acc.data.push(el.value)
-				if (el.status === 'rejected') acc.data.push(el.reason)
+				if (el.status === 'fulfilled') {
+					const [errors, data] = el.value
+					if (errors !== null) {
+						acc.errors.push(errors)
+						return acc
+					}
+					acc.data.push(data)
+				}
+				if (el.status === 'rejected') {
+					acc.errors.push({ reason: 'Unexpected', error: el.reason })
+				}
 				return acc
 			},
-			{ data: [], errors: [] } as { data: MastodonActor[]; errors: unknown[] }
+			{ data: [], errors: [] } as { data: MastodonActor[]; errors: ErrTypes[] }
 		)
 	)
 	for (const error of actors.errors) {
 		console.log(`There has been an error publishing to ${jstr(error)}`)
 	}
 	for (const actor of actors.data) {
-		const headers = createHeaders({ payload, endpoint, user, actor })
+		const [headers_errors, headers] = createHeadersPostRequest({ payload, endpoint, user })
+		if (headers_errors !== null) {
+			error(500, { message: headers_errors.reason, id: headers_errors.reason })
+		}
 		await fetch(actor.inbox, {
 			method: 'POST',
 			headers,

@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private'
+import { generateNote } from '$lib/mastodon/notes/create.js'
 import { handleDirectusError } from '$lib/utils/directus.js'
 import { getArticleDescription } from '$lib/utils/directus/articles.js'
-import { generateNote } from '$lib/utils/mastodon.js'
 import { readItem } from '@directus/sdk'
 import { json } from '@sveltejs/kit'
 

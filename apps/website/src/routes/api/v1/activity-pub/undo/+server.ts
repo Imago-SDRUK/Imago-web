@@ -1,11 +1,12 @@
 import type { MastodonUnfollowRequest } from '$lib/types/mastodon.js'
-import { createHeaders, getIncomingActorInformation } from '$lib/utils/mastodon'
 import { jstr } from '@arturoguzman/art-ui'
 import { error, json } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { deleteItem } from '@directus/sdk'
 import { directusSDKWithToken, handleDirectusError } from '$lib/utils/directus.js'
 import slugify from '@sindresorhus/slugify'
+import { getIncomingActorInformation } from '$lib/mastodon/actor/read.js'
+import { createHeadersPostRequest } from '$lib/mastodon/signature/headers.js'
 
 const hostname = env.MASTODON_HOSTNAME
 const endpoint = `https://${hostname}`
@@ -14,13 +15,18 @@ const user = env.MASTODON_USER
 export async function POST({ request }) {
 	//NOTE: make this internal only
 	const data = (await request.json()) as MastodonUnfollowRequest
-	const actor = await getIncomingActorInformation({
+	const [actor_errors, actor] = await getIncomingActorInformation({
 		actor: data.actor,
-		endpoint,
-		user,
 		fetch,
-		url: data.actor
+		endpoint,
+		url: data.actor,
+		user
 	})
+
+	if (actor_errors !== null) {
+		error(500, { message: actor_errors.reason, id: actor_errors.reason })
+	}
+
 	const directus = directusSDKWithToken(env.BACKEND_TOKEN, fetch)
 	await directus
 		.request(deleteItem('mastodon_followers', slugify(actor.id)))
@@ -32,7 +38,10 @@ export async function POST({ request }) {
 		actor: `${endpoint}/@${user}`,
 		object: data
 	}
-	const headers = createHeaders({ payload, endpoint, user })
+	const [headers_errors, headers] = createHeadersPostRequest({ payload, endpoint, user })
+	if (headers_errors !== null) {
+		error(500, { message: headers_errors.reason, id: headers_errors.reason })
+	}
 	const unfollow_response = await fetch(actor.inbox, {
 		method: 'POST',
 		headers,

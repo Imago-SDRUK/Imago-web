@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private'
-import { loadKey } from '$lib/utils/mastodon.js'
+import { loadMastodonPublicKey } from '$lib/mastodon/signature/key'
 import { json } from '@sveltejs/kit'
 
 const hostname = env.MASTODON_HOSTNAME
@@ -38,7 +38,7 @@ export const GET = async () => {
 			'@type': 'Key',
 			id: `${endpoint}/@blog#main-key`,
 			owner: `${endpoint}/@blog`,
-			publicKeyPem: loadKey(env.RSA_PUBLIC_KEY)
+			publicKeyPem: loadMastodonPublicKey()
 		},
 		tag: [],
 		attachment: []
