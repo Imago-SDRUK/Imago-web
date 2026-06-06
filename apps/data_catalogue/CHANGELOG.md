@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.15
+### Patch Changes
+
+- 64a4913: remove beta label, add extra information on landing, add redirect to resource page when user is not logged in
+
 ## 3.0.14
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "data_catalogue",
-	"version": "3.0.14",
+	"version": "3.0.15",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --port 5174 --host",
