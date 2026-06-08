@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.16
+### Patch Changes
+
+- 7eacdd5: fix button send to datasets, fix search str interpolation, move identity logic to use cases and add controllers, consolidate resource download logic, cleanup
+
 ## 3.0.15
 ### Patch Changes
 
