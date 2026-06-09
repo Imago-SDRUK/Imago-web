@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.17
+### Patch Changes
+
+- 6b69aea: public return unauth early
+
 ## 3.0.16
 ### Patch Changes
 
