@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.18
+### Patch Changes
+
+- 5e213ae: improve accessibility, #71
+
 ## 3.0.17
 ### Patch Changes
 

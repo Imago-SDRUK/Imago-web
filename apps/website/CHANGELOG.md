@@ -1,5 +1,11 @@
 # website
 
+## 2.0.45
+### Patch Changes
+
+- 5e213ae: improve accessibility, #71
+- 6ae88e2: fix mobile view, fix newsletter
+
 ## 2.0.44
 ### Patch Changes
 

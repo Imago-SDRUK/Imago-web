@@ -1,5 +1,10 @@
 # @imago/ui
 
+## 1.0.23
+### Patch Changes
+
+- 5e213ae: improve accessibility, #71
+
 ## 1.0.22
 ### Patch Changes
 
