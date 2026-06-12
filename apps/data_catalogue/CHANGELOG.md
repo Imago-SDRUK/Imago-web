@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.19
+### Patch Changes
+
+- b09a778: fix assert question id in validation
+
 ## 3.0.18
 ### Patch Changes
 
