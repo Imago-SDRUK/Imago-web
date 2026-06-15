@@ -1,5 +1,11 @@
 # data-catalogue
 
+## 3.0.20
+### Patch Changes
+
+- a843de6: add issues notice back
+- c6c2d9e: fix mobile views
+
 ## 3.0.19
 ### Patch Changes
 
