@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.21
+### Patch Changes
+
+- 13a2170: add delete tags
+
 ## 3.0.20
 ### Patch Changes
 
