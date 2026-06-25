@@ -1,5 +1,14 @@
 # @imago/ui
 
+## 1.0.25
+### Patch Changes
+
+- a9c0506: allow dashboard access to selected groups
+  enable remote functions
+  fix permissions resource upload
+  fix resource size and format
+  add application domain
+
 ## 1.0.24
 ### Patch Changes
 

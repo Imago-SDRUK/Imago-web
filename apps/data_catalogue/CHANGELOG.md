@@ -1,5 +1,14 @@
 # data-catalogue
 
+## 3.0.23
+### Patch Changes
+
+- a9c0506: allow dashboard access to selected groups
+  enable remote functions
+  fix permissions resource upload
+  fix resource size and format
+  add application domain
+
 ## 3.0.22
 ### Patch Changes
 
