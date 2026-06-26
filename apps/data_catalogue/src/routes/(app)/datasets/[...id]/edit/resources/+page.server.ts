@@ -21,7 +21,10 @@ import { err, errFmt, ok } from '$lib/server/entities/errors.js'
 import { datastoreCreateController } from '$lib/server/interface/adapters/controllers/datastore/create.js'
 import { jstr } from '@arturoguzman/art-ui'
 import { datastoreResetController } from '$lib/server/interface/adapters/controllers/datastore/delete.js'
-import { permissionCheckController } from '$lib/server/interface/adapters/controllers/permissions/get.js'
+import {
+	permissionCheckController,
+	permissionsCheckController
+} from '$lib/server/interface/adapters/controllers/permissions/get.js'
 
 export const load = async ({ locals, parent, url }) => {
 	const { permits, dataset } = await parent()

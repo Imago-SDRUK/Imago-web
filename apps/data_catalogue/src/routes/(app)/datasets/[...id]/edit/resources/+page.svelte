@@ -107,14 +107,6 @@
 						<Subtitle>{data.resource?.name}</Subtitle>
 					{/snippet}
 					{#snippet right()}
-						<Button
-							onclick={() => {
-								toggleDialog('edit-resource-service')
-							}}
-						>
-							<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
-						</Button>
-
 						{#if data.allow_delete}
 							<Button
 								onclick={() => {
