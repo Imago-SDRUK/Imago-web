@@ -1,5 +1,16 @@
 # data-catalogue
 
+## 3.0.24
+### Patch Changes
+
+- 46c8139: add errors fmt
+  fix resource service fn
+  add permission check
+  fix pass allow manage registration
+  fix conditional delete dataset on permissions
+  feat add err page for dataset edit
+  fix conditional delete edit resource
+
 ## 3.0.23
 ### Patch Changes
 
