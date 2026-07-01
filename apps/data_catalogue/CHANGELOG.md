@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.26
+### Patch Changes
+
+- 46fcb60: fix state options
+
 ## 3.0.25
 ### Patch Changes
 
