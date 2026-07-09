@@ -58,7 +58,33 @@ We're using version 18. Install as [per their instructions](https://www.postgres
 
 ##### Services
 
-To use Directus, CKAN (CKAN, Solr, Datapusher, Valkey), Ory Kratos and Ory Keto you'll need to use Docker. You can find the CKAN docker compose file [here](https://github.com/imago-SDRUK/ckan). You can find the Ory Kratos and Ory Keto docker compose file [here.](https://github.com/artgpz/imago-ory) Refer to each repository for development and deployment details.
+To use CKAN (CKAN, Solr, Datapusher, Valkey), Ory Kratos and Ory Keto you'll need to use Docker. You can find the CKAN docker compose file [here](https://github.com/imago-SDRUK/ckan). You can find the Ory Kratos and Ory Keto docker compose file [here.](https://github.com/artgpz/imago-ory) Refer to each repository for development and deployment details.
+
+##### Monorepo
+
+Clone and install the dependencies of this repository. For the data catalogue and Directus you'll need to setup a database.
+
+```bash
+# Clone
+git clone git@github.com:Imago-SDRUK/Imago-web.git
+
+# Go to folder
+cd Imago-web
+
+# Switch to dev branch
+git checkout -b dev origin/dev
+
+# Install dependencies
+pnpm install
+
+```
+
+Each app requires their own env variables, so set up each of them before running the application.
+
+```bash
+# Run the monorepo
+pnpm run dev
+```
 
 ## Contributing
 
