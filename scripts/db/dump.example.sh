@@ -8,7 +8,7 @@ PGPASSWORD=<remote db user password>
 DATABASES=(<databases>)
 
 date=$(date +"%Y_%m_%d_%H-%M-%S")
-mkdir "./$date"
+mkdir "./backups/$date"
 for i in "${DATABASES[@]}"; do
   echo $PGHOST
   echo "Dumping $i.sql"
