@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+echo "Starting"
+
+PGHOST=127.0.0.1
+PGPORT=5432
+PGUSER=<local pg user> || MAKE SURE IT IS THE LOCAL ONE
+PGPASSWORD=<local pg password> || MAKE SURE IT IS THE LOCAL ONE
+DATABASES=()
+TEST_USER=ckan_ro
+
+for i in "${DATABASES[@]}"; do
+  echo "Removing $i.sql"
+  PGHOST=$PGHOST PGPORT=$PGPORT PGUSER=$PGUSER PGPASSWORD=$PGPASSWORD psql -d postgres -c "DROP DATABASE $i"
+done
+
+PGHOST=$PGHOST PGPORT=$PGPORT PGUSER=$PGUSER PGPASSWORD=$PGPASSWORD psql -d postgres -c "DROP ROLE $TEST_USER"
+
+echo "Done"
