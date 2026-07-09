@@ -16,6 +16,8 @@ Thumbs.db
 # Env
 .env
 .env.*
+*.sh
+!*.example.sh
 !.env.example
 !.env.test
 
@@ -28,3 +30,5 @@ migrations/*.json
 
 # turbo
 .turbo
+
+scripts/db/backups
