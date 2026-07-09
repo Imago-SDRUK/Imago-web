@@ -86,6 +86,9 @@ Each app requires their own env variables, so set up each of them before running
 pnpm run dev
 ```
 
+Website should be accessible at 127.0.0.1:5173
+Data catalogue should be accessible at 127.0.0.1:5174
+
 ## Contributing
 
 ### Versioning
