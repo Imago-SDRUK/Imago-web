@@ -7,7 +7,7 @@
 	import type { Question } from '$lib/server/entities/models/questions'
 	import { handleEnhance } from '$lib/utils/forms'
 	import Facts from '../cards/facts.svelte'
-	import { jstr } from '@arturoguzman/art-ui'
+	import { questionUpdateSort } from '$lib/remotes/questions/update.remote'
 	let {
 		question = $bindable(),
 		questions,
@@ -28,10 +28,7 @@
 		}
 		const sort = generateKeyBetween(questions[index - 1]?.sort, question.sort)
 		if (current.dragging) {
-			await fetch(`/api/v1/questions/${current.dragging}`, {
-				method: 'POST',
-				body: JSON.stringify({ sort: sort })
-			}).catch((err) => console.log(err))
+			await questionUpdateSort({ sort, id: current.dragging })
 			await invalidateAll()
 		}
 	}
