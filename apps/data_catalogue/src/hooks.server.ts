@@ -69,45 +69,6 @@ const handleConfiguration: Handle = async ({ event, resolve }) => {
 	return await resolve(event)
 }
 
-const handleAccessMode: Handle = async ({ event, resolve }) => {
-	event.locals.access = false
-	const access_mode = env.ACCESS_MODE
-	if (access_mode === 'invite_only') {
-		const cookie = event.cookies.get(COOKIES.access_token)
-		if (cookie === env.ACESSS_INVITE_ONLY_TOKEN) {
-			event.locals.access = true
-		}
-	}
-	if (access_mode === 'authentication') {
-		event.locals.access = true
-	}
-	if (access_mode === 'development') {
-		event.locals.access = true
-	}
-	if (access_mode === 'build') {
-		event.locals.access = true
-	}
-
-	const preauthorised = event.cookies.get('kratos-api') === env.IDENTITY_TOKEN
-	if (preauthorised) {
-		event.locals.access = true
-		event.locals.identity_token = event.cookies.get('kratos-api')
-	}
-	if (!event.locals.access && event.url.pathname !== '/access') {
-		return new Response(null, {
-			status: 307,
-			headers: { location: '/access' }
-		})
-	}
-	if (event.locals.access && event.url.pathname === '/access') {
-		return new Response(null, {
-			status: 307,
-			headers: { location: '/' }
-		})
-	}
-	return resolve(event)
-}
-
 const handleCkan: Handle = async ({ event, resolve }) => {
 	event.locals.ckan = createCkanClient({
 		url: env.CKAN_URL,
@@ -221,19 +182,12 @@ export const handle =
 	process.env.NODE_ENV === 'production'
 		? sequence(
 				handleConfiguration,
-				handleAccessMode,
 				Sentry.sentryHandle(),
 				handleAuthentication,
 				handleProfile,
 				handleCkan
 			)
-		: sequence(
-				handleConfiguration,
-				handleAccessMode,
-				handleAuthentication,
-				handleProfile,
-				handleCkan
-			)
+		: sequence(handleConfiguration, handleAuthentication, handleProfile, handleCkan)
 export const handleError =
 	process.env.NODE_ENV === 'production'
 		? Sentry.handleErrorWithSentry(hooksErrorHandler)
