@@ -9,7 +9,8 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "./node_modules/directus/cli.js start",
 		"types": "./node_modules/directus/cli.js models snapshot model.d.ts",
-		"migrate": "./node_modules/directus/cli.js database migrate:latest"
+		"migrate": "./node_modules/directus/cli.js database migrate:latest",
+		"gen:schema": "./node_modules/directus/cli.js schema snapshot ./schema/snapshot.yaml"
 	},
 	"keywords": [],
 	"author": "",
