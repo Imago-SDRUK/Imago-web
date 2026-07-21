@@ -24,7 +24,7 @@
 		"@tiptap/extension-typography": "^2.27.2",
 		"@tiptap/pm": "^2.27.2",
 		"@tiptap/starter-kit": "^2.27.2",
-		"directus": "^11.17.2",
+		"directus": "11.17.4",
 		"directus-extension-models": "^2.5.2",
 		"pg": "^8.20.0"
 	},
