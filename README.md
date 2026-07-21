@@ -10,6 +10,21 @@
 - Imago CKAN client
 - Imago CMS configuration (Directus)
 
+## Project structure
+
+```text
+├── .changeset/         # Monorepo changesets
+├── .github/            # CI/CD workflows
+├── apps/               # Imago applications
+│ ├── cms/              # Directus configuration and Dockerfile
+│ ├── data_catalogue/   # Data catalogue - fullstack application
+│ ├── website/          # Imago website - fullstack application
+├── packages/           # Shared libraries
+│ ├── config/           # ESLint and Typescript rules
+│ ├── ui/               # UI/components library
+  ...                   # Readme, changelog and monorepo configuration files
+```
+
 ### Development
 
 #### Tools
