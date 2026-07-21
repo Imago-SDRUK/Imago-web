@@ -95,13 +95,17 @@ pnpm install
 
 This will install all dependencies for all workspace apps and packages.
 
-## Configuration for apps/website
+#### Configuration for apps/website
 
 Refer to the [website documentation](./website/setup.md) for its configuration.
 
-## Configuration for apps/data\_catalogue
+#### Configuration for apps/data\_catalogue
 
 Refer to the [data catalogue documentation](./data_catalogue/setup.md) for its configuration.
+
+#### Configuration for apps/cms
+
+Refer to the [directus documentation](./directus/setup.md) for its configuration.
 
 ## Running the applications
 
