@@ -10,7 +10,7 @@
 
 <div class="screen" use:observeRoot></div>
 <DynamicNav routes={ROUTES} nav_height={NAV_HEIGHT}>
-	{#snippet children({ scroll })}
+	{#snippet logos({ scroll })}
 		<Logos {scroll}></Logos>
 	{/snippet}
 </DynamicNav>
