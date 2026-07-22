@@ -1,7 +1,6 @@
 import { resourceVersionDownloadController } from '$lib/server/interface/adapters/controllers/resources/get.js'
 import { error, redirect } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
-
 export const GET = async ({ params, locals, url }) => {
 	const version_id = url.searchParams.get('version')
 	if (!version_id) {
