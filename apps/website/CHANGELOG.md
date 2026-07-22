@@ -1,5 +1,10 @@
 # website
 
+## 2.0.46
+### Patch Changes
+
+- a09f65c: add join newsletter button, change snippet on data catalogue
+
 ## 2.0.45
 ### Patch Changes
 
