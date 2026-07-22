@@ -7,7 +7,7 @@
 </script>
 
 <DynamicNav routes={data.routes} nav_height="4rem">
-	{#snippet children({ scroll })}
+	{#snippet logos({ scroll })}
 		<Logos {scroll}></Logos>
 	{/snippet}
 </DynamicNav>
