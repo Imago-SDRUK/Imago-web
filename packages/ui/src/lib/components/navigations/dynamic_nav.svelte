@@ -4,13 +4,16 @@
 	import Menu from '../menus/floating_menu.svelte'
 	import type { Routes } from './types'
 	import type { Snippet } from 'svelte'
+	import { resolve } from '$app/paths'
 	let {
 		routes,
 		nav_height,
+		logos,
 		children
 	}: {
 		routes: Routes
 		nav_height: string
+		logos?: Snippet<[{ scroll: number }]>
 		children?: Snippet<[{ scroll: number }]>
 	} = $props()
 	let window_height = $state(0)
@@ -18,7 +21,10 @@
 	let scroll = $state(0)
 	let desktop = $derived(window_width > 768)
 	let menu_open = $state(false)
-	let mobile_menu_selection = $state(routes[0].href ?? '')
+	let mobile_menu_selection = $derived.by(() => {
+		const value = $state(routes[0].href ?? '')
+		return value
+	})
 	const getBgPercentage = (scroll: number, height: number) => {
 		const result = (scroll * 100) / height
 		if (result > 100) return 100
@@ -52,11 +58,11 @@
 			</button>
 		{/if}
 		{#if desktop}
-			{#if page.url.pathname === '/' && children}
-				{@render children({ scroll })}
+			{#if page.url.pathname === '/' && logos}
+				{@render logos({ scroll })}
 			{/if}
 			{#if page.url.pathname !== '/'}
-				<a href="/" aria-label="home">
+				<a href={resolve('/', {})} aria-label="home">
 					<img class="icon" src="/favicon.png" alt="" />
 				</a>
 			{/if}
@@ -84,7 +90,7 @@
 					{#if subpaths.length > 0}
 						<Menu>
 							{#snippet trigger({ toggleMenu })}
-								{#if desktop}
+								{#if desktop && href}
 									<Button
 										active={page.url.pathname.startsWith(href) && href !== '/'}
 										style="anchor"
@@ -93,18 +99,16 @@
 									>
 								{/if}
 							{/snippet}
-							{#snippet children()}
-								<div class="subpaths">
-									{#each subpaths as { href, label, target }}
-										<Button style="anchor" {href} {target}>{label}</Button>
-									{/each}
-								</div>
-							{/snippet}
+							<div class="subpaths">
+								{#each subpaths as { href, label, target }}
+									<Button style="anchor" {href} {target}>{label}</Button>
+								{/each}
+							</div>
 						</Menu>
 					{:else}
 						<Menu>
 							{#snippet trigger({ toggleMenu })}
-								{#if desktop}
+								{#if desktop && href}
 									<Button
 										active={page.url.pathname.startsWith(href) && href !== '/'}
 										style="anchor"
@@ -132,7 +136,9 @@
 								<Button
 									style="anchor"
 									onclick={() => {
-										mobile_menu_selection = href
+										if (href) {
+											mobile_menu_selection = href
+										}
 									}}><p>{label}</p></Button
 								>
 							{/if}
@@ -154,6 +160,7 @@
 				</div>
 			{/if}
 		</div>
+		{@render children?.({ scroll })}
 	</div>
 </nav>
 
