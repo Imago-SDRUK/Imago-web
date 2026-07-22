@@ -1,5 +1,10 @@
 # cms
 
+## 1.1.10
+### Patch Changes
+
+- 8464810: add schema file, copy schema to docker image, update dependencies
+
 ## 1.1.9
 ### Patch Changes
 
