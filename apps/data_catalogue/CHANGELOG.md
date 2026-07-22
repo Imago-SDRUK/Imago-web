@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.27
+### Patch Changes
+
+- a09f65c: add join newsletter button, change snippet on data catalogue
+
 ## 3.0.26
 ### Patch Changes
 
