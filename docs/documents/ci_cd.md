@@ -1,5 +1,3 @@
-[imago](../modules.md) / ci\_cd
-
 # CI/CD
 
 ## Overview
@@ -33,15 +31,15 @@ The release workflow is defined in `.github/workflows/release.yml`. This workflo
 
 ### Workflow Details
 
-* **Trigger**: Pushes to the `main` branch.
-* **Concurrency**: Ensures that only one release workflow runs at a time for the `main` branch.
-* **Permissions**: Requires write permissions for contents, issues, and pull requests.
+- **Trigger**: Pushes to the `main` branch.
+- **Concurrency**: Ensures that only one release workflow runs at a time for the `main` branch.
+- **Permissions**: Requires write permissions for contents, issues, and pull requests.
 
 ### Steps
 
 1. **Checkout Repository**: Checks out the repository code.
 2. **Install pnpm**: Sets up pnpm for dependency management.
-3. **Set up Node.js**: Configures Node.js version 22 and sets up caching for pnpm.
+3. **Set up Node.js**: Configures Node.js version 24 and sets up caching for pnpm.
 4. **Install Dependencies**: Installs the project dependencies using pnpm.
 5. **Create Release Pull Request**: Uses the Changesets action to create a release pull request.
 
@@ -51,10 +49,10 @@ The build workflow is defined in `.github/workflows/build.yml`. This workflow is
 
 ### Workflow details
 
-* **Trigger**: Published releases.
-* **Environment Variables**:
-  * `REGISTRY`: GitHub Container Registry (GHCR).
-  * `IMAGE_NAME`: The name of the Docker image, derived from the GitHub repository.
+- **Trigger**: Published releases.
+- **Environment Variables**:
+  - `REGISTRY`: GitHub Container Registry (GHCR).
+  - `IMAGE_NAME`: The name of the Docker image, derived from the GitHub repository.
 
 1. **Checkout Repository**: Checks out the repository code with full history.
 2. **Get Tags**: Extracts the package name and version from the release tag.

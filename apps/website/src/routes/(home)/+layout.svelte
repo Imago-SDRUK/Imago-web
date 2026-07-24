@@ -3,6 +3,7 @@
 	import { NAV_HEIGHT } from '$lib/globals/style'
 	import { notify } from '$lib/stores/notify'
 	import Logos from '$lib/ui/cards/logos.svelte'
+	import { Icon } from '@imago/ui'
 	import { observeRoot } from '$lib/utils/observer.svelte'
 	import { Notification, DynamicNav, Footer, Button } from '@imago/ui'
 	let { children } = $props()
@@ -13,7 +14,7 @@
 	{#snippet logos({ scroll })}
 		<Logos {scroll}></Logos>
 	{/snippet}
-	<Button href="/#newsletter-form">Join the newsletter</Button>
+	<Button href="/#newsletter-form"><Icon icon={{ icon: 'mail', set: 'tabler', size: 'lg' }}></Icon>Join the newsletter</Button>
 </DynamicNav>
 <main id="main">
 	{@render children()}
