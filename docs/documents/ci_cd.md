@@ -1,5 +1,3 @@
-[imago](../modules.md) / ci\_cd
-
 # CI/CD
 
 ## Overview
