@@ -25,26 +25,11 @@
   ...                   # Readme, changelog and monorepo configuration files
 ```
 
+## Contributing
+
 ### Development
 
 Please refer to the [development documentation](/docs/documents/development_setup.md).
-
-## Contributing
-
-### Versioning
-
-We are using [Changesets](https://github.com/changesets/changesets) to manage the versions of the apps and packages. Once you've completed a fix or feature and want to merge/pr, run
-
-```
-pnpm changeset
-```
-
-and follow the instructions.
-
-The changeset should be included in the commit or any subsequent commits.
-
-> [!Note]
-> If you don't want your commits/pr to trigger a release you don't need to add a changeset.
 
 ### Commits
 
@@ -67,3 +52,18 @@ Follow [angular guidelines](https://github.com/angular/angular/blob/main/contrib
 ```
 
 Scope is optional.
+
+### Versioning
+
+We are using [Changesets](https://github.com/changesets/changesets) to manage the versions of the apps and packages. Once you've completed a fix or feature and want to merge/pr, run
+
+```
+pnpm changeset
+```
+
+and follow the instructions.
+
+The changeset should be included in the commit or any subsequent commits.
+
+> [!Note]
+> If you don't want your commits/pr to trigger a release you don't need to add a changeset.
