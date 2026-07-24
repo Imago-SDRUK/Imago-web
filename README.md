@@ -25,6 +25,10 @@
   ...                   # Readme, changelog and monorepo configuration files
 ```
 
+## Documentation
+
+Please refer to the [documentation.](/docs/documents/index.md)
+
 ## Contributing
 
 ### Development
