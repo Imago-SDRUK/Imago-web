@@ -4,7 +4,6 @@
 	import { APP_STATE } from '$lib/globals/state.svelte.js'
 	import { notify } from '$lib/stores/notify.js'
 	import Answer from '$lib/ui/forms/answer.svelte'
-	import { handleEnhance } from '$lib/utils/forms/index.js'
 	import { BaseSection, BaseCard, Button, Title } from '@imago/ui'
 	let { data } = $props()
 	let answers = $derived.by(() => {
@@ -16,43 +15,6 @@
 		)
 		return value
 	})
-	// () => {
-	// 					return async ({ result }) => {
-	// 						if (result.type === 'error') {
-	// 							notify.send(String(result.error.message))
-	// 						}
-	// 						if ('data' in result && result.data) {
-	// 							if ('errors' in result.data) {
-	// 								if (typeof result.data.errors === 'string') {
-	// 									notify.send(String(jstr(result.data.errors)))
-	// 								}
-	// 								if (
-	// 									typeof result.data.errors === 'object' &&
-	// 									result.data.errors &&
-	// 									!Array.isArray(result.data.errors)
-	// 								) {
-	// 									Object.entries(result.data.errors).forEach((entry) =>
-	// 										notify.send({ message: `${entry[1]}` })
-	// 									)
-	// 								}
-	// 								if (
-	// 									typeof result.data.errors === 'object' &&
-	// 									result.data.errors &&
-	// 									Array.isArray(result.data.errors)
-	// 								) {
-	// 									result.data.errors.forEach((error) =>
-	// 										Object.entries(error).forEach((entry) =>
-	// 											notify.send({ message: `${entry[0]}: ${entry[1]}` })
-	// 										)
-	// 									)
-	// 								}
-	// 							}
-	// 						}
-	// 						if (result.type === 'redirect') {
-	// 							applyAction(result)
-	// 						}
-	// 					}
-	// 				}
 </script>
 
 <BaseSection>

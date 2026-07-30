@@ -89,7 +89,8 @@ const getIdentity: IIdentityService['getIdentity'] = async ({ id }) => {
 		return ok({
 			email: identity.traits.email,
 			first_name: identity.traits.name.first,
-			last_name: identity.traits.name.last
+			last_name: identity.traits.name.last,
+			verified: identity.verifiable_addresses?.some((x) => x.verified) ?? false
 		})
 	} catch (_err) {
 		if (_err.response.status === 404) {

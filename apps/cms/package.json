@@ -9,7 +9,8 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "./node_modules/directus/cli.js start",
 		"types": "./node_modules/directus/cli.js models snapshot model.d.ts",
-		"migrate": "./node_modules/directus/cli.js database migrate:latest"
+		"migrate": "./node_modules/directus/cli.js database migrate:latest",
+		"gen:schema": "./node_modules/directus/cli.js schema snapshot ./schema/snapshot.yaml"
 	},
 	"keywords": [],
 	"author": "",
@@ -24,7 +25,7 @@
 		"@tiptap/extension-typography": "^2.27.2",
 		"@tiptap/pm": "^2.27.2",
 		"@tiptap/starter-kit": "^2.27.2",
-		"directus": "^11.17.2",
+		"directus": "11.17.4",
 		"directus-extension-models": "^2.5.2",
 		"pg": "^8.20.0"
 	},

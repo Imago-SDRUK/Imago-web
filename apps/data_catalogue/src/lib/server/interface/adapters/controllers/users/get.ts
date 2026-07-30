@@ -13,6 +13,8 @@ import { err, ok } from '$lib/server/entities/errors'
 import type { Session } from '$lib/server/entities/models/identity'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
+import { userCreateController } from '$lib/server/interface/adapters/controllers/users/create'
+import { env } from '$env/dynamic/private'
 
 const presenter = ({
 	user
@@ -77,10 +79,35 @@ export const userGetMeController = async ({
 		identity_service: getIdentityModule(),
 		...getServerContext({ session, configuration })
 	})
+	let _user = user
+	// HACK: might need to move this somewhere else...?
+	if (errors?.reason === 'Not Found' && !_user) {
+		const [errors] = await userCreateController({
+			configuration,
+			identity_token: env.IDENTITY_TOKEN,
+			payload: { id: session.identity.id },
+			session
+		})
+		if (errors !== null) {
+			return err(errors)
+		}
+		const [id_errors, id_user] = await userGetMeUseCase({
+			user_repository: getUserModule(),
+			identity_service: getIdentityModule(),
+			...getServerContext({ session, configuration })
+		})
+		if (id_errors !== null) {
+			return err(id_errors)
+		}
+		_user = id_user
+	}
 	if (errors !== null) {
 		return err(errors)
 	}
-	return ok(presenter({ user }))
+	if (_user === null) {
+		return err({ reason: 'Not Found', message: 'User not found' })
+	}
+	return ok(presenter({ user: _user }))
 }
 
 export const userGetGroupsController = async ({

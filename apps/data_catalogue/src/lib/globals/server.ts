@@ -39,5 +39,6 @@ export const SERVER_ERRORS: { [k: number]: [number, { message: string; id: strin
 
 export const COOKIES = {
 	access_token: 'imago-invite',
-	expire: 'imago-invite-expire'
+	expire: 'imago-invite-expire',
+	identity_token: 'kratos-api'
 }

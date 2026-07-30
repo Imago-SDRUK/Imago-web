@@ -9,7 +9,7 @@
 </script>
 
 <BaseCard border rounded shadow size="md">
-	<div class="newsletter-form">
+	<div id="newsletter-form" class="newsletter-form">
 		<div class="title">
 			<Title text={title} size="lg"></Title>
 			<Paragraph text={paragraph}></Paragraph>

@@ -76,6 +76,6 @@ export type InputSelectProps = {
 	multiple?: boolean
 	value?: string | string[]
 	same_width?: boolean
-	onchange: (value?: string | Set<string> | null) => void
+	onchange?: (value?: string | Set<string> | null) => void
 } & InputComponentProps
 // } & Omit<HTMLInputAttributes, 'popover'> &

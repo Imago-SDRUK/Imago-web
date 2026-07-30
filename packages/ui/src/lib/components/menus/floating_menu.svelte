@@ -40,6 +40,7 @@
 	></button>
 {/if}
 <div
+	role="none"
 	class="menu-wrapper"
 	onpointerenter={() => toggleMenu(true)}
 	onpointerleave={() => toggleMenu(false)}

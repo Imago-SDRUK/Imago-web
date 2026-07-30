@@ -4,8 +4,6 @@ import { COOKIES } from '$lib/globals/server.js'
 import { dashboard_routes, dashboard_routes_group } from '$lib/routes/dashboard.js'
 import { getNavigation } from '$lib/routes/index.js'
 import { settings_routes, settings_routes_group } from '$lib/routes/settings.js'
-// import { userGetGroupsController } from '$lib/server/interface/adapters/controllers/users/get.js'
-// import { error } from '@sveltejs/kit'
 export const load = async ({ locals, cookies }) => {
 	const allow_debug = env.NODE_ENV !== 'production'
 	const expire = cookies.get(COOKIES.expire)
@@ -29,14 +27,6 @@ export const load = async ({ locals, cookies }) => {
 			allow_debug
 		}
 	}
-	// const [errors, users_groups] = await userGetGroupsController({
-	// 	configuration: locals.configuration,
-	// 	session
-	// })
-	// if (errors !== null) {
-	// 	error(500, { message: errors.reason, id: errors.reason })
-	// }
-
 	const [dashboard_errors, dashboard] = await getNavigation({
 		groups: dashboard_routes_group,
 		routes: dashboard_routes,

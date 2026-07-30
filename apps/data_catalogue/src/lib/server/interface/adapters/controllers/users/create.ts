@@ -1,12 +1,11 @@
 import type { Session } from '$lib/server/entities/models/identity'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import type { UserRequest } from '$lib/server/entities/models/users'
-import { err } from '$lib/server/entities/errors'
+import { err, ok } from '$lib/server/entities/errors'
 import { getServerContext } from '$lib/server/application/context'
 import { userCreateUseCase } from '$lib/server/application/use_cases/users/create'
 import { getUserModule } from '$lib/server/modules/user'
 import { log } from '$lib/utils/server/logger'
-import { ok } from 'node:assert/strict'
 import { userAutoEnrollUseCase } from '$lib/server/application/use_cases/users/update'
 import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
 

@@ -44,7 +44,8 @@ export type IIdentityService = {
 	}: {
 		id: string
 	}) => Promise<
-		[ErrTypes, null] | [null, { first_name: string; last_name: string; email: string } | null]
+		| [ErrTypes, null]
+		| [null, { first_name: string; last_name: string; email: string; verified: boolean } | null]
 	>
 	getIdentities: (request: {
 		page_size?: number
