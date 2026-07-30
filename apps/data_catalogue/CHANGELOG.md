@@ -1,5 +1,11 @@
 # data-catalogue
 
+## 3.0.28
+### Patch Changes
+
+- 1b76527: recover if profile from kratos webhook is not created, closes #176
+- 2416cac: fix race condition on profile creation, fix pass kratos token
+
 ## 3.0.27
 ### Patch Changes
 

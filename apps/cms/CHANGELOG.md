@@ -1,5 +1,10 @@
 # cms
 
+## 1.1.11
+### Patch Changes
+
+- fe008ec: fix build
+
 ## 1.1.10
 ### Patch Changes
 

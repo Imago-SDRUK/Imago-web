@@ -1,5 +1,10 @@
 # website
 
+## 2.0.47
+### Patch Changes
+
+- 2489bab: Added icon next to 'Join Newsletter Button'- Icon was already available
+
 ## 2.0.46
 ### Patch Changes
 
