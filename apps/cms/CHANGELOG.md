@@ -1,5 +1,10 @@
 # cms
 
+## 1.1.12
+### Patch Changes
+
+- cdd8958: add footer option to pages
+
 ## 1.1.11
 ### Patch Changes
 

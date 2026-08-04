@@ -1,5 +1,10 @@
 # website
 
+## 2.0.48
+### Patch Changes
+
+- cdd8958: add footer option to pages
+
 ## 2.0.47
 ### Patch Changes
 

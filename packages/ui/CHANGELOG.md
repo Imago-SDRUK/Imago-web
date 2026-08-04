@@ -1,5 +1,10 @@
 # @imago/ui
 
+## 1.0.26
+### Patch Changes
+
+- 2b12a8a: add clean anchor style, add routes to footer
+
 ## 1.0.25
 ### Patch Changes
 
