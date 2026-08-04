@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.29
+### Patch Changes
+
+- 280e4fe: add resource service update, add mime types, download file with mime type extension
+
 ## 3.0.28
 ### Patch Changes
 
