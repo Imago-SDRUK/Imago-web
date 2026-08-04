@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.30
+### Patch Changes
+
+- eca77bc: display tags names with all characters
+
 ## 3.0.29
 ### Patch Changes
 
