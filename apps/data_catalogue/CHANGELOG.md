@@ -1,5 +1,11 @@
 # data-catalogue
 
+## 3.0.31
+### Patch Changes
+
+- 4f847d3: add/remove superusers, derive format from mimetype
+- 907ff9f: add title section
+
 ## 3.0.30
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @imago/ui
 
+## 1.0.27
+### Patch Changes
+
+- 907ff9f: add title section
+
 ## 1.0.26
 ### Patch Changes
 
