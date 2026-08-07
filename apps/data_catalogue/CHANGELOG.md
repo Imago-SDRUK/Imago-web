@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.32
+### Patch Changes
+
+- 7cd242f: add ckan token creation and revoke, add ckan user list
+
 ## 3.0.31
 ### Patch Changes
 
