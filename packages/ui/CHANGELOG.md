@@ -1,5 +1,10 @@
 # @imago/ui
 
+## 1.0.28
+### Patch Changes
+
+- ac8b649: remove permissions page, include border colour change
+
 ## 1.0.27
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.33
+### Patch Changes
+
+- ac8b649: remove permissions page, include border colour change
+
 ## 3.0.32
 ### Patch Changes
 
