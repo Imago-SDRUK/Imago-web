@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.36
+### Patch Changes
+
+- f71654c: add more logs
+
 ## 3.0.35
 ### Patch Changes
 
