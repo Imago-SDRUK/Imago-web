@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.38
+### Patch Changes
+
+- 7979df1: ckan token verification fix
+
 ## 3.0.37
 ### Patch Changes
 
