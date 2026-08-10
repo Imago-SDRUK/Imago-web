@@ -1,10 +1,23 @@
 import type { Routes, Tab } from '@imago/ui'
-type NavigationFeatures = 'datasets' | 'groups' | 'permissions' | 'registration' | 'users'
+type NavigationFeatures =
+	| 'datasets'
+	| 'groups'
+	// | 'permissions'
+	| 'registration'
+	| 'users'
+	| 'configuration'
 
 export const settings_routes: Record<
 	NavigationFeatures,
 	({ id }: { id?: string }) => { group: string; route: Tab }
 > = {
+	configuration: () => ({
+		group: 'Settings',
+		route: {
+			label: 'Configuration',
+			href: `/admin/settings/configuration`
+		}
+	}),
 	datasets: () => ({
 		group: 'Settings',
 		route: {
@@ -19,13 +32,13 @@ export const settings_routes: Record<
 			href: `/admin/settings/groups`
 		}
 	}),
-	permissions: () => ({
-		group: 'Settings',
-		route: {
-			label: 'Permissions',
-			href: `/admin/settings/permissions`
-		}
-	}),
+	// permissions: () => ({
+	// 	group: 'Settings',
+	// 	route: {
+	// 		label: 'Permissions',
+	// 		href: `/admin/settings/permissions`
+	// 	}
+	// }),
 	registration: () => ({
 		group: 'Settings',
 		route: {

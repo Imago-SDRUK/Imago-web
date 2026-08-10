@@ -5,7 +5,7 @@
 	import Logos from '$lib/ui/cards/logos.svelte'
 	import { observeRoot } from '$lib/utils/observer.svelte'
 	import { Notification, DynamicNav, Footer, Button } from '@imago/ui'
-	let { children } = $props()
+	let { data, children } = $props()
 </script>
 
 <div class="screen" use:observeRoot></div>
@@ -18,7 +18,7 @@
 <main id="main">
 	{@render children()}
 </main>
-<Footer></Footer>
+<Footer routes={data.footer_pages}></Footer>
 <Notification {notify}></Notification>
 
 <style>

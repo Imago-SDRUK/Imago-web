@@ -9,6 +9,7 @@
 	import CellText from '$lib/ui/tables/cell_text.svelte'
 	import Facts from '$lib/ui/cards/facts.svelte'
 	import { page } from '$app/state'
+	import MimeTypes from '$lib/assets/available_mime_types.json'
 
 	let { data } = $props()
 	let result = $derived(data.resource)
@@ -71,7 +72,10 @@
 			<!-- {#if result.versions.length > 0} -->
 			<div class="latest">
 				<Subtitle>Latest:</Subtitle>
-				<Button href={`${result.versions[0].url}&dataset=${page.params.id}`} download={result.name}>
+				<Button
+					href={`${result.versions[0].url}&dataset=${page.params.id}`}
+					download={`${result.name}.${MimeTypes.find((mt) => mt.value === result.mimetype)?.extension}`}
+				>
 					Download: {result.name ?? result.description} - {result.versions[0].version}
 					<Icon icon={{ icon: 'file-download', set: 'tabler' }}></Icon>
 				</Button>
@@ -82,7 +86,10 @@
 				<Subtitle>Available versions</Subtitle>
 				<div class="versions">
 					{#each data.resource.versions as version}
-						<Button href={`${version.url}&dataset=${page.params.id}`} download={result.name}>
+						<Button
+							href={`${version.url}&dataset=${page.params.id}`}
+							download={`${result.name}.${MimeTypes.find((mt) => mt.value === result.mimetype)?.extension}`}
+						>
 							Version: {version.version}
 							<Icon icon={{ icon: 'file-download', set: 'tabler' }}></Icon>
 						</Button>

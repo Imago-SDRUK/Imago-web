@@ -1,0 +1,37 @@
+[
+	{
+		"name": "geopackage+sqlite3",
+		"value": "application/geopackage+sqlite3",
+		"description": "[OGC][Scott_Simmons]",
+		"extension": "gpkg",
+		"format": "GeoPackage"
+	},
+	{
+		"name": "json",
+		"value": "application/json",
+		"description": "[RFC8259]",
+		"extension": "json",
+		"format": "JSON"
+	},
+	{
+		"name": "csv",
+		"value": "text/csv",
+		"description": "[RFC4180][RFC7111]",
+		"extension": "csv",
+		"format": "CSV"
+	},
+	{
+		"name": "tiff",
+		"value": "image/tiff",
+		"description": "[RFC3302]",
+		"extension": "tiff",
+		"format": "TIFF"
+	},
+	{
+		"name": "png",
+		"value": "image/png",
+		"description": "[W3C][PNG_WG][PNG]",
+		"extension": "png",
+		"format": "png"
+	}
+]

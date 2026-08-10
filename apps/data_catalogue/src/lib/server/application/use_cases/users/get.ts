@@ -1,6 +1,8 @@
+import type { AppContext } from '$lib/server/application/context'
 import type { IUsersRepository } from '$lib/server/application/repositories/users'
 import type { IAuthorisationService } from '$lib/server/application/services/autorisation'
 import type { IIdentityService } from '$lib/server/application/services/identity'
+import type { IUsersService } from '$lib/server/application/services/users'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import type { Session } from '$lib/server/entities/models/identity'
@@ -304,4 +306,83 @@ export const usersSearchUseCase = async ({
 	// 	return err({ reason: 'Unauthorised' })
 	// }
 	return ok(users)
+}
+
+export const userServiceGetUserUseCase = async ({
+	id,
+	user_service,
+	session,
+	configuration,
+	authorisation_module
+}: {
+	id: string
+	user_service: IUsersService
+} & AppContext) => {
+	// HACK: lets assume users authorised to read users are also allowed to read ckan users
+	const [errors, permission] = await authorisation_module.authorise({
+		actor: session.identity.id,
+		namespace: 'Action',
+		object: 'users',
+		permits: 'read',
+		configuration
+	})
+	if (errors) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	return await user_service.getUser({ id })
+}
+
+export const userServiceGetUsersUseCase = async ({
+	user_service,
+	session,
+	configuration,
+	authorisation_module
+}: {
+	user_service: IUsersService
+} & AppContext) => {
+	// HACK: lets assume users authorised to read users are also allowed to read ckan users
+	const [errors, permission] = await authorisation_module.authorise({
+		actor: session.identity.id,
+		namespace: 'Action',
+		object: 'users',
+		permits: 'read',
+		configuration
+	})
+	if (errors) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	return await user_service.getUsers()
+}
+
+export const userServiceGetUserApiKeysUseCase = async ({
+	id,
+	user_service,
+	session,
+	configuration,
+	authorisation_module
+}: {
+	id: string
+	user_service: IUsersService
+} & AppContext) => {
+	// HACK: lets assume users authorised to read users are also allowed to read ckan users
+	const [errors, permission] = await authorisation_module.authorise({
+		actor: session.identity.id,
+		namespace: 'Action',
+		object: 'users',
+		permits: 'read',
+		configuration
+	})
+	if (errors) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	return await user_service.getUserApiKeys({ id })
 }

@@ -35,7 +35,17 @@
 		onpointerdown?: PointerEventHandler<HTMLButtonElement | HTMLAnchorElement>
 		onpointerup?: PointerEventHandler<HTMLButtonElement | HTMLAnchorElement>
 		active?: boolean
-		style?: 'base' | 'alt' | null | 'clean' | 'anchor' | 'clean-full' | 'square' | 'tag' | 'nav'
+		style?:
+			| 'base'
+			| 'alt'
+			| null
+			| 'clean'
+			| 'anchor'
+			| 'anchor-clean'
+			| 'clean-full'
+			| 'square'
+			| 'tag'
+			| 'nav'
 		type?: 'button' | 'submit' | 'reset' | null
 		width?: 'full' | 'auto'
 		line_clamp?: boolean
@@ -180,6 +190,35 @@
 	}
 
 	.btn[data-style='anchor'].active {
+		outline: 0.15rem solid var(--quarternary);
+		outline-offset: 0.2rem;
+	}
+
+	.btn[data-style='anchor-clean'] {
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		transition: all var(--animation-time) ease-in-out;
+		position: relative;
+	}
+
+	.btn[data-style='anchor-clean']::after {
+		content: '';
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		left: 0;
+		top: 0;
+		z-index: -1;
+	}
+
+	.btn[data-style='anchor-clean']:hover {
+		text-decoration: underline;
+		text-underline-offset: 2px;
+		color: var(--highlight-accent);
+	}
+
+	.btn[data-style='anchor-clean'].active {
 		outline: 0.15rem solid var(--quarternary);
 		outline-offset: 0.2rem;
 	}

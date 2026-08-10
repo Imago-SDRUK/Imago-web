@@ -1,5 +1,4 @@
 import { downloadsGetAggregatesController } from '$lib/server/interface/adapters/controllers/downloads/get'
-import { permissionsCheckController } from '$lib/server/interface/adapters/controllers/permissions/get.js'
 import { error } from '@sveltejs/kit'
 
 export const load = async ({ locals, url }) => {

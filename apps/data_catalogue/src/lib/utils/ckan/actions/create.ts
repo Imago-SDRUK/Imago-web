@@ -175,7 +175,8 @@ type ApiTokenCreate = [
 	{
 		user: string // name or id of the user who owns new API Token
 		name: string // distinctive name for API Token
-	}
+	},
+	{ token: string }
 ]
 
 export type DatastoreCreate = ['datastore_create', CkanDatastoreCreate, CkanDatastore]

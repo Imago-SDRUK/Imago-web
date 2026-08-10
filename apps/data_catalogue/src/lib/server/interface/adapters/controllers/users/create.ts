@@ -3,11 +3,15 @@ import type { Configuration } from '$lib/server/entities/models/configuration'
 import type { UserRequest } from '$lib/server/entities/models/users'
 import { err, ok } from '$lib/server/entities/errors'
 import { getServerContext } from '$lib/server/application/context'
-import { userCreateUseCase } from '$lib/server/application/use_cases/users/create'
+import {
+	userCreateUseCase,
+	userServiceCreateUserApiKeysUseCase
+} from '$lib/server/application/use_cases/users/create'
 import { getUserModule } from '$lib/server/modules/user'
 import { log } from '$lib/utils/server/logger'
 import { userAutoEnrollUseCase } from '$lib/server/application/use_cases/users/update'
 import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
+import { getUserServiceModule } from '$lib/server/modules/user_service'
 
 export const userCreateController = async ({
 	session,
@@ -48,4 +52,31 @@ export const userCreateController = async ({
 		return err(groups_error)
 	}
 	return ok(result)
+}
+
+export const userServiceCreateUserApiTokenController = async ({
+	id,
+	name,
+	session,
+	configuration
+}: {
+	id: string
+	name: string
+	session?: Session
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+
+	const [errors, users] = await userServiceCreateUserApiKeysUseCase({
+		user: id,
+		name,
+		user_service: getUserServiceModule(),
+		...getServerContext({ session, configuration })
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(users)
 }

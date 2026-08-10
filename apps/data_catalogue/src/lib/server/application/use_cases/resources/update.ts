@@ -1,13 +1,16 @@
 import type { IResourceRepository } from '$lib/server/application/repositories/resource'
 import {
 	resource_versions,
+	ResourceServiceRequestSchema,
 	type ResourceRequest,
+	type ResourceServiceRequest,
 	type ResourceVersionRequest
 } from '$lib/server/entities/models/resources'
 import { err, ok } from '$lib/server/entities/errors'
 import type { AppContext } from '$lib/server/application/context'
 import { createUpdateSchema } from 'drizzle-arktype'
 import { type } from 'arktype'
+import type { IResourceService } from '$lib/server/application/services/resource'
 
 export const resourceUpdateUseCase = async ({
 	resource_id,
@@ -131,4 +134,41 @@ export const resourceVersionUpdateFileUseCase = async ({
 		return err(errs)
 	}
 	return ok(resource_version)
+}
+
+export const resourceServiceUpdateUseCase = async ({
+	id,
+	data,
+	resource_service,
+	session,
+	authorisation_module,
+	configuration
+}: {
+	id: string
+	data: Partial<ResourceServiceRequest>
+	resource_service: IResourceService
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		namespace: 'Resource',
+		object: id,
+		permits: 'edit',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const validated = ResourceServiceRequestSchema.omit('package_id')(data)
+	if (validated instanceof type.errors) {
+		return err({
+			reason: 'Invalid Data',
+			message: validated.summary,
+			id: 'resource version validation'
+		})
+	}
+	const res = await resource_service.updateResource({ data: validated, id })
+	return ok(res)
 }

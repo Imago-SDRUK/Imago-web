@@ -11,9 +11,9 @@ const initialiseConfiguration: IConfigurationRepository['initialiseConfiguration
 		if (_config[0]) {
 			return ok(_config[0])
 		}
-		return err({ reason: 'Not Found' })
+		return err({ reason: 'Not Found', message: 'Configuration not found' })
 	} catch (_err) {
-		return err({ reason: 'Unexpected', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 const addSuperUser: IConfigurationRepository['addSuperUser'] = async ({ id, config_id }) => {
@@ -32,9 +32,9 @@ const addSuperUser: IConfigurationRepository['addSuperUser'] = async ({ id, conf
 		if (config[0]) {
 			return ok(config[0])
 		}
-		return err({ reason: 'Not Found' })
+		return err({ reason: 'Not Found', message: 'superuser not found' })
 	} catch (_err) {
-		return err({ reason: 'Unexpected', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 
@@ -51,9 +51,9 @@ const removeSuperUser: IConfigurationRepository['removeSuperUser'] = async ({ id
 		if (config[0]) {
 			return ok(config[0])
 		}
-		return err({ reason: 'Not Found' })
+		return err({ reason: 'Not Found', message: 'Configuration not found' })
 	} catch (_err) {
-		return err({ reason: 'Unexpected', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 
@@ -69,9 +69,9 @@ const setAdminGroup: IConfigurationRepository['setAdminGroup'] = async ({ id, co
 		if (config[0]) {
 			return ok(config[0])
 		}
-		return err({ reason: 'Not Found' })
+		return err({ reason: 'Not Found', message: 'Configuration not found' })
 	} catch (_err) {
-		return err({ reason: 'Unexpected', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 
@@ -81,9 +81,9 @@ const getConfiguration: IConfigurationRepository['getConfiguration'] = async ({ 
 		if (config[0]) {
 			return ok(config[0])
 		}
-		return err({ reason: 'Not Found' })
+		return err({ reason: 'Not Found', message: 'Configuration not found' })
 	} catch (_err) {
-		return err({ reason: 'Unexpected', errors: _err })
+		return err({ reason: 'Unexpected', error: _err })
 	}
 }
 

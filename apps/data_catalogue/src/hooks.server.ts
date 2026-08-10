@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/sveltekit'
 import { env } from '$env/dynamic/private'
 import { createCkanClient } from '$lib/utils/ckan/ckan'
-import { getId } from '@arturoguzman/art-ui'
+import { getId, jstr } from '@arturoguzman/art-ui'
 import { error, redirect, type Handle, type HandleServerError } from '@sveltejs/kit'
 import { sequence } from '@sveltejs/kit/hooks'
 import { log } from '$lib/utils/server/logger'
@@ -42,6 +42,7 @@ export const init: ServerInit = async () => {
 }
 
 const handleConfiguration: Handle = async ({ event, resolve }) => {
+	log.trace({ message: 'start handle configuration' })
 	const [errors, configuration] = await configurationGetController()
 	if (event.url.pathname === '/configuration') {
 		if (configuration !== null) {
@@ -67,6 +68,7 @@ const handleConfiguration: Handle = async ({ event, resolve }) => {
 }
 
 const handleCkan: Handle = async ({ event, resolve }) => {
+	log.trace({ message: 'start handle ckan' })
 	event.locals.ckan = createCkanClient({
 		url: env.CKAN_URL,
 		token: env.CKAN_TOKEN ? env.CKAN_TOKEN : undefined,
@@ -92,6 +94,7 @@ const handleCkan: Handle = async ({ event, resolve }) => {
 }
 
 const handleAuthentication: Handle = async ({ event, resolve }) => {
+	log.trace({ message: 'start handle authentication' })
 	event.locals.session = {
 		identity: {
 			id: 'anonymous',
@@ -106,7 +109,11 @@ const handleAuthentication: Handle = async ({ event, resolve }) => {
 	}
 	const cookie = event.cookies.get('ory_kratos_session')
 	const token = event.request.headers.get('authorization')
+	log.trace({ message: `cookie is ${cookie}` })
+	log.trace({ message: `token is ${token}` })
+	log.trace({ message: `pathname is ${event.url.pathname}` })
 	if ((cookie || token) && !event.url.pathname.startsWith('/auth/login')) {
+		log.trace({ message: `cookie or token exist and pathname is not /auth/login` })
 		const session = await identityValidateSessionController({
 			cookie,
 			token
@@ -114,12 +121,14 @@ const handleAuthentication: Handle = async ({ event, resolve }) => {
 		if ('session' in session) {
 			event.locals.session = session.session
 			if (session.session.redirect_browser_to) {
+				log.trace({ message: `applying a redirec to` })
 				redirect(303, session.session.redirect_browser_to)
 			}
 			return resolve(event)
 		}
 		const { action } = session
 		if (action === 'invalidate') {
+			log.trace({ message: `invalidating session` })
 			event.cookies.delete('ory_kratos_session', { path: '/' })
 			event.request.headers.delete('authorization')
 			redirect(307, '/auth/login')
@@ -134,17 +143,24 @@ const handleAuthentication: Handle = async ({ event, resolve }) => {
 }
 
 const handleProfile: Handle = async ({ event, resolve }) => {
+	log.trace({ message: 'start handle profile' })
+	log.trace({ message: `session is ${jstr(event.locals.session)}` })
+	log.trace({ message: `identity is ${jstr(event.locals.session?.identity)}` })
+	log.trace({ message: `identity is anon ${event.locals.session?.identity.id === 'anonymous'}` })
+	log.trace({ message: `pathname is  ${event.url.pathname}` })
 	if (
 		event.locals.session &&
 		event.locals.session.identity &&
 		event.locals.session.identity.id !== 'anonymous' &&
 		event.url.pathname !== '/auth/verification'
 	) {
+		log.trace({ message: `getting user profile` })
 		const [error, profile] = await userGetMeController({
 			session: event.locals.session,
 			configuration: event.locals.configuration
 		})
 		if (error !== null) {
+			log.trace({ message: `theres been an error getting the user profile` })
 			redirect(307, `/user/register`)
 		}
 		if (profile.status === 'preregister' || profile.status === 'draft') {
@@ -180,10 +196,10 @@ export const handle =
 	process.env.NODE_ENV === 'production'
 		? sequence(
 				handleConfiguration,
-				Sentry.sentryHandle(),
 				handleAuthentication,
 				handleProfile,
-				handleCkan
+				handleCkan,
+				Sentry.sentryHandle()
 			)
 		: sequence(handleConfiguration, handleAuthentication, handleProfile, handleCkan)
 export const handleError =

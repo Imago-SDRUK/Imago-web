@@ -2,6 +2,7 @@ import { form, getRequestEvent } from '$app/server'
 import { resourceCreateControllerWithVersion } from '$lib/server/interface/adapters/controllers/resources/create'
 import { error } from '@sveltejs/kit'
 import { type } from 'arktype'
+import MimeTypes from '$lib/assets/available_mime_types.json'
 
 export const createResource = form(
 	type({
@@ -23,7 +24,8 @@ export const createResource = form(
 				description,
 				mimetype,
 				package_id,
-				size: String(size)
+				size: String(size),
+				format: MimeTypes.find((mt) => mt.value === mimetype)?.format ?? undefined
 			},
 			version_data: {
 				changelog,

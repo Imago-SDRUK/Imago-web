@@ -1,6 +1,11 @@
 import { getResourceRepositoryModule } from '$lib/server/modules/resources'
-import type { ResourceRequest, ResourceVersionRequest } from '$lib/server/entities/models/resources'
+import type {
+	ResourceRequest,
+	ResourceServiceRequest,
+	ResourceVersionRequest
+} from '$lib/server/entities/models/resources'
 import {
+	resourceServiceUpdateUseCase,
 	resourceUpdateUseCase,
 	resourceVersionUpdateFileUseCase,
 	resourceVersionUpdateUseCase
@@ -11,6 +16,7 @@ import { err, ok } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
 import { log } from '$lib/utils/server/logger'
+import { getResourceServiceModule } from '$lib/server/modules/resources_service'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -107,4 +113,27 @@ export const resourceVersionUpdateController = async ({
 		...getServerContext({ session, configuration })
 	})
 	return upload_url
+}
+
+export const resourceServiceUpdateController = async ({
+	session,
+	id,
+	data,
+	configuration
+}: {
+	session: App.Locals['session']
+	id: string
+	data: Partial<ResourceServiceRequest>
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const result = await resourceServiceUpdateUseCase({
+		id,
+		data,
+		resource_service: getResourceServiceModule(),
+		...getServerContext({ session, configuration })
+	})
+	return result
 }

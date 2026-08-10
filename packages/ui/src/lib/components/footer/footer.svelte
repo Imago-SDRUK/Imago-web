@@ -2,8 +2,9 @@
 	import ImagoLogo from '$lib/assets/logos/imago_logo.png'
 	import SDRUK from '$lib/assets/logos/sdr_logo.png'
 	import UKRI from '$lib/assets/logos/ukri_logo.png'
+	import type { Route } from '$lib/components/navigations/index'
 	import { Button, Icon, Subtitle, Title } from '@imago/ui'
-	let { id }: { id?: string } = $props()
+	let { routes, id }: { routes?: Route[]; id?: string } = $props()
 	const now = new Date()
 </script>
 
@@ -13,15 +14,24 @@
 			<div class="left-col">
 				<Title>Imago © {now.getFullYear()}</Title>
 			</div>
+			{#if routes}
+				<div class="right-col">
+					{#each routes as route}
+						<Button style="anchor-clean" href={route.href}>{route.label}</Button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 
 		<div class="bottom">
 			<div class="logos">
 				<a href="/" aria-label="Home"> <img class="logo" src={ImagoLogo} alt="" /> </a>
-				<a href="/" aria-label="Home">
+				<a href="https://www.sdruk.ukri.org/" aria-label="Home">
 					<img class="logo" src={SDRUK} alt="" />
 				</a>
-				<a href="/" aria-label="Home"> <img class="logo" src={UKRI} alt="" /> </a>
+				<a href="https://www.ukri.org/" aria-label="Home">
+					<img class="logo" src={UKRI} alt="" />
+				</a>
 			</div>
 			<div class="social-media">
 				<Subtitle>Contact us:</Subtitle>

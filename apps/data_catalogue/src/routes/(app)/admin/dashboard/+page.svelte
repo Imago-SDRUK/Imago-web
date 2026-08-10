@@ -2,6 +2,7 @@
 	import { page } from '$app/state'
 	import BaseTable from '$lib/ui/tables/base_table.svelte'
 	import CellText from '$lib/ui/tables/cell_text.svelte'
+	import { Paragraph } from '@arturoguzman/art-ui'
 	import {
 		ActionBar,
 		BaseSection,
@@ -34,9 +35,8 @@
 </script>
 
 <div class="page">
-	<Title>Downloads</Title>
-	<ActionBar>
-		{#snippet right()}
+	<BaseSection style="title" title="Downloads">
+		<div class="content">
 			<div class="filters">
 				<Input width="auto" label="From">
 					<Calendar bind:value={from}></Calendar>
@@ -54,12 +54,12 @@
 					})}>Filter</Button
 				>
 			</div>
-		{/snippet}
-	</ActionBar>
 
-	<div class="table-wrapper">
-		<BaseTable data={data.downloads} {columns}></BaseTable>
-	</div>
+			<div class="table-wrapper">
+				<BaseTable data={data.downloads} {columns}></BaseTable>
+			</div>
+		</div>
+	</BaseSection>
 </div>
 
 <style>
@@ -77,5 +77,10 @@
 	.table-wrapper {
 		height: 40lvh;
 		overflow: scroll;
+	}
+	.content {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
 	}
 </style>

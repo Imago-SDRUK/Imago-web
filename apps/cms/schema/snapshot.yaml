@@ -6929,6 +6929,8 @@ fields:
             value: home
           - text: General
             value: general
+          - text: Footer
+            value: footer
       readonly: false
       required: true
       searchable: true

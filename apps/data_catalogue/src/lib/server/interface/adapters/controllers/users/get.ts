@@ -5,6 +5,9 @@ import {
 	userGetMeUseCase,
 	userGetTokenUseCase,
 	userGetUseCase,
+	userServiceGetUserApiKeysUseCase,
+	userServiceGetUsersUseCase,
+	userServiceGetUserUseCase,
 	usersGetUseCase,
 	usersSearchUseCase
 } from '$lib/server/application/use_cases/users/get'
@@ -15,11 +18,13 @@ import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
 import { userCreateController } from '$lib/server/interface/adapters/controllers/users/create'
 import { env } from '$env/dynamic/private'
+import { getUserServiceModule } from '$lib/server/modules/user_service'
 
 const presenter = ({
 	user
 }: {
 	user: User & {
+		first_name: string
 		last_name: string
 		email: string
 		id: string
@@ -203,4 +208,73 @@ export const userGetTokenController = async ({
 		return err(errors)
 	}
 	return ok(token)
+}
+
+export const userServiceGetUserController = async ({
+	id,
+	session,
+	configuration
+}: {
+	id: string
+	session?: Session
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+
+	const [errors, users] = await userServiceGetUserUseCase({
+		id,
+		user_service: getUserServiceModule(),
+		...getServerContext({ session, configuration })
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(users)
+}
+
+export const userServiceGetUsersController = async ({
+	session,
+	configuration
+}: {
+	session?: Session
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+
+	const [errors, users] = await userServiceGetUsersUseCase({
+		user_service: getUserServiceModule(),
+		...getServerContext({ session, configuration })
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(users)
+}
+
+export const userServiceGetUserApiKeysController = async ({
+	id,
+	session,
+	configuration
+}: {
+	id: string
+	session?: Session
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+
+	const [errors, users] = await userServiceGetUserApiKeysUseCase({
+		id,
+		user_service: getUserServiceModule(),
+		...getServerContext({ session, configuration })
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(users)
 }

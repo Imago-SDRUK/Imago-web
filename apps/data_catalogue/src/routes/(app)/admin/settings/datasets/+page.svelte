@@ -15,7 +15,8 @@
 		handleSearchParams,
 		Input,
 		Text,
-		Textarea
+		Textarea,
+		BaseSection
 	} from '@imago/ui'
 	import { onMount } from 'svelte'
 	import CellText from '$lib/ui/tables/cell_text.svelte'
@@ -32,6 +33,7 @@
 	import CellEditorCtx from '$lib/ui/tables/cell_editor_ctx.svelte'
 	import { handleEnhance } from '$lib/utils/forms/index.js'
 	import { jstr } from '@arturoguzman/art-ui'
+	import { notify } from '$lib/stores/notify.js'
 	let { data } = $props()
 	let dataset_selected = $derived(
 		data.datasets.items?.findIndex(
@@ -252,57 +254,63 @@
 					></BaseTable>
 				</div>
 			</div>
-
-			<Title>Tags</Title>
-			{#each data.tags as tags}
-				<div class="section">
-					<Subtitle>Vocabulary: {tags.vocabulary.name}</Subtitle>
-					<div class="tags">
-						{#each tags.items as tag}
-							{#if typeof tag !== 'string'}
-								<div class="existing-tag">
-									<Paragraph>{tag.display_name}</Paragraph>
-									<div class="buttons">
-										<Button
-											style="tag"
-											hover_label={`Click to delete`}
-											onclick={() => {
-												toggleDialog(`delete-tag-${tag.id}`)
-											}}
-										>
-											<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
-										</Button>
-										<Dialog id="delete-tag-{tag.id}">
-											<form
-												action="?/delete_tag"
-												method="POST"
-												use:enhance={handleEnhance({
-													onsuccess: () => {}
-												})}
+			<BaseSection style="title" title="Tags">
+				{#each data.tags as tags}
+					<div class="section">
+						<Subtitle>Vocabulary: {tags.vocabulary.name}</Subtitle>
+						<div class="tags">
+							{#each tags.items as tag}
+								{#if typeof tag !== 'string'}
+									<div class="existing-tag">
+										<div class="tag-text">
+											<Paragraph>{tag.display_name}</Paragraph>
+											<Paragraph size="xs">{jstr(tag.name)}</Paragraph>
+										</div>
+										<div class="buttons">
+											<Button
+												style="tag"
+												hover_label="Click to delete"
+												onclick={() => {
+													toggleDialog(`delete-tag-${tag.id}`)
+												}}
 											>
-												<input type="hidden" hidden value={tag.id} name="tag_id" />
-												<input type="hidden" name="vocabulary_id" value={tags.vocabulary.id} />
-												<Subtitle
-													>Are you sure you want to delete this tag for all datasets?</Subtitle
-												>
-												<div class="buttons">
-													<Button
-														type="button"
-														onclick={() => {
+												<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
+											</Button>
+											<Dialog id="delete-tag-{tag.id}">
+												<form
+													action="?/delete_tag"
+													method="POST"
+													use:enhance={handleEnhance({
+														onsuccess: () => {
 															toggleDialog(`delete-tag-${tag.id}`)
-														}}>Cancel</Button
+														}
+													})}
+												>
+													<input type="hidden" hidden value={tag.id} name="tag_id" />
+													<input type="hidden" name="vocabulary_id" value={tags.vocabulary.id} />
+													<Subtitle
+														>Are you sure you want to delete "{tag.display_name}" tag for all
+														datasets?</Subtitle
 													>
-													<Button>Delete</Button>
-												</div>
-											</form>
-										</Dialog>
+													<div class="buttons">
+														<Button
+															type="button"
+															onclick={() => {
+																toggleDialog(`delete-tag-${tag.id}`)
+															}}>Cancel</Button
+														>
+														<Button>Delete</Button>
+													</div>
+												</form>
+											</Dialog>
+										</div>
 									</div>
-								</div>
-							{/if}
-						{/each}
+								{/if}
+							{/each}
+						</div>
 					</div>
-				</div>
-			{/each}
+				{/each}
+			</BaseSection>
 		</div>
 	{/snippet}
 	{#snippet rightCol()}
@@ -484,5 +492,10 @@
 		border: 1px solid var(--border-muted);
 		padding: 0.5rem 1rem;
 		border-radius: var(--radius);
+	}
+	.tag-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
 	}
 </style>

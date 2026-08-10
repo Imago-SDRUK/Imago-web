@@ -20,5 +20,12 @@ export type IResourceService = {
 		data: ResourceServiceRequest
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ResourceServiceDto]>
+	updateResource: ({
+		data,
+		id
+	}: {
+		data: ResourceServiceRequest
+		id: string
+	}) => Promise<[ErrTypes, null] | [null, ResourceServiceDto]>
 	deleteResource: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, null]>
 }

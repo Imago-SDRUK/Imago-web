@@ -78,3 +78,24 @@ The binary file data is proxied through the /assets endpoint. This allows us to:
 2. The request is handled using the Directus SDK.
 3. Directus returns a response.
 4. The response is returned to the user.
+
+## Development
+
+### Schema changes
+
+Locally in Directus you can make any schema changes using the web application. Once you've done your changes, you need to run inside the app/cms folder:
+
+```bash
+pnpm run gen:schema
+
+# say yes to overwrite the schema.yaml file
+
+```
+
+to generate the snapshot.yaml, which keeps track of the schema changes and will update the schema on production once the image is built and deployed.
+
+To generate the Directus SDK types, go to apps/website and run:
+
+```bash
+pnpm run types:directus
+```

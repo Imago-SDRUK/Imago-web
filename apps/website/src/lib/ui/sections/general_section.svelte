@@ -14,7 +14,7 @@
 </script>
 
 <BaseSection>
-	<div class="general-section">
+	<div class="section">
 		<div class="header">
 			{#if section.title}
 				<Title size="lg" text={section.title}></Title>
@@ -23,7 +23,7 @@
 				<Subtitle size="sm" text={section.subtitle}></Subtitle>
 			{/if}
 			{#if section.description}
-				<Paragraph>
+				<Paragraph style="full-width">
 					{@html section.description}
 				</Paragraph>
 			{/if}
@@ -39,11 +39,18 @@
 </BaseSection>
 
 <style>
-	.general-section {
+	.section {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
 		grid-template-rows: minmax(0, max-content) minmax(0, 1fr);
-		gap: 2rem;
+		width: min(100% - 4rem, 1280px);
+		gap: clamp(1rem, 0.667rem + 1.667vw, 2rem);
+	}
+	.header {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		width: 100%;
 	}
 	.blocks {
 		display: flex;

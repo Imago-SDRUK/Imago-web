@@ -452,6 +452,6 @@ export const actions = {
 			console.log(errors)
 			return fail(400, { message: `Error deleting the tag` })
 		}
-		return { message: `Tag ${tag_id} deleted` }
+		return { message: `Tag deleted` }
 	}
 }

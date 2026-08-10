@@ -15,6 +15,7 @@
 	import { xhrUpload } from '$lib/utils/files/readers/index.js'
 	import { handleEnhance } from '$lib/utils/forms'
 	import { toggleDialog } from '$lib/utils/ui/index.js'
+	import MimeTypes from '$lib/assets/available_mime_types.json'
 	import {
 		Accordion,
 		ActionBar,
@@ -25,11 +26,13 @@
 		Numerical,
 		Paragraph,
 		SectionEdit,
+		Select,
 		Subtitle,
 		Text,
 		Textarea
 	} from '@imago/ui'
 	import type { IColumnConfig } from '@svar-ui/svelte-grid'
+	import { updateResourceService } from '$lib/remotes/resources/update.remote.js'
 	let { data } = $props()
 	const columns: (IColumnConfig & { id: keyof ResourceServiceDto })[] = [
 		{
@@ -104,6 +107,14 @@
 						<Subtitle>{data.resource?.name}</Subtitle>
 					{/snippet}
 					{#snippet right()}
+						<Button
+							onclick={() => {
+								toggleDialog('edit-resource-service')
+							}}
+						>
+							<Icon icon={{ icon: 'edit', set: 'tabler' }}></Icon>
+						</Button>
+
 						{#if data.allow_delete}
 							<Button
 								onclick={() => {
@@ -409,6 +420,60 @@
 	{/snippet}
 </SectionEdit>
 
+<Dialog id="edit-resource-service">
+	<form
+		{...updateResourceService.enhance(async ({ submit }) => {
+			const valid = await submit()
+			if (valid) {
+				toggleDialog('edit-resource-service')
+			}
+		})}
+	>
+		<div class="fields">
+			<input {...updateResourceService.fields.id.as('hidden', data.resource?.id ?? '')} />
+
+			<Input label="Name">
+				{#snippet message()}
+					{#each updateResourceService.fields.name.issues() as issue}
+						<Paragraph size="xs">{issue.message}</Paragraph>
+					{/each}
+				{/snippet}
+				<Text {...updateResourceService.fields.name.as('text', data.resource?.name ?? '')}></Text>
+			</Input>
+			<Input label="Description">
+				{#snippet message()}
+					{#each updateResourceService.fields.description.issues() as issue}
+						<Paragraph size="xs">{issue.message}</Paragraph>
+					{/each}
+				{/snippet}
+				<Textarea
+					{...updateResourceService.fields.description.as('text', data.resource?.description ?? '')}
+				></Textarea>
+			</Input>
+			<Input label="MIMEType">
+				{#snippet message()}
+					{#each updateResourceService.fields.mimetype.issues() as issue}
+						<Paragraph size="xs">{issue.message}</Paragraph>
+					{/each}
+				{/snippet}
+				<Select
+					{...updateResourceService.fields.mimetype.as('select', data.resource?.mimetype ?? '')}
+					options={MimeTypes.map((mt) => ({ label: mt.name, value: mt.value }))}
+				></Select>
+			</Input>
+		</div>
+		<div class="buttons">
+			<Button
+				type="button"
+				onclick={() => {
+					toggleDialog('edit-resource-service')
+				}}>Cancel</Button
+			>
+			<Button>Save</Button>
+		</div>
+	</form>
+</Dialog>
+
 <Dialog id="add-resource">
 	<Upload name="resources" label="Add resources">
 		{#snippet children({ files, removeFile })}
@@ -581,7 +646,11 @@
 										<Paragraph size="xs">{issue.message}</Paragraph>
 									{/each}
 								{/snippet}
-								<Text {...createResource.fields.mimetype.as('text', file.type)}></Text>
+								<Select
+									{...createResource.fields.mimetype.as('select', file.type)}
+									options={MimeTypes.map((mt) => ({ label: mt.name, value: mt.value }))}
+								></Select>
+								<!-- <Text {...createResource.fields.mimetype.as('text', file.type)}></Text> -->
 							</Input>
 
 							<Input label="Size">
@@ -749,5 +818,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+	.fields {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
 	}
 </style>

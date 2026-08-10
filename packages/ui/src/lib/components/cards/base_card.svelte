@@ -37,8 +37,12 @@
 <style>
 	.card {
 		overflow: hidden;
+		transition: all var(--animation-time) ease-in-out;
 	}
 	.border {
+		border: 1px solid var(--border-muted);
+	}
+	.border:hover {
 		border: 1px solid var(--border);
 	}
 	.rounded {

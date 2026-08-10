@@ -29,6 +29,7 @@
 		grid-template-columns: minmax(0, 1fr);
 		border-top: 1px solid var(--border);
 		max-width: 100lvw;
+		height: 100%;
 		/* gap: 2rem; */
 	}
 	.left-col {
