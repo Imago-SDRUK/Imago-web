@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.37
+### Patch Changes
+
+- 2a8bf47: log request, update dependencies
+
 ## 3.0.36
 ### Patch Changes
 
