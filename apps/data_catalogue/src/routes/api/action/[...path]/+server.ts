@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private'
+import type { CkanPing } from '$lib/types/ckan/index.js'
 import { handleCKANResponse } from '$lib/utils/ckan/ckan.js'
 import { json, redirect, error } from '@sveltejs/kit'
 const ALLOWED_PATHS = [
@@ -33,14 +34,27 @@ export async function GET({ params, url, request }) {
 	if (!ALLOWED_PATHS.includes(params.path)) {
 		error(404, { message: `Not found`, id: '' })
 	}
+	const auth_header = request.headers.get('Authorization')
+	if (!auth_header) {
+		return error(401, { message: 'Unauthorised', id: 'unauthorised' })
+	}
+	// HACK: check this url to check auth token is valid
+	const ping_url = new URL(`${env.CKAN_URL}/api/action/am_following_user?id=metadataworks`)
+	const headers = new Headers()
+	headers.set('Authorization', auth_header)
+	let success = false
+	try {
+		const res = await fetch(ping_url, { method: 'GET', headers })
+		const data = await handleCKANResponse<CkanPing>(res)
+		success = data.success
+	} catch (_err) {
+		console.log(_err)
+	}
+	if (!success) {
+		return error(401, { message: 'Unauthorised', id: 'unauthorised' })
+	}
 	const backend_url = new URL(`${env.CKAN_URL}/api/3/action/${params.path}`)
 	url.searchParams.forEach((value, key) => backend_url.searchParams.set(key, value))
-
-	const headers = new Headers()
-	const auth_header = request.headers.get('Authorization')
-	if (auth_header) {
-		headers.set('Authorization', auth_header)
-	}
 	const res = await fetch(backend_url.toString(), {
 		headers,
 		method: 'GET'
