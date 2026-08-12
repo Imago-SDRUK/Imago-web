@@ -23,11 +23,12 @@ export {
 	users_to_groups_relations
 } from '../../server/entities/models/groups'
 export { configuration } from '../../server/entities/models/configuration'
-export {
-	products,
-	product_options,
-	type Product,
-	type ProductOption,
-	type ProductRequest,
-	type ProductOptionRequest
-} from '../../server/entities/models/products'
+
+export { storages } from '../../server/entities/models/storage'
+// export {
+// 	products,
+// 	product_options,
+// 	product_resources,
+// 	product_requests,
+// 	products_product_options
+// } from '../../server/entities/models/products'
