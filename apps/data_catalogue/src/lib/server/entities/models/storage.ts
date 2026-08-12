@@ -35,16 +35,16 @@ export const storages = pgTable('storages', {
 	...reuse()
 })
 
-export type StorageRequest = typeof storages.$inferInsert
+export type StorageInsert = typeof storages.$inferInsert
 export type Storage = typeof storages.$inferSelect
 
 export const StorageLocalCredentialsSchema = type({
-	path: 'string'
+	path: 'string > 1'
 })
 
 export const StorageAzureredentialsSchema = type({
-	account_name: 'string',
-	account_key: 'string',
-	container: 'string',
+	account_name: 'string > 1',
+	account_key: 'string > 1',
+	container: 'string > 1',
 	'path?': 'string'
 })

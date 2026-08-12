@@ -88,13 +88,15 @@ export const resourceVersionGetDownloadUrlUseCase = async ({
 	configuration,
 	authorisation_module,
 	resource_repository,
-	downloads_repository
+	downloads_repository,
+	storage_credentials
 }: {
 	resource_id: string
 	version_id: string
 	resource_repository: IResourceRepository
 	storage_service: IStorageService
 	downloads_repository: IDownloadsRepository
+	storage_credentials: Record<string, string>
 } & AppContext) => {
 	if (session.identity.id === 'anonymous') {
 		return err({ reason: 'Unauthorised' })
@@ -134,7 +136,10 @@ export const resourceVersionGetDownloadUrlUseCase = async ({
 	if (version_errors !== null) {
 		return err(version_errors)
 	}
-	const [errors_s, url] = await storage_service.getDownloadUrl({ filename: version.id })
+	const [errors_s, url] = await storage_service.getDownloadUrl({
+		filename: version.id,
+		credentials: storage_credentials
+	})
 	if (errors_s !== null) {
 		return err(errors_s)
 	}

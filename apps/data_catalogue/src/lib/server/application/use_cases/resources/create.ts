@@ -15,6 +15,7 @@ import { v7 } from 'uuid'
 import { type } from 'arktype'
 import { createInsertSchema } from 'drizzle-arktype'
 import { log } from '$lib/utils/server/logger'
+import type { Storage } from '$lib/server/entities/models/storage'
 
 export const resourceCreateUseCase = async ({
 	data,
@@ -129,11 +130,13 @@ export const resourceVersionCreateUseCase = async ({
 	session,
 	configuration,
 	authorisation_module,
+	storage_credentials,
 	tx
 }: {
 	data: Partial<ResourceVersionRequest>
 	resource_respository: IResourceRepository
 	storage_service: IStorageService
+	storage_credentials: Storage['credentials']
 } & AppContext) => {
 	log.trace({ caller: 'resourceVersionCreateUseCase' })
 	const schema = createInsertSchema(resource_versions, {
@@ -206,7 +209,10 @@ export const resourceVersionCreateUseCase = async ({
 	if (errors_p) {
 		return err(errors_p)
 	}
-	const [errs_s, url] = await storage_service.getUploadUrl({ filename: version_id })
+	const [errs_s, url] = await storage_service.getUploadUrl({
+		filename: version_id,
+		credentials: storage_credentials
+	})
 	if (errs_s !== null) {
 		return err(errs_s)
 	}
@@ -221,11 +227,13 @@ export const resourceVersionPipelineCreateUseCase = async ({
 	session,
 	configuration,
 	authorisation_module,
+	storage_credentials,
 	tx
 }: {
 	data: Partial<ResourceVersionRequest>
 	resource_respository: IResourceRepository
 	storage_service: IStorageService
+	storage_credentials: Storage['credentials']
 } & AppContext) => {
 	log.trace({ caller: 'resourceVersionCreateUseCase' })
 	const schema = createInsertSchema(resource_versions, {
@@ -274,7 +282,10 @@ export const resourceVersionPipelineCreateUseCase = async ({
 	if (version_errors !== null) {
 		return err(version_errors)
 	}
-	const [errs_s, url] = await storage_service.getUploadUrl({ filename: version_id })
+	const [errs_s, url] = await storage_service.getUploadUrl({
+		filename: version_id,
+		credentials: storage_credentials
+	})
 	if (errs_s !== null) {
 		return err(errs_s)
 	}

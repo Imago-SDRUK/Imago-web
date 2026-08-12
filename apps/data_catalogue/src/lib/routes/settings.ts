@@ -6,6 +6,7 @@ type NavigationFeatures =
 	| 'registration'
 	| 'users'
 	| 'configuration'
+	| 'storage'
 
 export const settings_routes: Record<
 	NavigationFeatures,
@@ -44,6 +45,13 @@ export const settings_routes: Record<
 		route: {
 			label: 'Registration',
 			href: `/admin/settings/registration`
+		}
+	}),
+	storage: () => ({
+		group: 'Settings',
+		route: {
+			label: 'Storage',
+			href: `/admin/settings/storage`
 		}
 	}),
 	users: () => ({

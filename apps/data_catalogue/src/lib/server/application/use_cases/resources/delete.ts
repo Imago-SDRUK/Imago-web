@@ -11,12 +11,14 @@ export const resourceDeleteUseCase = async ({
 	session,
 	configuration,
 	authorisation_module,
-	storage_service
+	storage_service,
+	storage_credentials
 }: {
 	id: string
 	resource_respository: IResourceRepository
 	datastore_service: IDatastoreService
 	storage_service: IStorageService
+	storage_credentials: Record<string, string>
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Resource',
@@ -36,7 +38,9 @@ export const resourceDeleteUseCase = async ({
 		return err(v_errors)
 	}
 	const deleted = await Promise.all(
-		versions.map(({ id }) => storage_service.deleteFile({ filename: id }))
+		versions.map(({ id }) =>
+			storage_service.deleteFile({ filename: id, credentials: storage_credentials })
+		)
 	)
 	const { st_errors } = deleted.reduce(
 		(acc, [errors, result]) => {
@@ -119,11 +123,13 @@ export const resourceVersionDeleteUseCase = async ({
 	session,
 	authorisation_module,
 	configuration,
-	storage_service
+	storage_service,
+	storage_credentials
 }: {
 	version_id: string
 	resource_respository: IResourceRepository
 	storage_service: IStorageService
+	storage_credentials: Record<string, string>
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'ResourceVersion',
@@ -147,7 +153,10 @@ export const resourceVersionDeleteUseCase = async ({
 	if (errs !== null) {
 		return err(errs)
 	}
-	const [storage_errors, storage] = await storage_service.deleteFile({ filename: version_id })
+	const [storage_errors, storage] = await storage_service.deleteFile({
+		filename: version_id,
+		credentials: storage_credentials
+	})
 	if (storage_errors !== null) {
 		return err(storage_errors)
 	}

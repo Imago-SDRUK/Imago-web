@@ -10,7 +10,9 @@ import {
 	resourceVersionDeleteUseCase
 } from '$lib/server/application/use_cases/resources/delete'
 import { getDatastoreModule } from '$lib/server/modules/datastore'
-import { getStorageModule } from '$lib/server/modules/storage'
+import { getStorageServiceModule } from '$lib/server/modules/storage_service'
+import { storageGetCredentialsAndTypeUseCase } from '$lib/server/application/use_cases/storages/get'
+import { getStorageRepositoryModule } from '$lib/server/modules/storage'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -33,6 +35,14 @@ export const resourceDeleteController = async ({
 			id: 'no-id'
 		})
 	}
+	const [storage_errors, storage_type] = await storageGetCredentialsAndTypeUseCase({
+		storages_repository: getStorageRepositoryModule(),
+		id: configuration.resources_storage,
+		...getServerContext({ session, configuration })
+	})
+	if (storage_errors !== null) {
+		return err(storage_errors)
+	}
 	const [s_errors] = await resourceServiceDeleteUseCase({
 		id: resource_id,
 		resource_service: getResourceServiceModule(),
@@ -46,7 +56,8 @@ export const resourceDeleteController = async ({
 		id: resource_id,
 		resource_respository: getResourceRepositoryModule(),
 		datastore_service: getDatastoreModule(),
-		storage_service: getStorageModule(),
+		storage_service: getStorageServiceModule(storage_type.type),
+		storage_credentials: storage_type.credentials,
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
@@ -68,10 +79,20 @@ export const resourceVersionDeleteController = async ({
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
+
+	const [storage_errors, storage] = await storageGetCredentialsAndTypeUseCase({
+		storages_repository: getStorageRepositoryModule(),
+		id: configuration.resources_storage,
+		...getServerContext({ session, configuration })
+	})
+	if (storage_errors !== null) {
+		return err(storage_errors)
+	}
 	const upload_url = await resourceVersionDeleteUseCase({
+		storage_credentials: storage.credentials,
 		version_id,
 		resource_respository: getResourceRepositoryModule(),
-		storage_service: getStorageModule(),
+		storage_service: getStorageServiceModule(storage.type),
 		...getServerContext({ session, configuration })
 	})
 	return upload_url

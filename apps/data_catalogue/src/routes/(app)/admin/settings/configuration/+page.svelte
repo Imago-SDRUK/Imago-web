@@ -1,7 +1,8 @@
 <script lang="ts">
 	import {
 		configurationAddSuperUser,
-		configurationRemoveSuperUser
+		configurationRemoveSuperUser,
+		configurationSetStorage
 	} from '$lib/remotes/configuration/update.remote.js'
 	import { userServiceCreateUserApiToken } from '$lib/remotes/users/create.remote.js'
 	import { userServiceDeleteUserApiToken } from '$lib/remotes/users/delete.remote.js'
@@ -18,6 +19,7 @@
 		Input,
 		Notice,
 		Paragraph,
+		Select,
 		Subtitle,
 		Text
 	} from '@imago/ui'
@@ -205,6 +207,108 @@
 			</div>
 		</div>
 		<!-- <pre>{jstr(data.api_keys)}</pre> -->
+	</BaseSection>
+	<BaseSection style="title" title="Storage configuration">
+		<div class="section">
+			<div class="content">
+				<form
+					{...configurationSetStorage.for('resources_storage').enhance(async ({ submit }) => {
+						const valid = await submit()
+						if (valid) {
+							notify.send({ message: 'Resources storage updated' })
+						}
+					})}
+				>
+					<div class="inputs">
+						<Subtitle>Resources storage</Subtitle>
+					</div>
+					<input type="hidden" value="resources_storage" name="kind" />
+					<Select
+						name="id"
+						value={data.configuration.resources_storage ?? undefined}
+						options={data.storages.items.map((storage) => ({
+							label: storage.name,
+							value: storage.id
+						}))}
+						onchange={async () => {
+							const valid = await configurationSetStorage.for('resources_storage').submit()
+							if (valid) {
+								notify.send({ message: 'Resources storage updated' })
+							}
+						}}
+					></Select>
+				</form>
+				<form
+					{...configurationSetStorage.for('products_storage').enhance(async ({ submit }) => {
+						const valid = await submit()
+						if (valid) {
+							notify.send({ message: 'Products storage updated' })
+						}
+					})}
+				>
+					<div class="inputs">
+						<Subtitle>Products storage</Subtitle>
+					</div>
+					<input type="hidden" value="products_storage" name="kind" />
+					<Select
+						name="id"
+						value={data.configuration.products_storage ?? undefined}
+						options={data.storages.items.map((storage) => ({
+							label: storage.name,
+							value: storage.id
+						}))}
+						onchange={async () => {
+							const valid = await configurationSetStorage.for('products_storage').submit()
+							if (valid) {
+								notify.send({ message: 'Products storage updated' })
+							}
+						}}
+					></Select>
+				</form>
+				<form
+					{...configurationSetStorage.for('geographies_storage').enhance(async ({ submit }) => {
+						const valid = await submit()
+						if (valid) {
+							notify.send({ message: 'Geographies storage updated' })
+						}
+					})}
+				>
+					<div class="inputs">
+						<Subtitle>Geographies storage</Subtitle>
+					</div>
+					<input type="hidden" value="geographies_storage" name="kind" />
+					<Select
+						name="id"
+						value={data.configuration.geographies_storage ?? undefined}
+						options={data.storages.items.map((storage) => ({
+							label: storage.name,
+							value: storage.id
+						}))}
+					></Select>
+				</form>
+				<form
+					{...configurationSetStorage.for('tiles_storage').enhance(async ({ submit }) => {
+						const valid = await submit()
+						if (valid) {
+							notify.send({ message: 'Tiles storage updated' })
+						}
+					})}
+				>
+					<div class="inputs">
+						<Subtitle>Tiles storage</Subtitle>
+					</div>
+					<input type="hidden" value="tiles_storage" name="kind" />
+					<Select
+						name="id"
+						value={data.configuration.tiles_storage ?? undefined}
+						options={data.storages.items.map((storage) => ({
+							label: storage.name,
+							value: storage.id
+						}))}
+					></Select>
+				</form>
+			</div>
+		</div>
 	</BaseSection>
 </div>
 
