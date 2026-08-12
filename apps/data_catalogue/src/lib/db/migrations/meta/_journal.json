@@ -127,6 +127,13 @@
       "when": 1786532044264,
       "tag": "0017_third_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786532913610,
+      "tag": "0018_orange_excalibur",
+      "breakpoints": true
     }
   ]
 }
