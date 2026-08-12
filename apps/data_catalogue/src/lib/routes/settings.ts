@@ -2,6 +2,7 @@ import type { Routes, Tab } from '@imago/ui'
 type NavigationFeatures =
 	| 'datasets'
 	| 'groups'
+	| 'data_products'
 	// | 'permissions'
 	| 'registration'
 	| 'users'
@@ -24,6 +25,13 @@ export const settings_routes: Record<
 		route: {
 			label: 'Datasets',
 			href: `/admin/settings/datasets`
+		}
+	}),
+	data_products: () => ({
+		group: 'Settings',
+		route: {
+			label: 'Data products',
+			href: `/admin/settings/data-products`
 		}
 	}),
 	groups: () => ({
