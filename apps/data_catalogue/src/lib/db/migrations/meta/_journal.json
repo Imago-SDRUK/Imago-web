@@ -134,6 +134,13 @@
       "when": 1786532913610,
       "tag": "0018_orange_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786545139264,
+      "tag": "0019_massive_emma_frost",
+      "breakpoints": true
     }
   ]
 }

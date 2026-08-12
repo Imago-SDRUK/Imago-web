@@ -8,7 +8,7 @@ export const configuration = pgTable(
 		id: text().unique().primaryKey().default('config'),
 		admin_group: uuid(),
 		superusers: uuid().array().default([]),
-		downloads_storage: uuid().references(() => storages.id, { onDelete: 'set null' }),
+		resources_storage: uuid().references(() => storages.id, { onDelete: 'set null' }),
 		products_storage: uuid().references(() => storages.id, { onDelete: 'set null' }),
 		geographies_storage: uuid().references(() => storages.id, { onDelete: 'set null' }),
 		tiles_storage: uuid().references(() => storages.id, { onDelete: 'set null' })
