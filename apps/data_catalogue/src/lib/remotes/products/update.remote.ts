@@ -5,7 +5,7 @@ import { error } from '@sveltejs/kit'
 import { type } from 'arktype'
 
 // import { createInsertSchema } from 'drizzle-arktype'
-export const productCreate = form(
+export const productUpdate = form(
 	type({
 		id: 'string',
 		'name?': 'string',
