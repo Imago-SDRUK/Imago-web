@@ -8,18 +8,18 @@ import { type } from 'arktype'
 export const productOptionCreate = form(
 	type({
 		name: 'string > 1',
-		type: 'string',
-		value: 'string'
+		value: 'string',
+		group: 'string.uuid'
 	}),
-	async ({ name, type, value }) => {
+	async ({ name, value, group }) => {
 		const { locals } = getRequestEvent()
 		const [errors] = await productOptionCreateController({
 			session: locals.session,
 			configuration: locals.configuration,
 			data: {
 				name,
-				type,
-				value
+				value,
+				group_id: group
 			}
 		})
 		if (errors !== null) {
