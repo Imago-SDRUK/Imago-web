@@ -8,8 +8,8 @@ import { type } from 'arktype'
 export const productCreate = form(
 	type({
 		name: 'string > 1',
-		versions: 'string[]',
-		years: 'number[]'
+		versions: 'string[] > 0',
+		years: 'number[] > 0'
 	}),
 	async ({ name, versions, years }) => {
 		const { locals } = getRequestEvent()
