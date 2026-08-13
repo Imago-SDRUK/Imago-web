@@ -7,7 +7,8 @@ import {
 	index,
 	primaryKey,
 	pgEnum,
-	jsonb
+	jsonb,
+	boolean
 } from 'drizzle-orm/pg-core'
 import { users } from './users'
 import { DateTime } from 'luxon'
@@ -129,11 +130,43 @@ export const product_options = pgTable(
 			.$defaultFn(() => uuidv7()),
 		name: text().unique().notNull(),
 		value: text().notNull(),
-		// not enforcing any types
-		type: text().notNull()
+		group_id: uuid().references(() => product_option_groups.id, { onDelete: 'set null' })
 	},
-	(table) => [index('product_options_type_idx').on(table.type)]
+	(table) => [index('product_options_product_option_groups_idx').on(table.group_id)]
 )
+
+export const product_option_groups = pgTable('product_option_groups', {
+	created_by: uuid()
+		.references(() => users.id, { onDelete: 'no action' })
+		.notNull(),
+	updated_by: uuid()
+		.references(() => users.id, { onDelete: 'no action' })
+		.notNull(),
+	created_at: timestamp({
+		mode: 'date',
+		precision: 3,
+		withTimezone: true
+	})
+		.defaultNow()
+		.notNull(),
+	updated_at: timestamp({
+		mode: 'date',
+		precision: 3,
+		withTimezone: true
+	})
+		.defaultNow()
+		.notNull()
+		.$onUpdateFn(() => DateTime.now().toBSON()),
+	id: uuid()
+		.primaryKey()
+		.$defaultFn(() => uuidv7()),
+	name: text().unique().notNull(),
+	value: text().notNull(),
+	multiple: boolean().default(false).notNull(),
+	required: boolean().default(true).notNull(),
+	min_selection: integer().default(1).notNull(),
+	max_selection: integer().default(1).notNull()
+})
 
 export const product_requests = pgTable(
 	'product_requests',
@@ -190,9 +223,7 @@ export const product_resources = pgTable(
 			mode: 'date',
 			precision: 3,
 			withTimezone: true
-		})
-			.defaultNow()
-			.notNull(),
+		}).notNull(),
 		updated_at: timestamp({
 			mode: 'date',
 			precision: 3,
@@ -258,6 +289,8 @@ export type Product = typeof products.$inferSelect
 export type ProductInsert = typeof products.$inferInsert
 export type ProductOption = typeof product_options.$inferSelect
 export type ProductOptionInsert = typeof product_options.$inferInsert
+export type ProductOptionGroup = typeof product_option_groups.$inferSelect
+export type ProductOptionGroupInsert = typeof product_option_groups.$inferInsert
 export type ProductsProductOptions = typeof products_product_options.$inferSelect
 export type ProductsProductOptionsInsert = typeof products_product_options.$inferInsert
 export type ProductRequest = typeof product_requests.$inferSelect

@@ -28,6 +28,7 @@ export { storages } from '../../server/entities/models/storage'
 export {
 	products,
 	product_options,
+	product_option_groups,
 	product_resources,
 	product_requests,
 	products_product_options,

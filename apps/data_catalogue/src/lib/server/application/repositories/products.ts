@@ -4,7 +4,11 @@ import type {
 	ProductInsert,
 	Product,
 	ProductOptionInsert,
-	ProductOption
+	ProductOption,
+	ProductsProductOptions,
+	ProductsProductOptionsInsert,
+	ProductOptionGroupInsert,
+	ProductOptionGroup
 } from '$lib/server/entities/models/products'
 
 export type IProductsRepository = {
@@ -19,7 +23,7 @@ export type IProductsRepository = {
 	}: {
 		id: string
 		tx?: Transaction
-	}) => Promise<[ErrTypes, null] | [null, Product]>
+	}) => Promise<[ErrTypes, null] | [null, Product & { options: ProductOption[] }]>
 	listProducts: ({
 		limit,
 		offset
@@ -50,7 +54,6 @@ export type IProductsRepository = {
 		data: ProductOptionInsert
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ProductOption]>
-
 	getProductOption: ({
 		id
 	}: {
@@ -77,6 +80,68 @@ export type IProductsRepository = {
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ProductOption]>
 	deleteProductOption: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, null]>
+	addOptionToProduct: ({
+		data
+	}: {
+		data: ProductsProductOptionsInsert
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductsProductOptions]>
+	removeOptionToProduct: ({
+		data
+	}: {
+		data: ProductsProductOptionsInsert
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, null]>
+	getProductOptions: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductsProductOptions[]]>
+	getProductOptionsByGroup: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, (ProductOptionGroup & { options: ProductOption[] })[]]>
+
+	createProductOptionGroup: ({
+		data
+	}: {
+		data: ProductOptionGroupInsert
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductOptionGroup]>
+	getProductOptionGroup: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductOptionGroup]>
+	listProductOptionGroups: ({
+		limit,
+		offset
+	}: {
+		ids?: string[]
+		limit: number
+		offset: number
+		tx?: Transaction
+	}) => Promise<
+		| [ErrTypes, null]
+		| [null, { items: ProductOptionGroup[]; total: number; offset: number; limit: number }]
+	>
+	updateProductOptionGroup: ({
+		id
+	}: {
+		id: string
+		data: Partial<ProductOptionGroupInsert>
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductOptionGroup]>
+	deleteProductOptionGroup: ({
 		id
 	}: {
 		id: string
