@@ -80,3 +80,81 @@ export const productsListUseCase = async ({
 	log.trace({ returning: 'productsListUseCase' })
 	return ok(product)
 }
+
+export const productOptionGetUseCase = async ({
+	id,
+	products_repository,
+	session,
+	configuration,
+	authorisation_module,
+	tx
+}: {
+	id: string
+	products_repository: IProductsRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		// TODO: create Product namespace if required?
+		namespace: 'Action',
+		object: 'products',
+		permits: 'create',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [errs_product, product] = await products_repository.getProductOption({
+		id,
+		tx
+	})
+	if (errs_product !== null) {
+		return err(errs_product)
+	}
+	log.trace({ returning: 'productOptionGetUseCase' })
+	return ok(product)
+}
+
+export const productOptionsListUseCase = async ({
+	ids,
+	limit,
+	offset,
+	products_repository,
+	session,
+	configuration,
+	authorisation_module,
+	tx
+}: {
+	ids?: string[]
+	limit: number
+	offset: number
+	products_repository: IProductsRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		// TODO: create Product namespace if required?
+		namespace: 'Action',
+		object: 'products',
+		permits: 'create',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [errs_product, product] = await products_repository.listProductOptions({
+		ids,
+		limit,
+		offset,
+		tx
+	})
+	if (errs_product !== null) {
+		return err(errs_product)
+	}
+	log.trace({ returning: 'productOptionsListUseCase' })
+	return ok(product)
+}
