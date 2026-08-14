@@ -16,7 +16,7 @@ import { type Product, type ProductOption } from '$lib/server/entities/models/pr
 const presenter = ({ product }: { product: Product & { options: ProductOption[] } }) => {
 	return {
 		...product,
-		options: product.options.map((opt) => opt.name).join(`, `)
+		options: product.options.map((opt) => opt.id)
 	}
 }
 

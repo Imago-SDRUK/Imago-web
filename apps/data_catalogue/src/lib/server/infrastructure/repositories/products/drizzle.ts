@@ -139,7 +139,14 @@ const deleteProductOption: IProductsRepository['deleteProductOption'] = async ({
 const getProductOption: IProductsRepository['getProductOption'] = async ({ id, tx }) => {
 	try {
 		const _db = tx ?? db
-		const product = await _db.select().from(product_options).where(eq(product_options.id, id))
+		const product = await _db
+			.select({
+				...getTableColumns(product_options),
+				group: product_option_groups.name
+			})
+			.from(product_options)
+			.where(eq(product_options.id, id))
+			.leftJoin(product_option_groups, eq(product_option_groups.id, product_options.group_id))
 		if (product.length === 1) {
 			return ok(product[0])
 		}
@@ -159,9 +166,13 @@ const listProductOptions: IProductsRepository['listProductOptions'] = async ({
 		const _db = tx ?? db
 		// TODO: add pagination
 		const results = await _db
-			.select()
+			.select({
+				...getTableColumns(product_options),
+				group: product_option_groups.name
+			})
 			.from(product_options)
 			.where(ids ? inArray(product_options.id, ids) : undefined)
+			.leftJoin(product_option_groups, eq(product_option_groups.id, product_options.group_id))
 		return ok({ limit, offset, items: results, total: results.length })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
@@ -192,7 +203,11 @@ const updateProductOption: IProductsRepository['updateProductOption'] = async ({
 const addOptionToProduct: IProductsRepository['addOptionToProduct'] = async ({ tx, data }) => {
 	try {
 		const _db = tx ?? db
-		const product = await _db.insert(products_product_options).values(data).returning()
+		const product = await _db
+			.insert(products_product_options)
+			.values(data)
+			.onConflictDoNothing()
+			.returning()
 		if (product.length === 1) {
 			return ok(product[0])
 		}

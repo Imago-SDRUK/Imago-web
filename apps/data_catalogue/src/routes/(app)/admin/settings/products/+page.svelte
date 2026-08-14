@@ -1,9 +1,4 @@
 <script lang="ts">
-	import type {
-		Product,
-		ProductOption,
-		ProductOptionGroup
-	} from '$lib/server/entities/models/products.js'
 	import { page } from '$app/state'
 	import Dialog from '$lib/ui/cards/dialog.svelte'
 	import BaseTable from '$lib/ui/tables/base_table.svelte'
@@ -37,6 +32,8 @@
 	import { productDelete } from '$lib/remotes/products/delete.remote'
 	import { productOptionGroupCreate } from '$lib/remotes/products/options/groups/create.remote.js'
 	import { productOptionGroupDelete } from '$lib/remotes/products/options/groups/delete.remote'
+	import { productUpdate } from '$lib/remotes/products/update.remote'
+	import CardSearch from '$lib/ui/cards/card_search.svelte'
 
 	let { data } = $props()
 
@@ -58,7 +55,7 @@
 		) ?? -1
 	)
 	const products_columns: (IColumnConfig & {
-		id: keyof Product
+		id: keyof (typeof data.products.items)[0]
 		// id: 'first_name' | 'last_name' | 'id' | 'email' | 'groups'
 	})[] = [
 		{
@@ -91,7 +88,7 @@
 		}
 	]
 	const product_options_columns: (IColumnConfig & {
-		id: keyof ProductOption
+		id: keyof (typeof data.product_options.items)[0]
 		// id: 'first_name' | 'last_name' | 'id' | 'email' | 'groups'
 	})[] = [
 		{
@@ -106,7 +103,7 @@
 			width: 300
 		},
 		{
-			id: 'group_id',
+			id: 'group',
 			header: 'Group',
 			cell: CellText
 		},
@@ -124,7 +121,7 @@
 		}
 	]
 	const product_option_groups_columns: (IColumnConfig & {
-		id: keyof ProductOptionGroup
+		id: keyof (typeof data.product_option_groups.items)[0]
 		// id: 'first_name' | 'last_name' | 'id' | 'email' | 'groups'
 	})[] = [
 		{
@@ -164,6 +161,10 @@
 	let versions: string[] = $state([])
 	let years: number[] = $state([])
 	let options: string[] = $state([])
+	let product_update = $derived.by(() => {
+		let value = $state(data.product)
+		return value
+	})
 	const ESCAPE_KEYS = ['Enter', ',']
 </script>
 
@@ -211,45 +212,211 @@
 			</div>
 		{/snippet}
 		{#snippet rightCol()}
-			{#if data.product}
-				{@const product = data.product}
+			{#if product_update}
+				{@const form = productUpdate.for(product_update.id)}
 				<div class="content">
 					<ActionBar>
 						{#snippet left()}
 							<Subtitle>
-								{product.name}
+								{data.product?.name}
 							</Subtitle>
 						{/snippet}
 						{#snippet right()}
 							<Button
 								onclick={() => {
-									toggleDialog(`delete-product-${product.id}`)
+									toggleDialog(`delete-product-${product_update.id}`)
 								}}
 							>
 								<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
 							</Button>
 						{/snippet}
 					</ActionBar>
-					<Facts record={product}></Facts>
+					<Facts record={product_update}></Facts>
+					<form
+						{...form.enhance(async ({ submit }) => {
+							const valid = await submit()
+							if (valid) {
+								notify.send({ message: `Product updated` })
+							}
+						})}
+					>
+						<input {...form.fields.id.as('hidden', product_update.id)} />
+						<Input label="Name" required>
+							{#each form.fields.name.issues() as issue}
+								<Notice level="negative">
+									<Paragraph>{issue.message}</Paragraph>
+								</Notice>
+							{/each}
+							<Text {...form.fields.name.as('text', product_update.name)}></Text>
+						</Input>
+						<Input label="Versions" required>
+							<div
+								class="tags-input"
+								data-open={product_update.versions?.length > 0 ? true : undefined}
+							>
+								{#each form.fields.versions.issues() as issue}
+									<Notice level="negative">
+										<Paragraph>{issue.message}</Paragraph>
+									</Notice>
+								{/each}
+								<Text
+									onkeydown={(e) => {
+										if (ESCAPE_KEYS.includes(e.key)) {
+											e.preventDefault()
+										}
+									}}
+									onkeyup={(e) => {
+										if (ESCAPE_KEYS.includes(e.key)) {
+											e.preventDefault()
+											const value = e.currentTarget.value
+											if (value !== '') {
+												if (product_update.versions?.includes(value)) {
+													notify.send({ message: `Values must be unique` })
+													return
+												}
+												product_update.versions?.push(e.currentTarget.value)
+												e.currentTarget.value = ''
+											}
+										}
+									}}
+								></Text>
+								<div class="values">
+									{#each product_update.versions as version, idx}
+										<input {...form.fields.versions[idx].as('hidden', version)} />
+										<Button
+											active
+											onclick={() => {
+												if (product_update.versions) {
+													console.log(product_update.versions)
+													product_update.versions = [
+														...product_update.versions?.slice(0, idx),
+														...product_update.versions?.slice(idx + 1)
+													]
+													console.log(product_update.versions)
+												}
+											}}
+											type="button"
+											style="tag">{version}</Button
+										>
+									{/each}
+								</div>
+							</div>
+						</Input>
+						<Input label="Years" required>
+							<div
+								class="tags-input"
+								data-open={product_update.years?.length > 0 ? true : undefined}
+							>
+								{#each form.fields.years.issues() as issue}
+									<Notice level="negative">
+										<Paragraph>{issue.message}</Paragraph>
+									</Notice>
+								{/each}
+
+								<Numerical
+									onkeydown={(e) => {
+										if (ESCAPE_KEYS.includes(e.key)) {
+											e.preventDefault()
+										}
+									}}
+									onkeyup={(e) => {
+										if (ESCAPE_KEYS.includes(e.key)) {
+											e.preventDefault()
+											const value = Number(e.currentTarget.value)
+											if (value && !Number.isNaN(value)) {
+												if (product_update.years?.includes(value)) {
+													notify.send({ message: `Values must be unique` })
+													return
+												}
+												product_update.years?.push(value)
+												e.currentTarget.value = ''
+											}
+										}
+									}}
+								></Numerical>
+								<div class="values">
+									{#each product_update.years as year, idx}
+										<input {...form.fields.years[idx].as('hidden', year)} />
+										<Button
+											active
+											onclick={() => {
+												product_update.years = [
+													...product_update.years?.slice(0, idx),
+													...product_update.years?.slice(idx + 1)
+												]
+											}}
+											type="button"
+											style="tag">{year}</Button
+										>
+									{/each}
+								</div>
+							</div>
+						</Input>
+						<Input label="Options" required>
+							<div
+								class="tags-input"
+								data-open={product_update.options.length > 0 ? true : undefined}
+							>
+								{#each form.fields.options.issues() as issue}
+									<Notice level="negative">
+										<Paragraph>{issue.message}</Paragraph>
+									</Notice>
+								{/each}
+								<CardSearch data={data.product_options.items} key="name">
+									{#snippet result({ result, clear })}
+										<Button
+											onclick={() => {
+												if (product_update.options?.includes(result.id)) {
+													notify.send({ message: `Values must be unique` })
+													return
+												}
+												product_update.options?.push(result.id)
+												clear()
+											}}>{result.name}</Button
+										>
+									{/snippet}
+								</CardSearch>
+								<div class="values">
+									{#each product_update.options as option, idx}
+										<input {...form.fields.options[idx].as('hidden', option)} />
+										<Button
+											onclick={() => {
+												product_update.options = [
+													...product_update.options.slice(0, idx),
+													...product_update.options.slice(idx + 1)
+												]
+											}}
+											type="button"
+											style="tag"
+											>{data.product_options.items.find((po) => po.id === option)?.name}</Button
+										>
+									{/each}
+								</div>
+							</div>
+						</Input>
+						<div class="buttons">
+							<Button>Save</Button>
+						</div>
+					</form>
 				</div>
-				<Dialog id={`delete-product-${product.id}`}>
+				<Dialog id={`delete-product-${product_update.id}`}>
 					<form
 						{...productDelete.enhance(async ({ submit }) => {
 							const valid = await submit()
 							if (valid) {
-								toggleDialog(`delete-product-${product.id}`)
+								toggleDialog(`delete-product-${product_update.id}`)
 								notify.send({ message: `Product deleted` })
 								goto(resolve(page.url.pathname))
 							}
 						})}
 					>
 						<Subtitle>Are you sure you want to delete this product?</Subtitle>
-						<input {...productDelete.fields.id.as('hidden', product.id)} />
+						<input {...productDelete.fields.id.as('hidden', product_update.id)} />
 						<div class="buttons">
 							<Button
 								type="button"
 								onclick={() => {
-									toggleDialog(`delete-product-${product.id}`)
+									toggleDialog(`delete-product-${product_update.id}`)
 								}}>Cancel</Button
 							>
 							<Button>Confirm</Button>
@@ -545,6 +712,7 @@
 						{#each years as year, idx}
 							<input {...productCreate.fields.years[idx].as('hidden', year)} />
 							<Button
+								active
 								onclick={() => {
 									years = [...years.slice(0, idx), ...years.slice(idx + 1)]
 								}}
@@ -563,13 +731,22 @@
 							<Paragraph>{issue.message}</Paragraph>
 						</Notice>
 					{/each}
-					<Select
-						{...productCreate.fields.options.as('select multiple')}
-						options={data.product_options.items.map((opt) => ({
-							label: `${opt.name}`,
-							value: opt.id
-						}))}
-					></Select>
+					<CardSearch data={data.product_options.items} key="name">
+						{#snippet result({ result, clear })}
+							<Button
+								type="button"
+								onclick={() => {
+									if (options?.includes(result.id)) {
+										notify.send({ message: `Values must be unique` })
+										return
+									}
+									options?.push(result.id)
+									clear()
+								}}>{result.name}</Button
+							>
+						{/snippet}
+					</CardSearch>
+
 					<!-- onchange={(value) => { -->
 					<!-- 							if (typeof value === 'string') { -->
 					<!-- 								if (!options.includes(value)) { -->
@@ -633,14 +810,7 @@
 				{/each}
 				<Text {...productOptionCreate.fields.name.as('text')}></Text>
 			</Input>
-			<Input label="Type" required>
-				{#each productOptionCreate.fields.type.issues() as issue}
-					<Notice level="negative">
-						<Paragraph>{issue.message}</Paragraph>
-					</Notice>
-				{/each}
-				<Text {...productOptionCreate.fields.type.as('text')}></Text>
-			</Input>
+
 			<Input label="Value" required>
 				{#each productOptionCreate.fields.value.issues() as issue}
 					<Notice level="negative">
@@ -648,6 +818,20 @@
 					</Notice>
 				{/each}
 				<Text {...productOptionCreate.fields.value.as('text')}></Text>
+			</Input>
+			<Input label="Group" required>
+				{#each productOptionCreate.fields.group.issues() as issue}
+					<Notice level="negative">
+						<Paragraph>{issue.message}</Paragraph>
+					</Notice>
+				{/each}
+				<Select
+					options={data.product_option_groups.items.map((pog) => ({
+						label: pog.name,
+						value: pog.id
+					}))}
+					{...productOptionCreate.fields.group.as('select')}
+				></Select>
 			</Input>
 		</div>
 		<div class="buttons">

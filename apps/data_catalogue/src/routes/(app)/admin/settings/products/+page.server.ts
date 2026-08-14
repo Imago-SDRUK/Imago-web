@@ -46,7 +46,7 @@ export const load = async ({ locals, url }) => {
 		error(...errFmt(product_option_groups_errors))
 	}
 
-	let product: Product | null = null
+	let product: (Product & { options: string[] }) | null = null
 	let product_option: ProductOption | null = null
 	let product_option_group: ProductOptionGroup | null = null
 	const edit_product = url.searchParams.get('edit-product')

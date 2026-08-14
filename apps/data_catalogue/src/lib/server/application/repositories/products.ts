@@ -70,7 +70,15 @@ export type IProductsRepository = {
 		tx?: Transaction
 	}) => Promise<
 		| [ErrTypes, null]
-		| [null, { items: ProductOption[]; total: number; offset: number; limit: number }]
+		| [
+				null,
+				{
+					items: (ProductOption & { group: string | null })[]
+					total: number
+					offset: number
+					limit: number
+				}
+		  ]
 	>
 	updateProductOption: ({
 		id
