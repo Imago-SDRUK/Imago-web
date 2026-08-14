@@ -105,12 +105,21 @@ export type IProductsRepository = {
 		data: ProductsProductOptionsInsert
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, null]>
-	getProductOptions: ({
-		id
-	}: {
-		id: string
-		tx?: Transaction
-	}) => Promise<[ErrTypes, null] | [null, ProductsProductOptions[]]>
+	getProductOptions: ({ id }: { id: string; tx?: Transaction }) => Promise<
+		| [ErrTypes, null]
+		| [
+				null,
+				{
+					group: string
+					group_id: string
+					required: boolean
+					multiple: boolean
+					min_selection: number
+					max_selection: number
+					options: Partial<ProductOption>[]
+				}[]
+		  ]
+	>
 	getProductOptionsByGroup: ({
 		id
 	}: {

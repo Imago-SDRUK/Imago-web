@@ -8,6 +8,7 @@ import {
 	productOptionGetUseCase,
 	productOptionGroupGetUseCase,
 	productOptionGroupsListUseCase,
+	productOptionsGetUseCase,
 	productOptionsListUseCase,
 	productsListUseCase
 } from '$lib/server/application/use_cases/products/get'
@@ -145,6 +146,38 @@ export const productOptionsListController = async ({
 				ids,
 				limit,
 				offset,
+				products_repository: getProductRepositoryModule(),
+				...getServerContext({ session, configuration, tx })
+			})
+			if (product_errors !== null) {
+				return err(product_errors)
+			}
+			return ok(product)
+		}
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(results)
+}
+
+export const productGetOptionsController = async ({
+	session,
+	id,
+	configuration
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+	id: string
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const tx_service = getTransactionModule()
+	const [errors, results] = await tx_service.startTransaction({
+		clb: async (tx) => {
+			const [product_errors, product] = await productOptionsGetUseCase({
+				id,
 				products_repository: getProductRepositoryModule(),
 				...getServerContext({ session, configuration, tx })
 			})

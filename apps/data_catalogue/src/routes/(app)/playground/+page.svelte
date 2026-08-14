@@ -1,201 +1,14 @@
 <script lang="ts">
-	import type { ProductsProductOptions } from '$lib/server/entities/models/products.js'
-	import type { Product, ProductOption } from '$lib/db/schema/index.js'
 	import { createPlaygroundRequest } from '$lib/remotes/playground/create.remote'
 	import { notify } from '$lib/stores/notify.js'
-	import { capitalise } from '@arturoguzman/art-ui'
 	import { BaseSection, Button, Input, Notice, Paragraph, Select, Subtitle } from '@imago/ui'
-	import { DateTime } from 'luxon'
+	import { productGetOptions } from '$lib/remotes/products/read.remote.js'
 
 	let { data } = $props()
-	const products: Product[] = [
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			id: '272b7c3a-650d-4bb8-b9bb-e85c27261540',
-			name: 'SPF',
-			versions: ['0.0.1', '0.0.2', '0.1.0', '1.0.0', '2.0.0'],
-			years: [2017, 2018, 2019]
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			id: 'ed4d0894-fcea-4ec4-9a1a-bc5de4415494',
-			name: 'Clive',
-			versions: ['0.0.1', '0.0.2', '0.0.3'],
-			years: [2022, 2023, 2024, 2025]
-		}
-	]
-	const product_options: ProductOption[] = [
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			id: 'd7478316-a059-47bb-83ff-ac1e49a3b706',
-			name: 'First geography',
-			type: 'geography',
-			value: 'first_geography'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			id: '63fe24ae-5952-4cf2-abea-9ffc301ce39e',
-			name: 'Second geography',
-			type: 'geography',
-			value: 'second_geography'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			id: 'a9c093c8-0182-45df-b4b2-265f0c414249',
-			name: 'Arithmetic mean',
-			type: 'aggregation',
-			value: 'arithmetic_mean'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			id: 'ccbb4c2e-b558-4a66-9452-1b8965debb94',
-			name: 'Another mean',
-			type: 'aggregation',
-			value: 'another_mean'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			id: '03c83cb0-e736-4d5d-b48c-7f7dfccd92e6',
-			name: 'Cloud probability',
-			type: 'band',
-			value: 'cloud_probability'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			id: 'ef05598a-1c15-418f-a8d8-d61812113139',
-			name: 'Another probability band',
-			type: 'band',
-			value: 'another_probability'
-		}
-	]
-	const manys: ProductsProductOptions[] = [
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: '272b7c3a-650d-4bb8-b9bb-e85c27261540',
-			product_option_id: 'd7478316-a059-47bb-83ff-ac1e49a3b706'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: '272b7c3a-650d-4bb8-b9bb-e85c27261540',
-			product_option_id: '63fe24ae-5952-4cf2-abea-9ffc301ce39e'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: '272b7c3a-650d-4bb8-b9bb-e85c27261540',
-			product_option_id: 'a9c093c8-0182-45df-b4b2-265f0c414249'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: '272b7c3a-650d-4bb8-b9bb-e85c27261540',
-			product_option_id: '03c83cb0-e736-4d5d-b48c-7f7dfccd92e6'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: 'ed4d0894-fcea-4ec4-9a1a-bc5de4415494',
-			product_option_id: 'd7478316-a059-47bb-83ff-ac1e49a3b706'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: 'ed4d0894-fcea-4ec4-9a1a-bc5de4415494',
-			product_option_id: '63fe24ae-5952-4cf2-abea-9ffc301ce39e'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: 'ed4d0894-fcea-4ec4-9a1a-bc5de4415494',
-			product_option_id: 'a9c093c8-0182-45df-b4b2-265f0c414249'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: 'ed4d0894-fcea-4ec4-9a1a-bc5de4415494',
-			product_option_id: 'ccbb4c2e-b558-4a66-9452-1b8965debb94'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: 'ed4d0894-fcea-4ec4-9a1a-bc5de4415494',
-			product_option_id: '03c83cb0-e736-4d5d-b48c-7f7dfccd92e6'
-		},
-		{
-			created_at: DateTime.now().toJSDate(),
-			updated_at: DateTime.now().toJSDate(),
-			created_by: '',
-			updated_by: '',
-			product_id: 'ed4d0894-fcea-4ec4-9a1a-bc5de4415494',
-			product_option_id: 'ef05598a-1c15-418f-a8d8-d61812113139'
-		}
-	]
+	const products = $derived(data.products)
 
 	let selected = $state('')
-	const product = $derived(products.find((product) => product.id === selected))
-	const available_options = $derived(
-		manys.filter((ppo) => ppo.product_id === selected).map((ppo) => ppo.product_option_id)
-	)
-	const options = $derived(
-		product_options
-			.filter((option) => available_options.includes(option.id))
-			.reduce(
-				(acc, option) => {
-					const index = acc.findIndex((o) => o.group.toLowerCase() === option.type.toLowerCase())
-					if (index === -1) {
-						acc.push({ group: capitalise(option.type), options: [option] })
-						return acc
-					}
-					acc[index].options.push(option)
-					return acc
-				},
-				[] as { group: string; options: ProductOption[] }[]
-			)
-	)
+	const product = $derived(products.items.find((product) => product.id === selected))
 </script>
 
 <BaseSection>
@@ -208,7 +21,7 @@
 				magnam totam placeat suscipit molestias.</Paragraph
 			>
 			<form
-				{...createPlaygroundRequest.enhance(async ({ submit, element }) => {
+				{...createPlaygroundRequest.enhance(async ({ submit }) => {
 					const valid = await submit()
 					if (valid) {
 						notify.send({ message: `Your request has been submitted` })
@@ -226,7 +39,10 @@
 							{/each}
 						{/snippet}
 						<Select
-							options={products.map((product) => ({ label: product.name, value: product.id }))}
+							options={products.items.map((product) => ({
+								label: product.name,
+								value: product.id
+							}))}
 							name="data_product"
 							bind:value={selected}
 						></Select>
@@ -262,25 +78,27 @@
 								></Select>
 							</Input>
 						{/if}
-						{#each options as group, index}
-							<Input label={group.group}>
-								{#snippet message()}
-									{#each createPlaygroundRequest.fields.options[index].issues() as issue}
-										<Notice level="negative">
-											<Paragraph>{issue.message}</Paragraph>
-										</Notice>
-									{/each}
-								{/snippet}
-								<Select
-									{...createPlaygroundRequest.fields.options[index].as('select')}
-									options={group.options.map((option) => ({
-										label: option.name,
-										value: option.value
-									}))}
-								></Select>
-							</Input>
-							<pre></pre>
-						{/each}
+						{#if selected !== ''}
+							{#each await productGetOptions({ id: selected }) as option_group, index}
+								<Input label={String(option_group.group)}>
+									{#snippet message()}
+										{#each createPlaygroundRequest.fields.options[index].issues() as issue}
+											<Notice level="negative">
+												<Paragraph>{issue.message}</Paragraph>
+											</Notice>
+										{/each}
+									{/snippet}
+									<Select
+										required={option_group.required}
+										{...createPlaygroundRequest.fields.options[index].as('select')}
+										options={option_group.options.map((option) => ({
+											label: option.name ?? '',
+											value: option.id ?? option.value ?? ''
+										}))}
+									></Select>
+								</Input>
+							{/each}
+						{/if}
 					{/key}
 				</div>
 				<div class="buttons">

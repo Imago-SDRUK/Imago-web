@@ -77,11 +77,33 @@ const getProduct: IProductsRepository['getProduct'] = async ({ id, tx }) => {
 const getProductOptions: IProductsRepository['getProductOptions'] = async ({ id, tx }) => {
 	try {
 		const _db = tx ?? db
-		const product_options = await _db
-			.select()
+		const result = await _db
+			.select({
+				group: product_option_groups.name,
+				group_id: product_option_groups.id,
+				required: product_option_groups.required,
+				multiple: product_option_groups.multiple,
+				min_selection: product_option_groups.min_selection,
+				max_selection: product_option_groups.max_selection,
+				options: sql<ProductOption[]>`
+      coalesce(
+        json_agg(
+          distinct jsonb_build_object(
+            'id', ${product_options.id},
+            'name', ${product_options.name},
+            'value', ${product_options.value}
+          )
+        ) filter (where ${product_options.id} is not null),
+        '[]'::json
+      )
+    `.as('options')
+			})
 			.from(products_product_options)
 			.where(eq(products_product_options.product_id, id))
-		return ok(product_options)
+			.leftJoin(product_options, eq(product_options.id, products_product_options.product_option_id))
+			.leftJoin(product_option_groups, eq(product_options.group_id, product_option_groups.id))
+			.groupBy(product_option_groups.id)
+		return ok(result)
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}

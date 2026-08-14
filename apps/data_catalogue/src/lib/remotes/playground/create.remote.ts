@@ -11,7 +11,7 @@ export const createPlaygroundRequest = form(
 		options: 'string[]'
 	}),
 	async ({ data_product, year, version, options }) => {
-		// TODO: depending on the product, fetch the options and evaluate if at least one of each option type is selected
+		// TODO: create request, return url or request pipeline and return notification
 		console.log({ data_product, year, version, options })
 		return {
 			message: 'ok'

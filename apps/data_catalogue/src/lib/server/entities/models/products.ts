@@ -136,6 +136,9 @@ export const product_options = pgTable(
 )
 
 export const product_option_groups = pgTable('product_option_groups', {
+	id: uuid()
+		.primaryKey()
+		.$defaultFn(() => uuidv7()),
 	created_by: uuid()
 		.references(() => users.id, { onDelete: 'no action' })
 		.notNull(),
@@ -157,9 +160,6 @@ export const product_option_groups = pgTable('product_option_groups', {
 		.defaultNow()
 		.notNull()
 		.$onUpdateFn(() => DateTime.now().toBSON()),
-	id: uuid()
-		.primaryKey()
-		.$defaultFn(() => uuidv7()),
 	name: text().unique().notNull(),
 	value: text().notNull(),
 	multiple: boolean().default(false).notNull(),
