@@ -5,6 +5,7 @@ import { db } from '$lib/db'
 import {
 	product_option_groups,
 	product_options,
+	product_requests,
 	products,
 	products_product_options
 } from '$lib/db/schema'
@@ -380,6 +381,38 @@ const updateProductOptionGroup: IProductsRepository['updateProductOptionGroup'] 
 	}
 }
 
+const createProductRequest: IProductsRepository['createProductRequest'] = async ({ tx, data }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.insert(product_requests).values(data).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProductRequests: IProductsRepository['listProductRequests'] = async ({
+	tx,
+	limit,
+	offset,
+	ids
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_requests)
+			.where(ids ? inArray(product_options.id, ids) : undefined)
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	createProduct,
 	deleteProduct,
@@ -399,5 +432,7 @@ export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	getProductOptionGroup,
 	listProductOptionGroups,
 	updateProductOptionGroup,
-	getProductOptionsByGroup
+	getProductOptionsByGroup,
+	createProductRequest,
+	listProductRequests
 }

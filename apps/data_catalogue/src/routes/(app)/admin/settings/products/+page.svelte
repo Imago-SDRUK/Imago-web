@@ -18,7 +18,8 @@
 		handleSearchParams,
 		Select,
 		Subtitle,
-		Checkbox
+		Checkbox,
+		BaseSection
 	} from '@imago/ui'
 	import type { IColumnConfig } from '@svar-ui/svelte-grid'
 	import { productCreate } from '$lib/remotes/products/create.remote'
@@ -143,6 +144,49 @@
 		{
 			id: 'multiple',
 			header: 'Multiple',
+			cell: CellText
+		},
+		{
+			id: 'created_at',
+			header: 'Created at',
+			cell: CellText,
+			width: 350
+		},
+		{
+			id: 'updated_at',
+			header: 'Updated at',
+			cell: CellText,
+			width: 350
+		}
+	]
+	const product_requests_columns: (IColumnConfig & {
+		id: keyof (typeof data.product_requests.items)[0]
+		// id: 'first_name' | 'last_name' | 'id' | 'email' | 'groups'
+	})[] = [
+		{
+			id: 'product_id',
+			header: 'Product id',
+			cell: CellText,
+			width: 300
+		},
+		{
+			id: 'year',
+			header: 'Year',
+			cell: CellText
+		},
+		{
+			id: 'version',
+			header: 'Version',
+			cell: CellText
+		},
+		{
+			id: 'options',
+			header: 'Options',
+			cell: CellText
+		},
+		{
+			id: 'status',
+			header: 'Status',
 			cell: CellText
 		},
 		{
@@ -608,6 +652,9 @@
 			{/if}
 		{/snippet}
 	</SectionEdit>
+	<BaseSection style="title" title="Product requests">
+		<BaseTable columns={product_requests_columns} data={data.product_requests.items}></BaseTable>
+	</BaseSection>
 </div>
 <Dialog id="add-product">
 	<form

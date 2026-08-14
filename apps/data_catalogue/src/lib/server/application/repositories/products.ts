@@ -8,7 +8,9 @@ import type {
 	ProductsProductOptions,
 	ProductsProductOptionsInsert,
 	ProductOptionGroupInsert,
-	ProductOptionGroup
+	ProductOptionGroup,
+	ProductRequestInsert,
+	ProductRequest
 } from '$lib/server/entities/models/products'
 
 export type IProductsRepository = {
@@ -164,4 +166,22 @@ export type IProductsRepository = {
 		id: string
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, null]>
+	createProductRequest: ({
+		data
+	}: {
+		data: ProductRequestInsert
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductRequest]>
+	listProductRequests: ({
+		limit,
+		offset
+	}: {
+		ids?: string[]
+		limit: number
+		offset: number
+		tx?: Transaction
+	}) => Promise<
+		| [ErrTypes, null]
+		| [null, { items: ProductRequest[]; total: number; offset: number; limit: number }]
+	>
 }
