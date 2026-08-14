@@ -77,14 +77,17 @@ const getProduct: IProductsRepository['getProduct'] = async ({ id, tx }) => {
 const getProductOptions: IProductsRepository['getProductOptions'] = async ({ id, tx }) => {
 	try {
 		const _db = tx ?? db
+		/**
+		 * NOTE: casting values to avoid [this bug](https://github.com/drizzle-team/drizzle-orm/issues/2157#issuecomment-2616032771)
+		 **/
 		const result = await _db
 			.select({
-				group: product_option_groups.name,
-				group_id: product_option_groups.id,
-				required: product_option_groups.required,
-				multiple: product_option_groups.multiple,
-				min_selection: product_option_groups.min_selection,
-				max_selection: product_option_groups.max_selection,
+				group_id: sql<string>`${product_option_groups.id}`,
+				group: sql<string>`${product_option_groups.name}`,
+				required: sql<boolean>`${product_option_groups.required}`,
+				multiple: sql<boolean>`${product_option_groups.multiple}`,
+				min_selection: sql<number>`${product_option_groups.min_selection}`,
+				max_selection: sql<number>`${product_option_groups.max_selection}`,
 				options: sql<ProductOption[]>`
       coalesce(
         json_agg(
