@@ -10,6 +10,7 @@ import {
 	productOptionGroupsListUseCase,
 	productOptionsGetUseCase,
 	productOptionsListUseCase,
+	productRequestsListUseCase,
 	productsListUseCase
 } from '$lib/server/application/use_cases/products/get'
 import { type Product, type ProductOption } from '$lib/server/entities/models/products'
@@ -245,6 +246,44 @@ export const productOptionGroupsListController = async ({
 	const [errors, results] = await tx_service.startTransaction({
 		clb: async (tx) => {
 			const [product_errors, product] = await productOptionGroupsListUseCase({
+				ids,
+				limit,
+				offset,
+				products_repository: getProductRepositoryModule(),
+				...getServerContext({ session, configuration, tx })
+			})
+			if (product_errors !== null) {
+				return err(product_errors)
+			}
+			return ok(product)
+		}
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(results)
+}
+
+export const productRequestsListController = async ({
+	session,
+	ids,
+	configuration,
+	limit,
+	offset
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+	ids?: string[]
+	limit: number
+	offset: number
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const tx_service = getTransactionModule()
+	const [errors, results] = await tx_service.startTransaction({
+		clb: async (tx) => {
+			const [product_errors, product] = await productRequestsListUseCase({
 				ids,
 				limit,
 				offset,

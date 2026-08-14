@@ -1,10 +1,12 @@
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
 import { err, ok } from '$lib/server/entities/errors'
-import { and, eq, inArray, sql, getTableColumns } from 'drizzle-orm'
+import { and, eq, inArray, sql, getTableColumns, arrayContains, arrayContained } from 'drizzle-orm'
 import { db } from '$lib/db'
 import {
 	product_option_groups,
 	product_options,
+	product_requests,
+	product_resources,
 	products,
 	products_product_options
 } from '$lib/db/schema'
@@ -380,6 +382,119 @@ const updateProductOptionGroup: IProductsRepository['updateProductOptionGroup'] 
 	}
 }
 
+const createProductRequest: IProductsRepository['createProductRequest'] = async ({ tx, data }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.insert(product_requests).values(data).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProductRequests: IProductsRepository['listProductRequests'] = async ({
+	tx,
+	limit,
+	offset,
+	ids
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_requests)
+			.where(ids ? inArray(product_options.id, ids) : undefined)
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const createProductResource: IProductsRepository['createProductResource'] = async ({
+	tx,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.insert(product_resources).values(data).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProductResources: IProductsRepository['listProductResources'] = async ({
+	tx,
+	limit,
+	offset,
+	ids
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_resources)
+			.where(ids ? inArray(product_options.id, ids) : undefined)
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductResource: IProductsRepository['getProductResource'] = async ({ tx, id }) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db.select().from(product_resources).where(eq(product_resources.id, id))
+
+		if (results.length === 1) {
+			return ok(results[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+const getProductResourceByData: IProductsRepository['getProductResourceByData'] = async ({
+	tx,
+	product_id,
+	version,
+	year,
+	options
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_resources)
+			.where(
+				and(
+					eq(product_resources.product_id, product_id),
+					eq(product_resources.version, version),
+					eq(product_resources.year, year),
+					arrayContains(product_resources.options, options),
+					arrayContained(product_resources.options, options)
+				)
+			)
+
+		if (results.length === 1) {
+			return ok(results[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	createProduct,
 	deleteProduct,
@@ -399,5 +514,11 @@ export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	getProductOptionGroup,
 	listProductOptionGroups,
 	updateProductOptionGroup,
-	getProductOptionsByGroup
+	getProductOptionsByGroup,
+	createProductRequest,
+	listProductRequests,
+	createProductResource,
+	listProductResources,
+	getProductResource,
+	getProductResourceByData
 }

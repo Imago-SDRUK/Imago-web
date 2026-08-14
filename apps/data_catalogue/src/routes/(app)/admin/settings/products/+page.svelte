@@ -18,7 +18,8 @@
 		handleSearchParams,
 		Select,
 		Subtitle,
-		Checkbox
+		Checkbox,
+		BaseSection
 	} from '@imago/ui'
 	import type { IColumnConfig } from '@svar-ui/svelte-grid'
 	import { productCreate } from '$lib/remotes/products/create.remote'
@@ -158,6 +159,7 @@
 			width: 350
 		}
 	]
+
 	let versions: string[] = $state([])
 	let years: number[] = $state([])
 	let options: string[] = $state([])

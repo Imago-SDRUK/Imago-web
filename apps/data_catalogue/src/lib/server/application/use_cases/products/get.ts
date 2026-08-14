@@ -272,3 +272,90 @@ export const productOptionGroupsListUseCase = async ({
 	log.trace({ returning: 'productOptionsListUseCase' })
 	return ok(product)
 }
+
+export const productRequestsListUseCase = async ({
+	ids,
+	limit,
+	offset,
+	products_repository,
+	session,
+	configuration,
+	authorisation_module,
+	tx
+}: {
+	ids?: string[]
+	limit: number
+	offset: number
+	products_repository: IProductsRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		// TODO: create Product namespace if required?
+		namespace: 'Action',
+		object: 'products',
+		permits: 'create',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [errs_product, product] = await products_repository.listProductRequests({
+		ids,
+		limit,
+		offset,
+		tx
+	})
+	if (errs_product !== null) {
+		return err(errs_product)
+	}
+	log.trace({ returning: 'productRequestsListUseCase' })
+	return ok(product)
+}
+
+export const productResourceGetByDataUseCase = async ({
+	product_id,
+	version,
+	year,
+	options,
+	session,
+	products_repository,
+	configuration,
+	authorisation_module,
+	tx
+}: {
+	product_id: string
+	version: string
+	year: number
+	options: string[]
+	products_repository: IProductsRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		// TODO: create Product namespace if required?
+		namespace: 'Action',
+		object: 'products',
+		permits: 'create',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [errs_product, product] = await products_repository.getProductResourceByData({
+		product_id,
+		version,
+		year,
+		options,
+		tx
+	})
+	if (errs_product !== null) {
+		return err(errs_product)
+	}
+	log.trace({ returning: 'productRequestsListUseCase' })
+	return ok(product)
+}

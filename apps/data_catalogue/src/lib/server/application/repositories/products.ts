@@ -8,7 +8,11 @@ import type {
 	ProductsProductOptions,
 	ProductsProductOptionsInsert,
 	ProductOptionGroupInsert,
-	ProductOptionGroup
+	ProductOptionGroup,
+	ProductRequestInsert,
+	ProductRequest,
+	ProductResource,
+	ProductResourceInsert
 } from '$lib/server/entities/models/products'
 
 export type IProductsRepository = {
@@ -164,4 +168,56 @@ export type IProductsRepository = {
 		id: string
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, null]>
+	createProductRequest: ({
+		data
+	}: {
+		data: ProductRequestInsert
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductRequest]>
+	listProductRequests: ({
+		limit,
+		offset
+	}: {
+		ids?: string[]
+		limit: number
+		offset: number
+		tx?: Transaction
+	}) => Promise<
+		| [ErrTypes, null]
+		| [null, { items: ProductRequest[]; total: number; offset: number; limit: number }]
+	>
+	createProductResource: ({
+		data
+	}: {
+		data: ProductResourceInsert
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductResource]>
+	listProductResources: ({
+		limit,
+		offset
+	}: {
+		ids?: string[]
+		limit: number
+		offset: number
+		tx?: Transaction
+	}) => Promise<
+		| [ErrTypes, null]
+		| [null, { items: ProductResource[]; total: number; offset: number; limit: number }]
+	>
+	getProductResource: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductResource]>
+	// TODO: query engine??
+	getProductResourceByData: ({
+		product_id
+	}: {
+		year: number
+		version: string
+		product_id: string
+		options: string[]
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductResource]>
 }
