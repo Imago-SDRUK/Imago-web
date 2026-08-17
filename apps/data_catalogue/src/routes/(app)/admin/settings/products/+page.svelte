@@ -610,6 +610,9 @@
 			{/if}
 		{/snippet}
 	</SectionEdit>
+	<BaseSection style="title" title="Product requests">
+		<BaseTable columns={product_requests_columns} data={data.product_requests.items}></BaseTable>
+	</BaseSection>
 </div>
 <Dialog id="add-product">
 	<form

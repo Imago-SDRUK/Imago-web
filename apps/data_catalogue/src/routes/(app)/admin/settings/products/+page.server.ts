@@ -10,6 +10,7 @@ import {
 	productOptionGroupGetController,
 	productOptionGroupsListController,
 	productOptionsListController,
+	productRequestsListController,
 	productsListController
 } from '$lib/server/interface/adapters/controllers/products/get.js'
 import { error } from '@sveltejs/kit'
@@ -44,6 +45,16 @@ export const load = async ({ locals, url }) => {
 		})
 	if (product_option_groups_errors !== null) {
 		error(...errFmt(product_option_groups_errors))
+	}
+
+	const [product_requests_errors, product_requests] = await productRequestsListController({
+		configuration: locals.configuration,
+		session: locals.session,
+		limit: 50,
+		offset: 0
+	})
+	if (product_requests_errors !== null) {
+		error(...errFmt(product_requests_errors))
 	}
 
 	let product: (Product & { options: string[] }) | null = null
@@ -103,6 +114,7 @@ export const load = async ({ locals, url }) => {
 		products,
 		product_options,
 		product_option_groups,
+		product_requests,
 		product,
 		product_option,
 		product_option_group

@@ -15,6 +15,8 @@ import {
 import { log } from '$lib/utils/server/logger'
 import { type } from 'arktype'
 import { createInsertSchema } from 'drizzle-arktype'
+import { options } from 'marked'
+import { versions } from 'node:process'
 
 export const productCreateUseCase = async ({
 	data,
