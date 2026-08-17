@@ -274,7 +274,7 @@ const createProductOptionGroup: IProductsRepository['createProductOptionGroup'] 
 		if (product.length === 1) {
 			return ok(product[0])
 		}
-		return err({ reason: 'Not Found', message: 'Product option not found' })
+		return err({ reason: 'Not Found', message: 'Product option group not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -303,7 +303,7 @@ const getProductOptionGroup: IProductsRepository['getProductOptionGroup'] = asyn
 		if (product.length === 1) {
 			return ok(product[0])
 		}
-		return err({ reason: 'Not Found', message: 'Product option not found' })
+		return err({ reason: 'Not Found', message: 'Product option group not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -376,7 +376,7 @@ const updateProductOptionGroup: IProductsRepository['updateProductOptionGroup'] 
 		if (product.length === 1) {
 			return ok(product[0])
 		}
-		return err({ reason: 'Not Found', message: 'Product option not found' })
+		return err({ reason: 'Not Found', message: 'Product option group not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -389,12 +389,23 @@ const createProductRequest: IProductsRepository['createProductRequest'] = async 
 		if (product.length === 1) {
 			return ok(product[0])
 		}
-		return err({ reason: 'Not Found', message: 'Product option not found' })
+		return err({ reason: 'Not Found', message: 'Product request not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
 }
-
+const getProductRequest: IProductsRepository['getProductRequest'] = async ({ tx, id }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.select().from(product_requests).where(eq(product_requests.id, id))
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product request option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
 const listProductRequests: IProductsRepository['listProductRequests'] = async ({
 	tx,
 	limit,
@@ -414,6 +425,48 @@ const listProductRequests: IProductsRepository['listProductRequests'] = async ({
 	}
 }
 
+const listProductRequestsByUser: IProductsRepository['listProductRequestsByUser'] = async ({
+	tx,
+	limit,
+	offset,
+	user_id
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select({
+				id: product_requests.id,
+				product: products.name,
+				version: product_requests.version,
+				year: product_requests.year,
+				status: product_requests.status,
+				created_at: product_requests.created_at,
+				updated_at: product_requests.updated_at,
+				options: sql<string[]>`
+      COALESCE(
+        array_agg(${product_options.name}) FILTER (WHERE ${product_options.name} IS NOT NULL),
+        ARRAY[]::text[]
+      )
+    `.as('options')
+			})
+			.from(product_requests)
+			.where(eq(product_requests.created_by, user_id))
+			.leftJoin(products, eq(products.id, product_requests.product_id))
+			.leftJoin(product_options, sql`${product_options.id} = ANY(${product_requests.options})`)
+			.groupBy(product_requests.id, products.name)
+		//
+		//sql`${options.id} = ANY(${records.options})`
+		//
+		//
+		//
+		//
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 const createProductResource: IProductsRepository['createProductResource'] = async ({
 	tx,
 	data
@@ -424,7 +477,7 @@ const createProductResource: IProductsRepository['createProductResource'] = asyn
 		if (product.length === 1) {
 			return ok(product[0])
 		}
-		return err({ reason: 'Not Found', message: 'Product option not found' })
+		return err({ reason: 'Not Found', message: 'Product resource not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -458,7 +511,7 @@ const getProductResource: IProductsRepository['getProductResource'] = async ({ t
 		if (results.length === 1) {
 			return ok(results[0])
 		}
-		return err({ reason: 'Not Found', message: 'Product option not found' })
+		return err({ reason: 'Not Found', message: 'Product resource not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -489,7 +542,7 @@ const getProductResourceByData: IProductsRepository['getProductResourceByData'] 
 		if (results.length === 1) {
 			return ok(results[0])
 		}
-		return err({ reason: 'Not Found', message: 'Product option not found' })
+		return err({ reason: 'Not Found', message: 'Product resource not found' })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -516,7 +569,9 @@ export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	updateProductOptionGroup,
 	getProductOptionsByGroup,
 	createProductRequest,
+	getProductRequest,
 	listProductRequests,
+	listProductRequestsByUser,
 	createProductResource,
 	listProductResources,
 	getProductResource,

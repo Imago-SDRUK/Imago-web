@@ -174,6 +174,12 @@ export type IProductsRepository = {
 		data: ProductRequestInsert
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ProductRequest]>
+	getProductRequest: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductRequest]>
 	listProductRequests: ({
 		limit,
 		offset
@@ -185,6 +191,35 @@ export type IProductsRepository = {
 	}) => Promise<
 		| [ErrTypes, null]
 		| [null, { items: ProductRequest[]; total: number; offset: number; limit: number }]
+	>
+	listProductRequestsByUser: ({
+		limit,
+		offset
+	}: {
+		user_id: string
+		limit: number
+		offset: number
+		tx?: Transaction
+	}) => Promise<
+		| [ErrTypes, null]
+		| [
+				null,
+				{
+					items: {
+						id: string
+						product: string | null
+						version: string
+						year: number
+						status: 'error' | 'requested' | 'notified'
+						created_at: Date
+						updated_at: Date
+						options: string[]
+					}[]
+					total: number
+					offset: number
+					limit: number
+				}
+		  ]
 	>
 	createProductResource: ({
 		data

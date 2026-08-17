@@ -10,10 +10,18 @@ import {
 	productOptionGroupsListUseCase,
 	productOptionsGetUseCase,
 	productOptionsListUseCase,
+	productRequestsListByUserUseCase,
 	productRequestsListUseCase,
+	productResourceGetDownloadUrlUseCase,
 	productsListUseCase
 } from '$lib/server/application/use_cases/products/get'
 import { type Product, type ProductOption } from '$lib/server/entities/models/products'
+import { getStorageRepositoryModule } from '$lib/server/modules/storage'
+import { storageGetCredentialsAndTypeUseCase } from '$lib/server/application/use_cases/storages/get'
+import { getResourceRepositoryModule } from '$lib/server/modules/resources'
+import { getDownloadsModule } from '$lib/server/modules/downloads'
+import { getStorageServiceModule } from '$lib/server/modules/storage_service'
+import { log } from '$lib/utils/server/logger'
 
 const presenter = ({ product }: { product: Product & { options: ProductOption[] } }) => {
 	return {
@@ -300,4 +308,74 @@ export const productRequestsListController = async ({
 		return err(errors)
 	}
 	return ok(results)
+}
+
+export const productRequestsListByUserController = async ({
+	session,
+	configuration,
+	limit,
+	offset
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+	limit: number
+	offset: number
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const tx_service = getTransactionModule()
+	const [errors, results] = await tx_service.startTransaction({
+		clb: async (tx) => {
+			const [product_errors, product] = await productRequestsListByUserUseCase({
+				limit,
+				offset,
+				products_repository: getProductRepositoryModule(),
+				...getServerContext({ session, configuration, tx })
+			})
+			if (product_errors !== null) {
+				return err(product_errors)
+			}
+			return ok(product)
+		}
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(results)
+}
+
+export const productResourceGetDownloadUrlController = async ({
+	product_request_id,
+	session,
+	configuration
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+	product_request_id: string
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const [storage_errors, storage_type] = await storageGetCredentialsAndTypeUseCase({
+		storages_repository: getStorageRepositoryModule(),
+		id: configuration.resources_storage,
+		...getServerContext({ session, configuration })
+	})
+	if (storage_errors !== null) {
+		return err(storage_errors)
+	}
+	const [errors, resource] = await productResourceGetDownloadUrlUseCase({
+		product_request_id,
+		products_repository: getProductRepositoryModule(),
+		downloads_repository: getDownloadsModule(),
+		storage_service: getStorageServiceModule(storage_type.type),
+		storage_credentials: storage_type.credentials,
+		...getServerContext({ session, configuration })
+	})
+	if (errors) {
+		log.error({ controller: 'resourceVersionDownloadController', errors })
+		return err(errors)
+	}
+	return ok(resource)
 }
