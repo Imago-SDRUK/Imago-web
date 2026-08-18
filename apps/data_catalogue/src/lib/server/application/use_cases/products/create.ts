@@ -1,5 +1,7 @@
+import { env } from '$env/dynamic/private'
 import type { AppContext } from '$lib/server/application/context'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
+import type { IProductsService } from '$lib/server/application/services/products'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import {
 	product_option_groups,
@@ -325,7 +327,9 @@ export const productRequestCreateUseCase = async ({
 	if (errs_product !== null) {
 		return err(errs_product)
 	}
+
 	log.trace({ returning: 'productRequestCreateUseCase' })
+
 	// TODO: create permissions
 	// const [errors_p] = await authorisation_module.createPermission({
 	// 	namespace: 'Resource',
@@ -346,6 +350,7 @@ export const productRequestCreateUseCase = async ({
 export const productResourceCreateUseCase = async ({
 	data,
 	products_repository,
+	products_service,
 	session,
 	configuration,
 	authorisation_module,
@@ -353,6 +358,7 @@ export const productResourceCreateUseCase = async ({
 }: {
 	data: Partial<ProductResourceInsert>
 	products_repository: IProductsRepository
+	products_service: IProductsService
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
@@ -369,7 +375,8 @@ export const productResourceCreateUseCase = async ({
 	}
 
 	const schema = createInsertSchema(product_resources)
-
+	console.log(`Here's data`)
+	console.log(data)
 	const validated = schema({
 		// NOTE: data here will be passed directly to schema validation as it will be coming from product request, which has already perfomed the data validations against the db
 		...data,
@@ -387,6 +394,19 @@ export const productResourceCreateUseCase = async ({
 	})
 	if (errs_product !== null) {
 		return err(errs_product)
+	}
+	const [pipeline_errors] = await products_service.requestPipeline({
+		data: {
+			container_group: 'container_group',
+			// TODO: parse the env variables from the data
+			environment_variables: [{ key: 'hello', value: 'world' }],
+			id: result.id,
+			image: env.PIPELINE_CONTAINER_IMAGE,
+			resource_group: 'resource_group'
+		}
+	})
+	if (pipeline_errors !== null) {
+		return err(pipeline_errors)
 	}
 	log.trace({ returning: 'productResourceCreateUseCase' })
 	// TODO: derive permissions from product

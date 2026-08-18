@@ -1,6 +1,7 @@
 import type { AppContext } from '$lib/server/application/context'
 import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
+import type { IProductsService } from '$lib/server/application/services/products'
 import type { IStorageService } from '$lib/server/application/services/storage'
 import { err, ok } from '$lib/server/entities/errors'
 import { log } from '$lib/utils/server/logger'
@@ -512,4 +513,89 @@ export const productResourceGetDownloadUrlUseCase = async ({
 	// fail if status is not completed
 	// get storage info
 	// generate dowload url
+}
+
+export const productResourcesListUseCase = async ({
+	ids,
+	limit,
+	offset,
+	products_repository,
+	session,
+	configuration,
+	authorisation_module,
+	tx
+}: {
+	ids?: string[]
+	limit: number
+	offset: number
+	products_repository: IProductsRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		// TODO: create Product namespace if required?
+		namespace: 'Action',
+		object: 'products',
+		permits: 'create',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [errs_product, product] = await products_repository.listProductResources({
+		ids,
+		limit,
+		offset,
+		tx
+	})
+	if (errs_product !== null) {
+		return err(errs_product)
+	}
+	log.trace({ returning: 'productsListUseCase' })
+	return ok(product)
+}
+
+export const productResourceGetByIdWithPipelineUseCase = async ({
+	id,
+	session,
+	products_repository,
+	products_service,
+	configuration,
+	authorisation_module,
+	tx
+}: {
+	id: string
+	products_repository: IProductsRepository
+	products_service: IProductsService
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		// TODO: create Product namespace if required?
+		namespace: 'Action',
+		object: 'products',
+		permits: 'create',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [product_resource_errors, product_resource] = await products_repository.getProductResource({
+		id,
+		tx
+	})
+	if (product_resource_errors !== null) {
+		return err(product_resource_errors)
+	}
+
+	const [pipeline_error, pipeline] = await products_service.getPipeline({ id: product_resource.id })
+	if (pipeline_error !== null && pipeline_error.reason !== 'Not Found') {
+		return err(pipeline_error)
+	}
+	log.trace({ returning: 'productRequestsListUseCase' })
+	return ok({ resource: product_resource, pipeline })
 }

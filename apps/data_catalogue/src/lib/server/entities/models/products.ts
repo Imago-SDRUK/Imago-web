@@ -223,7 +223,9 @@ export const product_resources = pgTable(
 			mode: 'date',
 			precision: 3,
 			withTimezone: true
-		}).notNull(),
+		})
+			.defaultNow()
+			.notNull(),
 		updated_at: timestamp({
 			mode: 'date',
 			precision: 3,
@@ -280,6 +282,17 @@ export const ProductResourceUpdateCompleteSchema = type({
 	'metadata?': 'object'
 })
 
+export const ProductPipelineSchema = type({
+	product: 'string',
+	version: 'string',
+	year: 'string',
+	geography: 'string',
+	stats: 'string',
+	data_sas: 'string',
+	geographies_sas: 'string',
+	output_sas: 'string'
+})
+
 export const ProductResourceUpdateSchema = type.or(
 	ProductResourceUpdateMessageSchema,
 	ProductResourceUpdateCompleteSchema
@@ -297,3 +310,4 @@ export type ProductRequest = typeof product_requests.$inferSelect
 export type ProductRequestInsert = typeof product_requests.$inferInsert
 export type ProductResource = typeof product_resources.$inferSelect
 export type ProductResourceInsert = typeof product_resources.$inferInsert
+export type ProductPipeline = typeof ProductPipelineSchema.infer

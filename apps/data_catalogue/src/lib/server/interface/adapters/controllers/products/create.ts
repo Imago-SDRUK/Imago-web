@@ -18,6 +18,7 @@ import {
 } from '$lib/server/application/use_cases/products/create'
 import { productResourceGetByDataUseCase } from '$lib/server/application/use_cases/products/get'
 import { log } from '$lib/utils/server/logger'
+import { getProductsServiceModule } from '$lib/server/modules/products_service'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -156,7 +157,7 @@ export const productRequestCreateController = async ({
 					// rolly rolly
 					log.error({
 						caller: 'productRequestCreateController - productResourceGetByDataUseCase',
-						errors
+						errors: product_resource_errors
 					})
 
 					tx.rollback()
@@ -176,12 +177,13 @@ export const productRequestCreateController = async ({
 							year: product_request.year
 						},
 						products_repository: getProductRepositoryModule(),
+						products_service: getProductsServiceModule(),
 						...getServerContext({ session, configuration, tx })
 					})
 				if (product_resource_create_errors !== null) {
 					log.error({
 						caller: 'productRequestCreateController - productResourceCreateUseCase',
-						errors
+						errors: product_resource_create_errors
 					})
 					tx.rollback()
 					return err(product_resource_create_errors)

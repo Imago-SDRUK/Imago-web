@@ -12,16 +12,18 @@ import {
 	productOptionsListUseCase,
 	productRequestsListByUserUseCase,
 	productRequestsListUseCase,
+	productResourceGetByIdWithPipelineUseCase,
 	productResourceGetDownloadUrlUseCase,
+	productResourcesListUseCase,
 	productsListUseCase
 } from '$lib/server/application/use_cases/products/get'
 import { type Product, type ProductOption } from '$lib/server/entities/models/products'
 import { getStorageRepositoryModule } from '$lib/server/modules/storage'
 import { storageGetCredentialsAndTypeUseCase } from '$lib/server/application/use_cases/storages/get'
-import { getResourceRepositoryModule } from '$lib/server/modules/resources'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
 import { getStorageServiceModule } from '$lib/server/modules/storage_service'
 import { log } from '$lib/utils/server/logger'
+import { getProductsServiceModule } from '$lib/server/modules/products_service'
 
 const presenter = ({ product }: { product: Product & { options: ProductOption[] } }) => {
 	return {
@@ -378,4 +380,75 @@ export const productResourceGetDownloadUrlController = async ({
 		return err(errors)
 	}
 	return ok(resource)
+}
+
+export const productResourcesListController = async ({
+	session,
+	ids,
+	configuration,
+	limit,
+	offset
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+	ids?: string[]
+	limit: number
+	offset: number
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const tx_service = getTransactionModule()
+	const [errors, results] = await tx_service.startTransaction({
+		clb: async (tx) => {
+			const [product_errors, product] = await productResourcesListUseCase({
+				ids,
+				limit,
+				offset,
+				products_repository: getProductRepositoryModule(),
+				...getServerContext({ session, configuration, tx })
+			})
+			if (product_errors !== null) {
+				return err(product_errors)
+			}
+			return ok(product)
+		}
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(results)
+}
+
+export const productResourceGetByIdWithPipelineController = async ({
+	session,
+	id,
+	configuration
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+	id: string
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const tx_service = getTransactionModule()
+	const [errors, results] = await tx_service.startTransaction({
+		clb: async (tx) => {
+			const [product_errors, product] = await productResourceGetByIdWithPipelineUseCase({
+				id,
+				products_repository: getProductRepositoryModule(),
+				products_service: getProductsServiceModule(),
+				...getServerContext({ session, configuration, tx })
+			})
+			if (product_errors !== null) {
+				return err(product_errors)
+			}
+			return ok(product)
+		}
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(results)
 }
