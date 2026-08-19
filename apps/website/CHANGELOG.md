@@ -1,5 +1,10 @@
 # website
 
+## 2.0.49
+### Patch Changes
+
+- 60a656a: add turnstile
+
 ## 2.0.48
 ### Patch Changes
 
