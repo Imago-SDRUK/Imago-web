@@ -235,6 +235,7 @@ export const product_resources = pgTable(
 			.notNull()
 			.$onUpdateFn(() => DateTime.now().toBSON()),
 		status: product_resources_status_enum().default('requested').notNull(),
+		pipeline_backend: text('pipeline_backend', { enum: ['local', 'azure'] }).notNull(),
 		id: uuid()
 			.primaryKey()
 			.$defaultFn(() => uuidv7()),
