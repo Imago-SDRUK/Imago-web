@@ -4,9 +4,9 @@ import { localIStorageServiceInfrastructure } from '$lib/server/infrastructure/s
 import { testIStorageServiceInfrastructure } from '$lib/server/infrastructure/services/storage/test'
 
 export const storageServiceInfrastructure: {
-	azure: IStorageService
-	local: IStorageService
-	test: IStorageService
+	azure: ({ credentials }: { credentials: Record<string, string> }) => IStorageService
+	local: ({ credentials }: { credentials: Record<string, string> }) => IStorageService
+	test: ({ credentials }: { credentials: Record<string, string> }) => IStorageService
 } = {
 	azure: azureIStorageServiceInfrastructure,
 	test: testIStorageServiceInfrastructure,

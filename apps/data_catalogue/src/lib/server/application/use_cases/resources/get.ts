@@ -1,14 +1,15 @@
 import type { IResourceRepository } from '$lib/server/application/repositories/resource'
 import type { IDatastoreService } from '$lib/server/application/services/datastore'
 import type { IResourceService } from '$lib/server/application/services/resource'
-import type { IStorageService } from '$lib/server/application/services/storage'
-import { err, ok } from '$lib/server/entities/errors'
 import type { AppContext } from '$lib/server/application/context'
+import type { IStoragesRepository } from '$lib/server/application/repositories/storages'
+import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
+import type { IStorageResolver } from '$lib/server/application/resolvers/storage'
+import { err, ok } from '$lib/server/entities/errors'
 import { datastoreToCsvw } from '$lib/server/entities/utils/datastore'
 import { createInsertSchema } from 'drizzle-arktype'
 import { downloads } from '$lib/db/schema'
 import { type } from 'arktype'
-import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
 import { log } from '$lib/utils/server/logger'
 import { handleArkErrors } from '$lib/db/validation'
 
@@ -83,20 +84,20 @@ export const resourceGetUseCase = async ({
 export const resourceVersionGetDownloadUrlUseCase = async ({
 	resource_id,
 	version_id,
-	storage_service,
 	session,
 	configuration,
 	authorisation_module,
 	resource_repository,
 	downloads_repository,
-	storage_credentials
+	storage_repository,
+	storage_resolver
 }: {
 	resource_id: string
 	version_id: string
 	resource_repository: IResourceRepository
-	storage_service: IStorageService
+	storage_repository: IStoragesRepository
+	storage_resolver: IStorageResolver
 	downloads_repository: IDownloadsRepository
-	storage_credentials: Record<string, string>
 } & AppContext) => {
 	if (session.identity.id === 'anonymous') {
 		return err({ reason: 'Unauthorised' })
@@ -136,9 +137,15 @@ export const resourceVersionGetDownloadUrlUseCase = async ({
 	if (version_errors !== null) {
 		return err(version_errors)
 	}
+	const [storage_service_error, storage_service] = await storage_resolver.resolve({
+		id: configuration.resources_storage ?? '',
+		storages_repository: storage_repository
+	})
+	if (storage_service_error !== null) {
+		return err(storage_service_error)
+	}
 	const [errors_s, url] = await storage_service.getDownloadUrl({
-		filename: version.id,
-		credentials: storage_credentials
+		filename: version.id
 	})
 	if (errors_s !== null) {
 		return err(errors_s)

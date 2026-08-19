@@ -15,8 +15,6 @@ export type IProductsService = {
 		data: {
 			id: string
 			image: string
-			resource_group: string
-			container_group: string
 			environment_variables: { key: string; value: string }[]
 		}
 		tx?: Transaction

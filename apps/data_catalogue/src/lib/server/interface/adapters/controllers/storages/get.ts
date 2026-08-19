@@ -7,8 +7,12 @@ import {
 	storageGetUseCase,
 	storagesListUseCase
 } from '$lib/server/application/use_cases/storages/get'
+import type { Storage } from '$lib/server/entities/models/storage'
 
-// const presenter = ({ dataset }: { dataset: Dataset }) => dataset
+// TODO: clear sensitive values
+// const presenter = ({ storage }: { storage: Storage }) => ({
+//   ...storage, credentials: {}
+// })
 
 export const storageGetController = async ({
 	session,

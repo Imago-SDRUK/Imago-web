@@ -1,6 +1,8 @@
 import { env } from '$env/dynamic/private'
 import type { AppContext } from '$lib/server/application/context'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
+import type { IStoragesRepository } from '$lib/server/application/repositories/storages'
+import type { IStorageResolver } from '$lib/server/application/resolvers/storage'
 import type { IProductsService } from '$lib/server/application/services/products'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import {
@@ -370,6 +372,8 @@ export const productRequestCreateUseCase = async ({
 
 export const productResourceCreateUseCase = async ({
 	data,
+	storages_repository,
+	storage_resolver,
 	products_repository,
 	products_service,
 	session,
@@ -377,6 +381,8 @@ export const productResourceCreateUseCase = async ({
 	authorisation_module,
 	tx
 }: {
+	storages_repository: IStoragesRepository
+	storage_resolver: IStorageResolver
 	data: Partial<ProductResourceInsert>
 	products_repository: IProductsRepository
 	products_service: {
@@ -420,17 +426,59 @@ export const productResourceCreateUseCase = async ({
 	if (product_resource_errors !== null) {
 		return err(product_resource_errors)
 	}
+
+	const [storage_tiles_error, storage_tiles] = await storage_resolver.resolve({
+		id: configuration.tiles_storage ?? '',
+		storages_repository
+	})
+	if (storage_tiles_error !== null) {
+		return err(storage_tiles_error)
+	}
+	const [storage_geo_error, storage_geo] = await storage_resolver.resolve({
+		id: configuration.geographies_storage ?? '',
+		storages_repository
+	})
+	if (storage_geo_error !== null) {
+		return err(storage_geo_error)
+	}
+	const [storage_products_error, storage_products] = await storage_resolver.resolve({
+		id: configuration.products_storage ?? '',
+		storages_repository
+	})
+	if (storage_products_error !== null) {
+		return err(storage_products_error)
+	}
+
+	const [tiles_token_error, tiles_token] = await storage_tiles.getAuthenticationToken()
+
+	if (tiles_token_error !== null) {
+		return err(tiles_token_error)
+	}
+	const [geo_token_error, geo_token] = await storage_geo.getAuthenticationToken()
+	if (geo_token_error !== null) {
+		return err(geo_token_error)
+	}
+	const [products_token_error, products_token] = await storage_products.getAuthenticationToken()
+	if (products_token_error !== null) {
+		return err(products_token_error)
+	}
+
 	const [pipeline_errors] = await products_service[
 		product_resource.pipeline_backend
 	].requestPipeline({
 		tx,
 		data: {
-			container_group: 'container_group',
 			// TODO: parse the env variables from the data
-			environment_variables: [{ key: 'hello', value: 'world' }],
+			environment_variables: [
+				{ key: 'IMAGO_YEAR', value: `${product_resource.year}` },
+				{ key: 'IMAGO_VERSION', value: `${product_resource.version}` },
+				{ key: 'IMAGO_PRODUCT', value: `${product_resource.product_id}` },
+				{ key: 'IMAGO_DATA_SAS_URL', value: tiles_token },
+				{ key: 'IMAGO_GEOGRAPHIES_SAS_URL', value: geo_token },
+				{ key: 'IMAGO_OUTPUT_SAS_URL', value: products_token }
+			],
 			id: product_resource.id,
-			image: env.PIPELINE_CONTAINER_IMAGE,
-			resource_group: 'resource_group'
+			image: env.PIPELINE_CONTAINER_IMAGE
 		}
 	})
 	if (pipeline_errors !== null) {

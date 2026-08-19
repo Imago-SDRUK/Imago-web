@@ -12,13 +12,12 @@ import {
 } from '$lib/server/application/use_cases/resources/update'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { resourceVersionCreateUseCase } from '$lib/server/application/use_cases/resources/create'
-import { getStorageServiceModule } from '$lib/server/modules/storage_service'
 import { err, ok } from '$lib/server/entities/errors'
 import { getServerContext } from '$lib/server/application/context'
 import { log } from '$lib/utils/server/logger'
 import { getResourceServiceModule } from '$lib/server/modules/resources_service'
 import { getStorageRepositoryModule } from '$lib/server/modules/storage'
-import { storageGetCredentialsAndTypeUseCase } from '$lib/server/application/use_cases/storages/get'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -58,19 +57,11 @@ export const resourceAddVersionController = async ({
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
-	const [storage_errors, storage_type] = await storageGetCredentialsAndTypeUseCase({
-		storages_repository: getStorageRepositoryModule(),
-		id: configuration.resources_storage,
-		...getServerContext({ session, configuration })
-	})
-	if (storage_errors !== null) {
-		return err(storage_errors)
-	}
 	const [errors, res] = await resourceVersionCreateUseCase({
 		data,
 		resource_respository: getResourceRepositoryModule(),
-		storage_service: getStorageServiceModule(storage_type.type),
-		storage_credentials: storage_type.credentials,
+		storage_repository: getStorageRepositoryModule(),
+		storage_resolver: getStorageResolverModule(),
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {

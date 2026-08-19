@@ -7,6 +7,10 @@ export const getUploadUrl: IStorageService['getUploadUrl'] = async () => {
 	return ok('/favicon.png')
 }
 
+export const getAuthenticationToken: IStorageService['getAuthenticationToken'] = async () => {
+	return ok('')
+}
+
 export const getDownloadUrl: IStorageService['getDownloadUrl'] = async ({ filename }) => {
 	const result = mock.find((x) => x === filename)
 	if (result) {
@@ -26,5 +30,6 @@ export const deleteFile: IStorageService['deleteFile'] = async ({ filename }) =>
 export const localIStorageServiceInfrastructure: IStorageService = {
 	getDownloadUrl,
 	getUploadUrl,
-	deleteFile
+	deleteFile,
+	getAuthenticationToken
 }

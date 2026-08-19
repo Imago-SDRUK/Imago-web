@@ -20,11 +20,10 @@ import {
 } from '$lib/server/application/use_cases/products/get'
 import { type Product, type ProductOption } from '$lib/server/entities/models/products'
 import { getStorageRepositoryModule } from '$lib/server/modules/storage'
-import { storageGetCredentialsAndTypeUseCase } from '$lib/server/application/use_cases/storages/get'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
-import { getStorageServiceModule } from '$lib/server/modules/storage_service'
 import { log } from '$lib/utils/server/logger'
 import { getProductsServiceModule } from '$lib/server/modules/products_service'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 
 const presenter = ({ product }: { product: Product & { options: ProductOption[] } }) => {
 	return {
@@ -362,20 +361,12 @@ export const productResourceGetDownloadUrlController = async ({
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
-	const [storage_errors, storage_type] = await storageGetCredentialsAndTypeUseCase({
-		storages_repository: getStorageRepositoryModule(),
-		id: configuration.resources_storage,
-		...getServerContext({ session, configuration })
-	})
-	if (storage_errors !== null) {
-		return err(storage_errors)
-	}
 	const [errors, resource] = await productResourceGetDownloadUrlUseCase({
 		product_request_id,
 		products_repository: getProductRepositoryModule(),
 		downloads_repository: getDownloadsModule(),
-		storage_service: getStorageServiceModule(storage_type.type),
-		storage_credentials: storage_type.credentials,
+		storage_repository: getStorageRepositoryModule(),
+		storage_resolver: getStorageResolverModule(),
 		...getServerContext({ session, configuration })
 	})
 	if (errors) {

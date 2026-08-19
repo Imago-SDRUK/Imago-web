@@ -9,10 +9,9 @@ import { err, ok } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
 import { log } from '$lib/utils/server/logger'
-import { getStorageServiceModule } from '$lib/server/modules/storage_service'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
-import { storageGetCredentialsAndTypeUseCase } from '$lib/server/application/use_cases/storages/get'
 import { getStorageRepositoryModule } from '$lib/server/modules/storage'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 
 export const resourceGetController = async ({
 	session,
@@ -85,21 +84,13 @@ export const resourceVersionDownloadController = async ({
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
-	const [storage_errors, storage_type] = await storageGetCredentialsAndTypeUseCase({
-		storages_repository: getStorageRepositoryModule(),
-		id: configuration.resources_storage,
-		...getServerContext({ session, configuration })
-	})
-	if (storage_errors !== null) {
-		return err(storage_errors)
-	}
 	const [errors, resource] = await resourceVersionGetDownloadUrlUseCase({
 		version_id,
 		resource_id,
 		resource_repository: getResourceRepositoryModule(),
 		downloads_repository: getDownloadsModule(),
-		storage_service: getStorageServiceModule(storage_type.type),
-		storage_credentials: storage_type.credentials,
+		storage_repository: getStorageRepositoryModule(),
+		storage_resolver: getStorageResolverModule(),
 		...getServerContext({ session, configuration })
 	})
 	if (errors) {

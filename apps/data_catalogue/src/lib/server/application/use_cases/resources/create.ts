@@ -1,7 +1,6 @@
 import type { IResourceRepository } from '$lib/server/application/repositories/resource'
 import type { AppContext } from '$lib/server/application/context'
 import type { IResourceService } from '$lib/server/application/services/resource'
-import type { IStorageService } from '$lib/server/application/services/storage'
 import {
 	resource_versions,
 	resources,
@@ -16,6 +15,8 @@ import { type } from 'arktype'
 import { createInsertSchema } from 'drizzle-arktype'
 import { log } from '$lib/utils/server/logger'
 import type { Storage } from '$lib/server/entities/models/storage'
+import type { IStoragesRepository } from '$lib/server/application/repositories/storages'
+import type { IStorageResolver } from '$lib/server/application/resolvers/storage'
 
 export const resourceCreateUseCase = async ({
 	data,
@@ -126,17 +127,17 @@ export const resourceServiceCreateUseCase = async ({
 export const resourceVersionCreateUseCase = async ({
 	data,
 	resource_respository,
-	storage_service,
 	session,
 	configuration,
 	authorisation_module,
-	storage_credentials,
-	tx
+	tx,
+	storage_repository,
+	storage_resolver
 }: {
 	data: Partial<ResourceVersionRequest>
 	resource_respository: IResourceRepository
-	storage_service: IStorageService
-	storage_credentials: Storage['credentials']
+	storage_repository: IStoragesRepository
+	storage_resolver: IStorageResolver
 } & AppContext) => {
 	log.trace({ caller: 'resourceVersionCreateUseCase' })
 	const schema = createInsertSchema(resource_versions, {
@@ -209,9 +210,15 @@ export const resourceVersionCreateUseCase = async ({
 	if (errors_p) {
 		return err(errors_p)
 	}
+	const [storage_service_error, storage_service] = await storage_resolver.resolve({
+		id: configuration.resources_storage ?? '',
+		storages_repository: storage_repository
+	})
+	if (storage_service_error !== null) {
+		return err(storage_service_error)
+	}
 	const [errs_s, url] = await storage_service.getUploadUrl({
-		filename: version_id,
-		credentials: storage_credentials
+		filename: version_id
 	})
 	if (errs_s !== null) {
 		return err(errs_s)
@@ -223,16 +230,17 @@ export const resourceVersionCreateUseCase = async ({
 export const resourceVersionPipelineCreateUseCase = async ({
 	data,
 	resource_respository,
-	storage_service,
 	session,
 	configuration,
 	authorisation_module,
-	storage_credentials,
+	storage_resolver,
+	storage_repository,
 	tx
 }: {
 	data: Partial<ResourceVersionRequest>
 	resource_respository: IResourceRepository
-	storage_service: IStorageService
+	storage_repository: IStoragesRepository
+	storage_resolver: IStorageResolver
 	storage_credentials: Storage['credentials']
 } & AppContext) => {
 	log.trace({ caller: 'resourceVersionCreateUseCase' })
@@ -282,9 +290,16 @@ export const resourceVersionPipelineCreateUseCase = async ({
 	if (version_errors !== null) {
 		return err(version_errors)
 	}
+
+	const [storage_service_error, storage_service] = await storage_resolver.resolve({
+		id: configuration.resources_storage ?? '',
+		storages_repository: storage_repository
+	})
+	if (storage_service_error !== null) {
+		return err(storage_service_error)
+	}
 	const [errs_s, url] = await storage_service.getUploadUrl({
-		filename: version_id,
-		credentials: storage_credentials
+		filename: version_id
 	})
 	if (errs_s !== null) {
 		return err(errs_s)

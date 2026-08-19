@@ -1,8 +1,9 @@
 import type { AppContext } from '$lib/server/application/context'
 import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
+import type { IStoragesRepository } from '$lib/server/application/repositories/storages'
+import type { IStorageResolver } from '$lib/server/application/resolvers/storage'
 import type { IProductsService } from '$lib/server/application/services/products'
-import type { IStorageService } from '$lib/server/application/services/storage'
 import { err, ok } from '$lib/server/entities/errors'
 import { log } from '$lib/utils/server/logger'
 
@@ -408,18 +409,18 @@ export const productResourceGetDownloadUrlUseCase = async ({
 	product_request_id,
 	session,
 	products_repository,
-	storage_service,
 	configuration,
 	authorisation_module,
-	storage_credentials,
 	downloads_repository,
+	storage_repository,
+	storage_resolver,
 	tx
 }: {
 	product_request_id: string
 	products_repository: IProductsRepository
 	downloads_repository: IDownloadsRepository
-	storage_service: IStorageService
-	storage_credentials: Record<string, string>
+	storage_repository: IStoragesRepository
+	storage_resolver: IStorageResolver
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		// TODO: create Product namespace if required?
@@ -489,9 +490,16 @@ export const productResourceGetDownloadUrlUseCase = async ({
 		})
 	}
 
+	const [storage_service_error, storage_service] = await storage_resolver.resolve({
+		id: configuration.resources_storage ?? '',
+		storages_repository: storage_repository
+	})
+	if (storage_service_error !== null) {
+		return err(storage_service_error)
+	}
+
 	const [errors_s, url] = await storage_service.getDownloadUrl({
-		filename: product_resource.filename,
-		credentials: storage_credentials
+		filename: product_resource.filename
 	})
 	if (errors_s !== null) {
 		return err(errors_s)

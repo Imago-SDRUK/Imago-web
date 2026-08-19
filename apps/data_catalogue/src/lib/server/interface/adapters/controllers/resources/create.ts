@@ -14,12 +14,12 @@ import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
 import { log } from '$lib/utils/server/logger'
 import { getTransactionModule } from '$lib/server/modules/transaction'
-import { getStorageServiceModule } from '$lib/server/modules/storage_service'
 import { resourceServiceDeleteUseCase } from '$lib/server/application/use_cases/resources/delete'
 import { getDatastoreModule } from '$lib/server/modules/datastore'
 import { permissionsDeleteUseCase } from '$lib/server/application/use_cases/permissions/delete'
 import { storageGetCredentialsAndTypeUseCase } from '$lib/server/application/use_cases/storages/get'
 import { getStorageRepositoryModule } from '$lib/server/modules/storage'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -132,7 +132,9 @@ export const resourceCreateControllerWithVersion = async ({
 				storage_credentials: storage_type.credentials,
 				resource_respository: getResourceRepositoryModule(),
 				data: { ...version_data, resource: res.id },
-				storage_service: getStorageServiceModule(storage_type.type),
+				storage_repository: getStorageRepositoryModule(),
+				storage_resolver: getStorageResolverModule(),
+
 				...getServerContext({ session, configuration, tx })
 			})
 			if (v_errors !== null) {
