@@ -107,6 +107,7 @@ export const productsListUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
+	log.trace(`listing products`)
 	const [errs_product, product] = await products_repository.listProducts({
 		ids,
 		limit,
@@ -568,7 +569,11 @@ export const productResourceGetByIdWithPipelineUseCase = async ({
 }: {
 	id: string
 	products_repository: IProductsRepository
-	products_service: IProductsService
+	products_service: {
+		['local']: IProductsService
+		['azure']: IProductsService
+		['test']: IProductsService
+	}
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		// TODO: create Product namespace if required?
@@ -592,10 +597,53 @@ export const productResourceGetByIdWithPipelineUseCase = async ({
 		return err(product_resource_errors)
 	}
 
-	const [pipeline_error, pipeline] = await products_service.getPipeline({ id: product_resource.id })
+	const [pipeline_error, pipeline] = await products_service[
+		product_resource.pipeline_backend
+	].getPipeline({
+		id: product_resource.id
+	})
 	if (pipeline_error !== null && pipeline_error.reason !== 'Not Found') {
-		return err(pipeline_error)
+		console.log('TODO HANDLE THIS ERRORS')
+		console.log(pipeline_error)
+		console.log('TODO HANDLE THIS ERRORS')
+		// return err(pipeline_error)
 	}
 	log.trace({ returning: 'productRequestsListUseCase' })
 	return ok({ resource: product_resource, pipeline })
+}
+
+export const productRequestGetUseCase = async ({
+	id,
+	products_repository,
+	session,
+	configuration,
+	authorisation_module,
+	tx
+}: {
+	id: string
+	products_repository: IProductsRepository
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		// TODO: create Product namespace if required?
+		namespace: 'Action',
+		object: 'products',
+		permits: 'create',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const [errs_product, product] = await products_repository.getProductRequest({
+		id,
+		tx
+	})
+	if (errs_product !== null) {
+		return err(errs_product)
+	}
+	log.trace({ returning: 'productGetUseCase' })
+	return ok(product)
 }

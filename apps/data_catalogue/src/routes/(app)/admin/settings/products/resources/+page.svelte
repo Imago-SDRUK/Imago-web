@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { productRequestDelete } from '$lib/remotes/products/requests/delete.remote.js'
+	import { productResourceDelete } from '$lib/remotes/products/resources/delete.remote'
 	import Facts from '$lib/ui/cards/facts.svelte'
 	import BaseTable from '$lib/ui/tables/base_table.svelte'
 	import CellEditorCtx from '$lib/ui/tables/cell_editor_ctx.svelte'
@@ -53,7 +53,8 @@
 			width: 350
 		}
 	]
-	let selected = $derived(
+
+	let resource_selected = $derived(
 		data.product_requests.items.findIndex(
 			(product) => product.id === page.url.searchParams.get('edit')
 		) ?? -1
@@ -61,15 +62,15 @@
 </script>
 
 <div class="page">
-	<BaseSection style="title" title="Product requests">
-		<SectionEdit open={selected > -1 ? true : undefined}>
+	<BaseSection style="title" title="Product resources">
+		<SectionEdit open={resource_selected > -1 ? true : undefined}>
 			{#snippet leftCol()}
 				<BaseTable
 					columns={product_requests_columns}
 					data={data.product_requests.items}
 					query="edit-product"
 					onopeneditor={({ row }) => {
-						if (row?.id) {
+						if (row?.product_id) {
 							goto(
 								handleSearchParams({
 									toggle: [{ key: 'edit', value: row.id }],
@@ -83,27 +84,29 @@
 				></BaseTable>
 			{/snippet}
 			{#snippet rightCol()}
-				{#if data.product_request}
+				{#if data.resource}
 					<ActionBar>
 						{#snippet right()}
 							<form
-								{...productRequestDelete.enhance(async ({ submit }) => {
+								{...productResourceDelete.enhance(async ({ submit }) => {
 									const valid = await submit()
 									if (valid) {
 										goto(page.url.pathname)
 									}
 								})}
 							>
-								<input {...productRequestDelete.fields.id.as('hidden', data.product_request.id)} />
+								<input
+									{...productResourceDelete.fields.id.as('hidden', data.resource.resource.id)}
+								/>
 								<Button>
 									<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
 								</Button>
 							</form>
 						{/snippet}
 					</ActionBar>
-					<Facts record={data.product_request}></Facts>
+					<Facts record={data.resource?.resource}></Facts>
 				{/if}
-				<pre>{jstr(data.product_request)}</pre>
+				<pre>{jstr(data.resource)}</pre>
 			{/snippet}
 		</SectionEdit>
 	</BaseSection>

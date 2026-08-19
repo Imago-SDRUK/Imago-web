@@ -52,6 +52,12 @@ export type IProductsRepository = {
 		id: string
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, null]>
+	deleteProductRequest: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, null]>
 	createProductOption: ({
 		data
 	}: {
@@ -180,6 +186,16 @@ export type IProductsRepository = {
 		id: string
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ProductRequest]>
+	getProductRequestByData: ({
+		product_id
+	}: {
+		year: number
+		version: string
+		product_id: string
+		options: string[]
+		user_id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductRequest[]]>
 	listProductRequests: ({
 		limit,
 		offset
@@ -255,4 +271,10 @@ export type IProductsRepository = {
 		options: string[]
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ProductResource]>
+	deleteProductResource: ({
+		id
+	}: {
+		id: string
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, null]>
 }

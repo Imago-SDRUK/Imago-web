@@ -6,6 +6,7 @@ import {
 	type ContainerGroup
 } from '@azure/arm-containerinstance'
 import { DefaultAzureCredential } from '@azure/identity'
+import { log } from '$lib/utils/server/logger'
 
 //NOTE: the host must have the az client installed and authenticated as IT is blocking managed identities....
 //function getAzureCliToken() {
@@ -89,6 +90,7 @@ export const getPipeline: IProductsService['getPipeline'] = async ({ id }) => {
 		)
 		return ok(container_group)
 	} catch (_err) {
+		log.debug(`error getting the pipeline - azure`)
 		return err({ reason: 'Unexpected', error: _err })
 	}
 }

@@ -10,6 +10,7 @@ import {
 	productOptionGroupsListUseCase,
 	productOptionsGetUseCase,
 	productOptionsListUseCase,
+	productRequestGetUseCase,
 	productRequestsListByUserUseCase,
 	productRequestsListUseCase,
 	productResourceGetByIdWithPipelineUseCase,
@@ -83,6 +84,7 @@ export const productsListController = async ({
 	const tx_service = getTransactionModule()
 	const [errors, results] = await tx_service.startTransaction({
 		clb: async (tx) => {
+			log.trace(`call productsListUseCase`)
 			const [product_errors, product] = await productsListUseCase({
 				ids,
 				limit,
@@ -91,6 +93,7 @@ export const productsListController = async ({
 				...getServerContext({ session, configuration, tx })
 			})
 			if (product_errors !== null) {
+				log.debug(`error listing the products, productsListController`)
 				return err(product_errors)
 			}
 			return ok(product)
@@ -451,4 +454,36 @@ export const productResourceGetByIdWithPipelineController = async ({
 		return err(errors)
 	}
 	return ok(results)
+}
+
+export const productRequestGetController = async ({
+	session,
+	id,
+	configuration
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+	id: string
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const tx_service = getTransactionModule()
+	const [errors, result] = await tx_service.startTransaction({
+		clb: async (tx) => {
+			const [product_errors, product] = await productRequestGetUseCase({
+				id,
+				products_repository: getProductRepositoryModule(),
+				...getServerContext({ session, configuration, tx })
+			})
+			if (product_errors !== null) {
+				return err(product_errors)
+			}
+			return ok(product)
+		}
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(result)
 }

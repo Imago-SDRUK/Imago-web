@@ -394,6 +394,16 @@ const createProductRequest: IProductsRepository['createProductRequest'] = async 
 		return err({ reason: 'Unexpected', error: _err })
 	}
 }
+
+const deleteProductRequest: IProductsRepository['deleteProductRequest'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		await _db.delete(product_requests).where(eq(product_requests.id, id))
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
 const getProductRequest: IProductsRepository['getProductRequest'] = async ({ tx, id }) => {
 	try {
 		const _db = tx ?? db
@@ -402,6 +412,37 @@ const getProductRequest: IProductsRepository['getProductRequest'] = async ({ tx,
 			return ok(product[0])
 		}
 		return err({ reason: 'Not Found', message: 'Product request option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductRequestByData: IProductsRepository['getProductRequestByData'] = async ({
+	tx,
+	product_id,
+	version,
+	year,
+	user_id,
+	options
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_requests)
+			.where(
+				and(
+					eq(product_requests.product_id, product_id),
+					eq(product_requests.version, version),
+					eq(product_requests.year, year),
+					arrayContains(product_requests.options, options),
+					arrayContained(product_requests.options, options),
+					eq(product_requests.created_by, user_id)
+				)
+			)
+
+		return ok(results)
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -516,6 +557,7 @@ const getProductResource: IProductsRepository['getProductResource'] = async ({ t
 		return err({ reason: 'Unexpected', error: _err })
 	}
 }
+
 const getProductResourceByData: IProductsRepository['getProductResourceByData'] = async ({
 	tx,
 	product_id,
@@ -548,6 +590,16 @@ const getProductResourceByData: IProductsRepository['getProductResourceByData'] 
 	}
 }
 
+const deleteProductResource: IProductsRepository['deleteProductResource'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		await _db.delete(product_resources).where(eq(product_resources.id, id))
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	createProduct,
 	deleteProduct,
@@ -570,10 +622,13 @@ export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	getProductOptionsByGroup,
 	createProductRequest,
 	getProductRequest,
+	getProductRequestByData,
 	listProductRequests,
 	listProductRequestsByUser,
 	createProductResource,
 	listProductResources,
 	getProductResource,
-	getProductResourceByData
+	getProductResourceByData,
+	deleteProductResource,
+	deleteProductRequest
 }

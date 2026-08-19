@@ -1,5 +1,5 @@
 import type { Configuration } from '$lib/server/entities/models/configuration'
-import { err, ok } from '$lib/server/entities/errors'
+import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import { getServerContext } from '$lib/server/application/context'
 import { getTransactionModule } from '$lib/server/modules/transaction'
 import { getProductRepositoryModule } from '$lib/server/modules/products'
@@ -130,79 +130,102 @@ export const productRequestCreateController = async ({
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
+	let rollback_error: ErrTypes | null = null
 	const tx_service = getTransactionModule()
-	const [errors, results] = await tx_service.startTransaction({
-		clb: async (tx) => {
-			const [product_request_errors, product_request] = await productRequestCreateUseCase({
-				data,
-				products_repository: getProductRepositoryModule(),
-				...getServerContext({ session, configuration, tx })
-			})
-			if (product_request_errors !== null) {
-				return err(product_request_errors)
-			}
-
-			// TODO: evaluate request, check if product resource exists
-			// if exists update request
-			const [product_resource_errors, product_resource] = await productResourceGetByDataUseCase({
-				product_id: product_request.product_id,
-				options: product_request.options,
-				version: product_request.version,
-				year: product_request.year,
-				products_repository: getProductRepositoryModule(),
-				...getServerContext({ session, configuration, tx })
-			})
-			if (product_resource_errors !== null) {
-				if (product_resource_errors.reason !== 'Not Found') {
-					// rolly rolly
-					log.error({
-						caller: 'productRequestCreateController - productResourceGetByDataUseCase',
-						errors: product_resource_errors
-					})
-
-					tx.rollback()
-					return err(product_resource_errors)
-				}
-			}
-
-			// create if null
-			let resource = product_resource
-			if (resource === null) {
-				const [product_resource_create_errors, product_resource_create] =
-					await productResourceCreateUseCase({
-						data: {
-							product_id: product_request.product_id,
-							options: product_request.options,
-							version: product_request.version,
-							year: product_request.year
-						},
-						products_repository: getProductRepositoryModule(),
-						products_service: getProductsServiceModule(),
-						...getServerContext({ session, configuration, tx })
-					})
-				if (product_resource_create_errors !== null) {
-					log.error({
-						caller: 'productRequestCreateController - productResourceCreateUseCase',
-						errors: product_resource_create_errors
-					})
-					tx.rollback()
-					return err(product_resource_create_errors)
-				}
-				resource = product_resource_create
-			}
-			if (resource.status === 'error') {
-				// TODO: return notification to user `There's been an issue with this request`, notify team
-				return err({
-					reason: 'Invalid Data',
-					message: `There's been an issue with your request`,
-					id: 'resource-error'
+	// NOTE: to rollback the tx needs to throw an error, otherwhise the requests and products get created
+	try {
+		const [errors, results] = await tx_service.startTransaction({
+			clb: async (tx) => {
+				const [product_request_errors, product_request] = await productRequestCreateUseCase({
+					data,
+					products_repository: getProductRepositoryModule(),
+					...getServerContext({ session, configuration, tx })
 				})
+				if (product_request_errors !== null) {
+					log.error({
+						caller:
+							'productRequestCreateController - productResourceGetByDataUseCase; rolling back',
+						errors: product_request_errors
+					})
+					rollback_error = product_request_errors
+					tx.rollback()
+					return err(product_request_errors)
+				}
+
+				// TODO: evaluate request, check if product resource exists
+				// if exists update request
+				const [product_resource_errors, product_resource] = await productResourceGetByDataUseCase({
+					product_id: product_request.product_id,
+					options: product_request.options,
+					version: product_request.version,
+					year: product_request.year,
+					products_repository: getProductRepositoryModule(),
+					...getServerContext({ session, configuration, tx })
+				})
+				if (product_resource_errors !== null) {
+					if (product_resource_errors.reason !== 'Not Found') {
+						// rolly rolly
+						log.error({
+							caller:
+								'productRequestCreateController - productResourceGetByDataUseCase; rolling back',
+							errors: product_resource_errors
+						})
+						tx.rollback()
+						return err(product_resource_errors)
+					}
+				}
+
+				// create if null
+				let resource = product_resource
+				if (resource === null) {
+					log.trace(`creating product resource`)
+					const [product_resource_create_errors, product_resource_create] =
+						await productResourceCreateUseCase({
+							data: {
+								product_id: product_request.product_id,
+								options: product_request.options,
+								version: product_request.version,
+								year: product_request.year
+							},
+							products_repository: getProductRepositoryModule(),
+							products_service: getProductsServiceModule(),
+							...getServerContext({ session, configuration, tx })
+						})
+					if (product_resource_create_errors !== null) {
+						log.trace('error hit on product resource create')
+						log.error({
+							caller: 'productRequestCreateController - productResourceCreateUseCase; rolling back',
+							errors: product_resource_create_errors
+						})
+						tx.rollback()
+						return err(product_resource_create_errors)
+					}
+					resource = product_resource_create
+				}
+				log.trace(`created product resource`)
+				if (resource.status === 'error') {
+					// TODO: return notification to user `There's been an issue with this request`, notify team
+					return err({
+						reason: 'Invalid Data',
+						message: `There's been an issue with your request`,
+						id: 'resource-error'
+					})
+				}
+				return ok({ request: product_request, status: resource.status, resource: resource.id })
 			}
-			return ok({ request: product_request, status: resource.status, resource: resource.id })
+		})
+		if (errors !== null) {
+			return err(errors)
 		}
-	})
-	if (errors !== null) {
-		return err(errors)
+		return ok(results)
+	} catch (_err) {
+		console.log(_err)
+		return err(
+			rollback_error ?? {
+				reason: 'Invalid Data',
+				message: `There's been an issue with your request`,
+				id: 'resource-error'
+			}
+		)
 	}
-	return ok(results)
 }

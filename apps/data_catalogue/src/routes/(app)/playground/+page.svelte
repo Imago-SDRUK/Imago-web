@@ -29,6 +29,11 @@
 					}
 				})}
 			>
+				{#each createPlaygroundRequest.fields.allIssues() as issue}
+					<Notice level="negative">
+						<Paragraph>{issue.message}</Paragraph>
+					</Notice>
+				{/each}
 				<div class="inputs">
 					<Input label="Data product">
 						{#snippet message()}

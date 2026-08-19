@@ -1,5 +1,7 @@
 import { form, getRequestEvent } from '$app/server'
+import { errFmt } from '$lib/server/entities/errors'
 import { productRequestCreateController } from '$lib/server/interface/adapters/controllers/products/create'
+import { error, invalid, redirect } from '@sveltejs/kit'
 import { type } from 'arktype'
 const nonEmptyString = type('string').narrow((s, ctx) =>
 	s === '' ? ctx.reject({ expected: 'a value (was missing)', actual: '' }) : true
@@ -25,8 +27,15 @@ export const createPlaygroundRequest = form(
 				version
 			}
 		})
-		console.log(errors)
+		if (errors !== null) {
+			if (errors.reason === 'Invalid Data' && errors.id === 'duplicate') {
+				redirect(307, '/playground/requests')
+			}
+			return invalid(errFmt(errors)[1])
+			// error(...errFmt(errors))
+		}
 		console.log(data)
+
 		return {
 			message: 'ok'
 		}

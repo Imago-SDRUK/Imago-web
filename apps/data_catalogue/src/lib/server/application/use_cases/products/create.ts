@@ -245,6 +245,7 @@ export const productRequestCreateUseCase = async ({
 	const [product_options_errors, product_options] = await products_repository.getProductOptions({
 		id: product.id
 	})
+
 	if (product_options_errors !== null) {
 		return err(product_options_errors)
 	}
@@ -319,6 +320,26 @@ export const productRequestCreateUseCase = async ({
 		return err({ reason: 'Invalid Data', message: validated.summary, id: 'invalid-data' })
 	}
 
+	// check user has not made this requests previously
+	const [request_error, request] = await products_repository.getProductRequestByData({
+		product_id: validated.product_id,
+		year: validated.year,
+		version: validated.version,
+		options: validated.options ?? [],
+		user_id: validated.created_by,
+		tx
+	})
+	if (request_error !== null) {
+		return err(request_error)
+	}
+	if (request.length > 0) {
+		return err({
+			reason: 'Invalid Data',
+			message: `You've already submitted this request`,
+			id: 'duplicate'
+		})
+	}
+
 	const [errs_product, result] = await products_repository.createProductRequest({
 		data: validated,
 		tx
@@ -358,7 +379,11 @@ export const productResourceCreateUseCase = async ({
 }: {
 	data: Partial<ProductResourceInsert>
 	products_repository: IProductsRepository
-	products_service: IProductsService
+	products_service: {
+		['azure']: IProductsService
+		['local']: IProductsService
+		['test']: IProductsService
+	}
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
@@ -375,11 +400,11 @@ export const productResourceCreateUseCase = async ({
 	}
 
 	const schema = createInsertSchema(product_resources)
-	console.log(`Here's data`)
-	console.log(data)
 	const validated = schema({
 		// NOTE: data here will be passed directly to schema validation as it will be coming from product request, which has already perfomed the data validations against the db
 		...data,
+		// get pipeline backend from env variable, could be moved to config
+		pipeline_backend: env.PIPELINE_BACKEND,
 		// TODO: the created/updated could be removed, otherwise it needs to be created_by/updated_by an internal superuser/bot/etc
 		created_by: session.identity.id,
 		updated_by: session.identity.id
@@ -387,25 +412,29 @@ export const productResourceCreateUseCase = async ({
 	if (validated instanceof type.errors) {
 		return err({ reason: 'Invalid Data', message: validated.summary, id: 'invalid-data' })
 	}
-
-	const [errs_product, result] = await products_repository.createProductResource({
-		data: validated,
-		tx
-	})
-	if (errs_product !== null) {
-		return err(errs_product)
+	const [product_resource_errors, product_resource] =
+		await products_repository.createProductResource({
+			data: validated,
+			tx
+		})
+	if (product_resource_errors !== null) {
+		return err(product_resource_errors)
 	}
-	const [pipeline_errors] = await products_service.requestPipeline({
+	const [pipeline_errors] = await products_service[
+		product_resource.pipeline_backend
+	].requestPipeline({
+		tx,
 		data: {
 			container_group: 'container_group',
 			// TODO: parse the env variables from the data
 			environment_variables: [{ key: 'hello', value: 'world' }],
-			id: result.id,
+			id: product_resource.id,
 			image: env.PIPELINE_CONTAINER_IMAGE,
 			resource_group: 'resource_group'
 		}
 	})
 	if (pipeline_errors !== null) {
+		log.error({ error: pipeline_errors, message: `Error requestiong the pipeline` })
 		return err(pipeline_errors)
 	}
 	log.trace({ returning: 'productResourceCreateUseCase' })
@@ -423,5 +452,5 @@ export const productResourceCreateUseCase = async ({
 	// if (errors_p) {
 	// 	return err(errors_p)
 	// }
-	return ok(result)
+	return ok(product_resource)
 }
