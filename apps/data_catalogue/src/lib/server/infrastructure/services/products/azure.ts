@@ -37,11 +37,11 @@ const client = new ContainerInstanceManagementClient(
 const requestPipeline: IProductsService['requestPipeline'] = async ({ data }) => {
 	try {
 		const configuration: ContainerGroup = {
-			location: '',
+			location: env.PIPELINE_AZURE_LOCATION,
 			containers: [
 				{
 					name: `${env.PIPELINE_AZURE_CONTAINER_GROUP}-${data.id}`,
-					image: '',
+					image: data.image,
 					resources: {
 						requests: { cpu: 4, memoryInGB: 10 }
 					},
@@ -59,24 +59,31 @@ const requestPipeline: IProductsService['requestPipeline'] = async ({ data }) =>
 				}
 			],
 			osType: env.PIPELINE_AZURE_OS_TYPE,
-			restartPolicy: env.PIPELINE_AZURE_RESTART_POLICY,
-			ipAddress: {
-				type: 'Private',
-				ports: [{ port: 80, protocol: 'TCP' }]
-			},
-			subnetIds: [
-				{
-					id: `/subscriptions/${env.PIPELINE_AZURE_SUBSCRIPTION_ID}/resourceGroups/${env.PIPELINE_AZURE_RESOURCE_GROUP}/providers/Microsoft.Network/virtualNetworks/${env.PIPELINE_AZURE_VNET}/subnets/${env.PIPELINE_AZURE_SUBNET}`
-				}
-			]
+			restartPolicy: env.PIPELINE_AZURE_RESTART_POLICY
+			// TODO: networking
+			// ipAddress: {
+			// 	type: 'Private',
+			// 	ports: [{ port: 80, protocol: 'TCP' }]
+			// },
+			// subnetIds: [
+			// 	{
+			// 		id: `/subscriptions/${env.PIPELINE_AZURE_SUBSCRIPTION_ID}/resourceGroups/${env.PIPELINE_AZURE_RESOURCE_GROUP}/providers/Microsoft.Network/virtualNetworks/${env.PIPELINE_AZURE_VNET}/subnets/${env.PIPELINE_AZURE_SUBNET}`
+			// 	}
+			// ]
 		}
 		const res = await client.containerGroups.beginCreateOrUpdateAndWait(
-			data.resource_group,
-			data.container_group,
+			env.PIPELINE_AZURE_RESOURCE_GROUP,
+			`${env.PIPELINE_AZURE_CONTAINER_GROUP}-${data.id}`,
 			configuration
 		)
-
-		return ok(res)
+		return ok({
+			active: res.provisioningState,
+			fqdn: res.ipAddress?.fqdn ?? null,
+			instance_events: JSON.stringify(res.instanceView?.events) ?? null,
+			instance_state: res.instanceView?.state ?? null,
+			location: res.location ?? null,
+			ip: res.ipAddress?.ip ?? null
+		})
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
 	}
@@ -84,11 +91,18 @@ const requestPipeline: IProductsService['requestPipeline'] = async ({ data }) =>
 
 export const getPipeline: IProductsService['getPipeline'] = async ({ id }) => {
 	try {
-		const container_group = await client.containerGroups.get(
+		const res = await client.containerGroups.get(
 			env.PIPELINE_AZURE_RESOURCE_GROUP,
 			`${env.PIPELINE_AZURE_CONTAINER_GROUP}-${id}`
 		)
-		return ok(container_group)
+		return ok({
+			active: res.provisioningState,
+			fqdn: res.ipAddress?.fqdn ?? null,
+			instance_events: JSON.stringify(res.instanceView?.events) ?? null,
+			instance_state: res.instanceView?.state ?? null,
+			location: res.location ?? null,
+			ip: res.ipAddress?.ip ?? null
+		})
 	} catch (_err) {
 		log.debug(`error getting the pipeline - azure`)
 		return err({ reason: 'Unexpected', error: _err })
@@ -100,7 +114,10 @@ export const deletePipeline: IProductsService['deletePipeline'] = async ({ id })
 		/**
 		 * Check if the container group exists, if it thows an err it will be caught and return false
 		 **/
-		const res = await client.containerGroups.beginDelete(env.PIPELINE_AZURE_RESOURCE_GROUP, id)
+		const res = await client.containerGroups.beginDelete(
+			env.PIPELINE_AZURE_RESOURCE_GROUP,
+			`${env.PIPELINE_AZURE_CONTAINER_GROUP}-${id}`
+		)
 		console.log(res)
 		return ok(null)
 	} catch (_err) {

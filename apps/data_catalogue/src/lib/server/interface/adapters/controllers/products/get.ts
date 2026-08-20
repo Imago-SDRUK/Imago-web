@@ -22,8 +22,8 @@ import { type Product, type ProductOption } from '$lib/server/entities/models/pr
 import { getStorageRepositoryModule } from '$lib/server/modules/storage'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
 import { log } from '$lib/utils/server/logger'
-import { getProductsServiceModule } from '$lib/server/modules/products_service'
 import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
+import { getProductResourcesResolver } from '$lib/server/application/resolvers/products'
 
 const presenter = ({ product }: { product: Product & { options: ProductOption[] } }) => {
 	return {
@@ -432,7 +432,7 @@ export const productResourceGetByIdWithPipelineController = async ({
 			const [product_errors, product] = await productResourceGetByIdWithPipelineUseCase({
 				id,
 				products_repository: getProductRepositoryModule(),
-				products_service: getProductsServiceModule(),
+				product_resources_resolver: getProductResourcesResolver(),
 				...getServerContext({ session, configuration, tx })
 			})
 			if (product_errors !== null) {

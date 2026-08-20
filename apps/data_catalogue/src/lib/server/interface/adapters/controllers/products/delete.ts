@@ -1,5 +1,5 @@
 import type { Configuration } from '$lib/server/entities/models/configuration'
-import { err, ok } from '$lib/server/entities/errors'
+import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import { getServerContext } from '$lib/server/application/context'
 import { getTransactionModule } from '$lib/server/modules/transaction'
 import { getProductRepositoryModule } from '$lib/server/modules/products'
@@ -10,6 +10,7 @@ import {
 	productRequestDeleteUseCase,
 	productResourceDeleteUseCase
 } from '$lib/server/application/use_cases/products/delete'
+import { getProductResourcesResolver } from '$lib/server/application/resolvers/products'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -122,23 +123,32 @@ export const productResourceDeleteController = async ({
 		return err({ reason: 'Unauthenticated' })
 	}
 	const tx_service = getTransactionModule()
-	const [errors, results] = await tx_service.startTransaction({
-		clb: async (tx) => {
-			const [product_errors, product] = await productResourceDeleteUseCase({
-				id,
-				products_repository: getProductRepositoryModule(),
-				...getServerContext({ session, configuration, tx })
-			})
-			if (product_errors !== null) {
-				return err(product_errors)
+	let error: ErrTypes | null = null
+	try {
+		const [errors, results] = await tx_service.startTransaction({
+			clb: async (tx) => {
+				const [product_errors, product] = await productResourceDeleteUseCase({
+					id,
+					products_repository: getProductRepositoryModule(),
+					product_resources_resolver: getProductResourcesResolver(),
+					...getServerContext({ session, configuration, tx })
+				})
+				if (product_errors !== null) {
+					error = product_errors
+					tx.rollback()
+					return err(product_errors)
+				}
+				return ok(product)
 			}
-			return ok(product)
+		})
+		if (errors !== null) {
+			return err(errors)
 		}
-	})
-	if (errors !== null) {
-		return err(errors)
+		return ok(results)
+	} catch (_err) {
+		console.log(_err)
+		return err(error ?? { reason: 'Unexpected', error: _err })
 	}
-	return ok(results)
 }
 
 export const productRequestDeleteController = async ({

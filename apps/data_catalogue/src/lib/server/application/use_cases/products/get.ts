@@ -2,8 +2,8 @@ import type { AppContext } from '$lib/server/application/context'
 import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
 import type { IStoragesRepository } from '$lib/server/application/repositories/storages'
+import type { IProductResourcesResolver } from '$lib/server/application/resolvers/products'
 import type { IStorageResolver } from '$lib/server/application/resolvers/storage'
-import type { IProductsService } from '$lib/server/application/services/products'
 import { err, ok } from '$lib/server/entities/errors'
 import { log } from '$lib/utils/server/logger'
 
@@ -570,18 +570,14 @@ export const productResourceGetByIdWithPipelineUseCase = async ({
 	id,
 	session,
 	products_repository,
-	products_service,
+	product_resources_resolver,
 	configuration,
 	authorisation_module,
 	tx
 }: {
 	id: string
 	products_repository: IProductsRepository
-	products_service: {
-		['local']: IProductsService
-		['azure']: IProductsService
-		['test']: IProductsService
-	}
+	product_resources_resolver: IProductResourcesResolver
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		// TODO: create Product namespace if required?
@@ -597,18 +593,25 @@ export const productResourceGetByIdWithPipelineUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
+
 	const [product_resource_errors, product_resource] = await products_repository.getProductResource({
 		id,
 		tx
 	})
+
 	if (product_resource_errors !== null) {
 		return err(product_resource_errors)
 	}
 
-	const [pipeline_error, pipeline] = await products_service[
-		product_resource.pipeline_backend
-	].getPipeline({
-		id: product_resource.id
+	const [product_service_error, products_service] = await product_resources_resolver.resolve({
+		type: product_resource.pipeline_backend
+	})
+	if (product_service_error !== null) {
+		return err(product_service_error)
+	}
+
+	const [pipeline_error, pipeline] = await products_service.getPipeline({
+		id: id
 	})
 	if (pipeline_error !== null && pipeline_error.reason !== 'Not Found') {
 		console.log('TODO HANDLE THIS ERRORS')

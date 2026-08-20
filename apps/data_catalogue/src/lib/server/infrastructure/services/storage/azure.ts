@@ -37,7 +37,7 @@ export const loadStorageClient = ({
 			// `https://${env.STORAGE_AZURE_ACCOUNT_NAME}.blob.core.windows.net`,
 			pipeline
 		),
-		container_name: container,
+		container_name: container.trim(),
 		credentials: shared_key_credential
 		// container_name: env.STORAGE_AZURE_CONTAINER
 	}
@@ -54,7 +54,7 @@ function getContainerSasUri({
 }) {
 	const sas_options = {
 		containerName: container_name,
-		permissions: ContainerSASPermissions.parse('c'),
+		permissions: ContainerSASPermissions.parse('crwdfl'),
 		startsOn: new Date(),
 		expiresOn: new Date(new Date().valueOf() + 3600 * 1000)
 	}
@@ -69,7 +69,7 @@ function getContainerSasUri({
 	const sas_token = generateBlobSASQueryParameters(sas_options, shared_key_credential).toString()
 	console.log(`SAS token for blob container is: ${sas_token}`)
 
-	return `${client.url}?${sas_token}`
+	return `${client.url}${container_name}?${sas_token}`
 }
 
 export const getUploadUrl =

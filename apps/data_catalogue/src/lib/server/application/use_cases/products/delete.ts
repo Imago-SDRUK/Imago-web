@@ -1,5 +1,6 @@
 import type { AppContext } from '$lib/server/application/context'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
+import type { IProductResourcesResolver } from '$lib/server/application/resolvers/products'
 import { err, ok } from '$lib/server/entities/errors'
 import { log } from '$lib/utils/server/logger'
 
@@ -156,9 +157,11 @@ export const productResourceDeleteUseCase = async ({
 	session,
 	configuration,
 	authorisation_module,
-	tx
+	tx,
+	product_resources_resolver
 }: {
 	id: string
+	product_resources_resolver: IProductResourcesResolver
 	products_repository: IProductsRepository
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
@@ -174,13 +177,26 @@ export const productResourceDeleteUseCase = async ({
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
 	}
+	const [product_service_error, products_service] = await product_resources_resolver.resolve({
+		id,
+		products_repository
+	})
+	if (product_service_error !== null) {
+		return err(product_service_error)
+	}
 	const [errs_product, result] = await products_repository.deleteProductResource({
 		id,
 		tx
 	})
+
 	if (errs_product !== null) {
 		return err(errs_product)
 	}
+	const [pipeline_error] = await products_service.deletePipeline({ id })
+	if (pipeline_error !== null) {
+		return err(pipeline_error)
+	}
+
 	log.trace({ returning: 'productDeleteUseCase' })
 	// TODO: either restrict the crud operations to superusers or create Product namespace and add permissions, but products shouldn't be available to non superusers/admins!
 	// const [errors_p] = await authorisation_module.createPermission({

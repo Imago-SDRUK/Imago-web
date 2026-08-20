@@ -136,6 +136,12 @@ export type IProductsRepository = {
 		id: string
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, (ProductOptionGroup & { options: ProductOption[] })[]]>
+	getProductOptionsWithGroup: ({
+		ids
+	}: {
+		ids: string[]
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, { option: ProductOption; group: ProductOptionGroup }[]]>
 
 	createProductOptionGroup: ({
 		data

@@ -113,7 +113,20 @@ const deletePipeline: IProductsService['deletePipeline'] = async ({ id }) => {
 			return err(ping_err)
 		}
 		const container = client.getContainer(generateContainerName(id))
-		await container.stop()
+		const [stop_errors] = await container
+			.stop()
+			.then(() => {
+				return ok(null)
+			})
+			.catch((_err) => {
+				if (_err['reason'] === 'container already stopped') {
+					return ok(null)
+				}
+				return err({ reason: 'Unexpected', error: _err })
+			})
+		if (stop_errors !== null) {
+			return err(stop_errors)
+		}
 		await container.remove()
 		return ok(null)
 	} catch (_err) {

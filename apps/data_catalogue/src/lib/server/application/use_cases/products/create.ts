@@ -2,8 +2,8 @@ import { env } from '$env/dynamic/private'
 import type { AppContext } from '$lib/server/application/context'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
 import type { IStoragesRepository } from '$lib/server/application/repositories/storages'
+import type { IProductResourcesResolver } from '$lib/server/application/resolvers/products'
 import type { IStorageResolver } from '$lib/server/application/resolvers/storage'
-import type { IProductsService } from '$lib/server/application/services/products'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import {
 	product_option_groups,
@@ -375,21 +375,17 @@ export const productResourceCreateUseCase = async ({
 	storages_repository,
 	storage_resolver,
 	products_repository,
-	products_service,
 	session,
 	configuration,
 	authorisation_module,
+	product_resources_resolver,
 	tx
 }: {
 	storages_repository: IStoragesRepository
 	storage_resolver: IStorageResolver
 	data: Partial<ProductResourceInsert>
 	products_repository: IProductsRepository
-	products_service: {
-		['azure']: IProductsService
-		['local']: IProductsService
-		['test']: IProductsService
-	}
+	product_resources_resolver: IProductResourcesResolver
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
@@ -423,26 +419,50 @@ export const productResourceCreateUseCase = async ({
 			data: validated,
 			tx
 		})
+
 	if (product_resource_errors !== null) {
 		return err(product_resource_errors)
 	}
 
+	const [product_service_error, products_service] = await product_resources_resolver.resolve({
+		// not from env to avoid wiggly lines
+		type: product_resource.pipeline_backend
+	})
+	if (product_service_error !== null) {
+		return err(product_service_error)
+	}
+
+	const [product_options_errors, product_options] =
+		await products_repository.getProductOptionsWithGroup({
+			ids: product_resource.options
+		})
+	if (product_options_errors !== null) {
+		return err(product_options_errors)
+	}
+
+	const [product_errors, product] = await products_repository.getProduct({
+		id: product_resource.product_id
+	})
+	if (product_errors !== null) {
+		return err(product_errors)
+	}
+
 	const [storage_tiles_error, storage_tiles] = await storage_resolver.resolve({
-		id: configuration.tiles_storage ?? '',
+		id: configuration.tiles_storage,
 		storages_repository
 	})
 	if (storage_tiles_error !== null) {
 		return err(storage_tiles_error)
 	}
 	const [storage_geo_error, storage_geo] = await storage_resolver.resolve({
-		id: configuration.geographies_storage ?? '',
+		id: configuration.geographies_storage,
 		storages_repository
 	})
 	if (storage_geo_error !== null) {
 		return err(storage_geo_error)
 	}
 	const [storage_products_error, storage_products] = await storage_resolver.resolve({
-		id: configuration.products_storage ?? '',
+		id: configuration.products_storage,
 		storages_repository
 	})
 	if (storage_products_error !== null) {
@@ -462,21 +482,22 @@ export const productResourceCreateUseCase = async ({
 	if (products_token_error !== null) {
 		return err(products_token_error)
 	}
-
-	const [pipeline_errors] = await products_service[
-		product_resource.pipeline_backend
-	].requestPipeline({
+	const environment_variables = [
+		...product_options.map(({ option, group }) => ({ key: group.value, value: option.value })),
+		{ key: 'IMAGO_PRODUCT', value: `${product.name}` },
+		{ key: 'IMAGO_YEAR', value: `${product_resource.year}` },
+		{ key: 'IMAGO_VERSION', value: `${product_resource.version}` },
+		{ key: 'IMAGO_DATA_SAS_URL', value: tiles_token },
+		{ key: 'IMAGO_GEOGRAPHIES_SAS_URL', value: geo_token },
+		{ key: 'IMAGO_OUTPUT_SAS_URL', value: products_token },
+		{ key: 'IMAGO_CALLBACK_URL', value: env.SITE_URL }
+	]
+	console.log(environment_variables)
+	const [pipeline_errors] = await products_service.requestPipeline({
 		tx,
 		data: {
 			// TODO: parse the env variables from the data
-			environment_variables: [
-				{ key: 'IMAGO_YEAR', value: `${product_resource.year}` },
-				{ key: 'IMAGO_VERSION', value: `${product_resource.version}` },
-				{ key: 'IMAGO_PRODUCT', value: `${product_resource.product_id}` },
-				{ key: 'IMAGO_DATA_SAS_URL', value: tiles_token },
-				{ key: 'IMAGO_GEOGRAPHIES_SAS_URL', value: geo_token },
-				{ key: 'IMAGO_OUTPUT_SAS_URL', value: products_token }
-			],
+			environment_variables,
 			id: product_resource.id,
 			image: env.PIPELINE_CONTAINER_IMAGE
 		}

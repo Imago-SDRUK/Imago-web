@@ -18,7 +18,9 @@ import {
 } from '$lib/server/application/use_cases/products/create'
 import { productResourceGetByDataUseCase } from '$lib/server/application/use_cases/products/get'
 import { log } from '$lib/utils/server/logger'
-import { getProductsServiceModule } from '$lib/server/modules/products_service'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
+import { getStorageRepositoryModule } from '$lib/server/modules/storage'
+import { getProductResourcesResolver } from '$lib/server/application/resolvers/products'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -188,7 +190,9 @@ export const productRequestCreateController = async ({
 								year: product_request.year
 							},
 							products_repository: getProductRepositoryModule(),
-							products_service: getProductsServiceModule(),
+							storage_resolver: getStorageResolverModule(),
+							storages_repository: getStorageRepositoryModule(),
+							product_resources_resolver: getProductResourcesResolver(),
 							...getServerContext({ session, configuration, tx })
 						})
 					if (product_resource_create_errors !== null) {
@@ -203,7 +207,7 @@ export const productRequestCreateController = async ({
 					resource = product_resource_create
 				}
 				log.trace(`created product resource`)
-				if (resource.status === 'error') {
+				if (resource?.status === 'error') {
 					// TODO: return notification to user `There's been an issue with this request`, notify team
 					return err({
 						reason: 'Invalid Data',

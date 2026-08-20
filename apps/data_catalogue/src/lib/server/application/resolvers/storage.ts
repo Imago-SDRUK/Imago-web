@@ -7,7 +7,7 @@ export type IStorageResolver = {
 	resolve: ({
 		id
 	}: {
-		id: string
+		id: string | null
 		storages_repository: IStoragesRepository
 	}) => Promise<[ErrTypes, null] | [null, IStorageService]>
 }
@@ -16,9 +16,15 @@ const resolve: IStorageResolver['resolve'] = async ({
 	id,
 	storages_repository
 }: {
-	id: string
+	id: string | null
 	storages_repository: IStoragesRepository
 }) => {
+	if (!id) {
+		return err({
+			reason: 'Missing Configuration',
+			message: `You need to configure a storage service before perfoming this action.`
+		})
+	}
 	const [errors, storage] = await storages_repository.getStorage({ id })
 	if (errors !== null) {
 		return err(errors)

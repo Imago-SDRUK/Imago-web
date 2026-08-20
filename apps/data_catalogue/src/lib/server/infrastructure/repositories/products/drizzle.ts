@@ -1,6 +1,15 @@
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
 import { err, ok } from '$lib/server/entities/errors'
-import { and, eq, inArray, sql, getTableColumns, arrayContains, arrayContained } from 'drizzle-orm'
+import {
+	and,
+	eq,
+	inArray,
+	sql,
+	getTableColumns,
+	arrayContains,
+	arrayContained,
+	isNotNull
+} from 'drizzle-orm'
 import { db } from '$lib/db'
 import {
 	product_option_groups,
@@ -41,6 +50,7 @@ const getProduct: IProductsRepository['getProduct'] = async ({ id, tx }) => {
 			.select({
 				id: products.id,
 				name: products.name,
+				value: products.value,
 				versions: products.versions,
 				years: products.years,
 				created_by: products.created_by,
@@ -342,6 +352,29 @@ const getProductOptionsByGroup: IProductsRepository['getProductOptionsByGroup'] 
 	}
 }
 
+const getProductOptionsWithGroup: IProductsRepository['getProductOptionsWithGroup'] = async ({
+	ids,
+	tx
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.select({
+				option: product_options,
+				group: product_option_groups
+			})
+			.from(product_options)
+			.leftJoin(product_option_groups, eq(product_option_groups.id, product_options.group_id))
+			.where(
+				and(isNotNull(product_options.group_id), ids ? inArray(product_options.id, ids) : undefined)
+			)
+		return ok(product)
+	} catch (_err) {
+		console.log(_err)
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 const listProductOptionGroups: IProductsRepository['listProductOptionGroups'] = async ({
 	tx,
 	limit,
@@ -620,6 +653,7 @@ export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	listProductOptionGroups,
 	updateProductOptionGroup,
 	getProductOptionsByGroup,
+	getProductOptionsWithGroup,
 	createProductRequest,
 	getProductRequest,
 	getProductRequestByData,
