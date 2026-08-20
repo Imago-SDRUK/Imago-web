@@ -65,6 +65,11 @@
 			cell: CellEditorCtx
 		},
 		{
+			id: 'value',
+			header: 'Value',
+			cell: CellText
+		},
+		{
 			id: 'versions',
 			header: 'Versions',
 			cell: CellText
@@ -463,9 +468,9 @@
 						}
 					}}
 				></BaseTable>
-				{#if data.products.items.length === 0}
+				{#if data.product_options.items.length === 0}
 					<Notice level="info">
-						<Paragraph>There are no products</Paragraph>
+						<Paragraph>There are no product options</Paragraph>
 					</Notice>
 				{/if}
 			</div>
@@ -554,7 +559,7 @@
 						}
 					}}
 				></BaseTable>
-				{#if data.products.items.length === 0}
+				{#if data.product_option_groups.items.length === 0}
 					<Notice level="info">
 						<Paragraph>There are no product option groups</Paragraph>
 					</Notice>
@@ -638,6 +643,15 @@
 				{/each}
 				<Text {...productCreate.fields.name.as('text')}></Text>
 			</Input>
+			<Input label="Value" required>
+				{#each productCreate.fields.value.issues() as issue}
+					<Notice level="negative">
+						<Paragraph>{issue.message}</Paragraph>
+					</Notice>
+				{/each}
+				<Text {...productCreate.fields.value.as('text')}></Text>
+			</Input>
+
 			<Input label="Versions" required>
 				<div class="tags-input" data-open={versions.length > 0 ? true : undefined}>
 					{#each productCreate.fields.versions.issues() as issue}
@@ -812,7 +826,6 @@
 				{/each}
 				<Text {...productOptionCreate.fields.name.as('text')}></Text>
 			</Input>
-
 			<Input label="Value" required>
 				{#each productOptionCreate.fields.value.issues() as issue}
 					<Notice level="negative">
@@ -821,6 +834,7 @@
 				{/each}
 				<Text {...productOptionCreate.fields.value.as('text')}></Text>
 			</Input>
+
 			<Input label="Group" required>
 				{#each productOptionCreate.fields.group.issues() as issue}
 					<Notice level="negative">
@@ -874,6 +888,14 @@
 					</Notice>
 				{/each}
 				<Text {...productOptionGroupCreate.fields.name.as('text')}></Text>
+			</Input>
+			<Input label="Value" required>
+				{#each productOptionCreate.fields.value.issues() as issue}
+					<Notice level="negative">
+						<Paragraph>{issue.message}</Paragraph>
+					</Notice>
+				{/each}
+				<Text {...productOptionCreate.fields.value.as('text')}></Text>
 			</Input>
 			<Input label="Required">
 				{#each productOptionGroupCreate.fields.required.issues() as issue}

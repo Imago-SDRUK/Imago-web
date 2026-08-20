@@ -284,6 +284,12 @@
 							label: storage.name,
 							value: storage.id
 						}))}
+						onchange={async () => {
+							const valid = await configurationSetStorage.for('geographies_storage').submit()
+							if (valid) {
+								notify.send({ message: 'Products storage updated' })
+							}
+						}}
 					></Select>
 				</form>
 				<form
@@ -305,6 +311,12 @@
 							label: storage.name,
 							value: storage.id
 						}))}
+						onchange={async () => {
+							const valid = await configurationSetStorage.for('tiles_storage').submit()
+							if (valid) {
+								notify.send({ message: 'Products storage updated' })
+							}
+						}}
 					></Select>
 				</form>
 			</div>
