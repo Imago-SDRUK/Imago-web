@@ -55,6 +55,7 @@ export const products = pgTable('products', {
 		.primaryKey()
 		.$defaultFn(() => uuidv7()),
 	name: text().unique().notNull(),
+	value: text().notNull(),
 	versions: text().array().default([]),
 	years: integer().array().default([])
 })
