@@ -2,24 +2,25 @@ import { form, getRequestEvent } from '$app/server'
 import { errFmt } from '$lib/server/entities/errors'
 
 import { productOptionGroupCreateController } from '$lib/server/interface/adapters/controllers/products/create'
-import slugify from '@sindresorhus/slugify'
+import { nonEmptyString } from '$lib/utils'
 import { error } from '@sveltejs/kit'
 import { type } from 'arktype'
 
 export const productOptionGroupCreate = form(
 	type({
-		name: 'string > 1',
+		name: nonEmptyString,
+		value: nonEmptyString,
 		'required?': 'boolean',
 		'multiple?': 'boolean'
 	}),
-	async ({ name, required, multiple }) => {
+	async ({ name, value, required, multiple }) => {
 		const { locals } = getRequestEvent()
 		const [errors] = await productOptionGroupCreateController({
 			session: locals.session,
 			configuration: locals.configuration,
 			data: {
 				name,
-				value: slugify(name),
+				value,
 				required: required ? true : false,
 				multiple: multiple ? true : false
 			}

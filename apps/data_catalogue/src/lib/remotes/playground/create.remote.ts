@@ -1,11 +1,10 @@
 import { form, getRequestEvent } from '$app/server'
 import { errFmt } from '$lib/server/entities/errors'
 import { productRequestCreateController } from '$lib/server/interface/adapters/controllers/products/create'
+import { nonEmptyString } from '$lib/utils'
 import { error, invalid, redirect } from '@sveltejs/kit'
 import { type } from 'arktype'
-const nonEmptyString = type('string').narrow((s, ctx) =>
-	s === '' ? ctx.reject({ expected: 'a value (was missing)', actual: '' }) : true
-)
+
 export const createPlaygroundRequest = form(
 	type({
 		data_product: nonEmptyString,
