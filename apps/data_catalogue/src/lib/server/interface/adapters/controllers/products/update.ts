@@ -7,6 +7,8 @@ import type {
 	ProductInsert,
 	ProductOptionGroupInsert,
 	ProductOptionInsert,
+	ProductResourceUpdateComplete,
+	ProductResourceUpdateMessage,
 	ProductsProductOptionsInsert
 } from '$lib/server/entities/models/products'
 import {
@@ -14,8 +16,12 @@ import {
 	productOptionGroupUpdateUseCase,
 	productOptionUpdateUseCase,
 	productRemoveOptionUseCase,
+	productResourceUpdateCompleteUseCase,
+	productResourceUpdateMessageUseCase,
 	productUpdateUseCase
 } from '$lib/server/application/use_cases/products/update'
+import { getIdentityModule } from '$lib/server/modules/identity'
+import { getNoficationsModule } from '$lib/server/modules/notifications'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -177,6 +183,55 @@ export const productOptionGroupUpdateController = async ({
 				id,
 				data,
 				products_repository: getProductRepositoryModule(),
+				...getServerContext({ session, configuration, tx })
+			})
+			if (product_errors !== null) {
+				return err(product_errors)
+			}
+			return ok(product)
+		}
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(results)
+}
+
+export const productResourceUpdateController = async ({
+	session,
+	data,
+	configuration,
+	id
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+	id: string
+	data: ProductResourceUpdateComplete | ProductResourceUpdateMessage
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const tx_service = getTransactionModule()
+	const [errors, results] = await tx_service.startTransaction({
+		clb: async (tx) => {
+			if ('message' in data) {
+				const [product_errors, product] = await productResourceUpdateMessageUseCase({
+					id,
+					data,
+					products_repository: getProductRepositoryModule(),
+					...getServerContext({ session, configuration, tx })
+				})
+				if (product_errors !== null) {
+					return err(product_errors)
+				}
+				return ok(product)
+			}
+			const [product_errors, product] = await productResourceUpdateCompleteUseCase({
+				id,
+				data,
+				products_repository: getProductRepositoryModule(),
+				identity_service: getIdentityModule(),
+				notifications_service: getNoficationsModule(),
 				...getServerContext({ session, configuration, tx })
 			})
 			if (product_errors !== null) {
