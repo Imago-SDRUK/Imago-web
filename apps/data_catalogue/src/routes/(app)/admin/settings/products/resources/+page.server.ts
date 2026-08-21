@@ -1,4 +1,5 @@
 import { errFmt } from '$lib/server/entities/errors.js'
+import type { ProductResource } from '$lib/server/entities/models/products.js'
 import {
 	productResourceGetByIdWithPipelineController,
 	productResourcesListController
@@ -16,7 +17,7 @@ export const load = async ({ locals, url }) => {
 		error(...errFmt(product_requests_errors))
 	}
 	const edit = url.searchParams.get('edit')
-	let resource: Record<string, unknown> | null = null
+	let resource: { resource: ProductResource; pipeline: unknown } | null = null
 	if (edit) {
 		resource = await productResourceGetByIdWithPipelineController({
 			configuration: locals.configuration,
