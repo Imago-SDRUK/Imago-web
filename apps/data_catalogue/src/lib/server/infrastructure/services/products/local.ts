@@ -2,19 +2,20 @@ import type { IProductsService } from '$lib/server/application/services/products
 import { log } from '$lib/utils/server/logger'
 import { err, ok } from '$lib/server/entities/errors'
 import Docker from 'dockerode'
+import { env } from '$env/dynamic/private'
 
 const generateContainerName = (id: string) => `imago-pipeline-${id}`
 
-const client = new Docker({
-	socketPath: '/var/run/docker.sock'
-	// host: 'localhost',
-	// port: 2375
-})
-
-// {
-// 					host: '127.0.0.1',
-// 					port: 2375
-// 				}
+const client = new Docker(
+	env.PIPELINE_LOCAL_SOCKET
+		? {
+				socketPath: env.PIPELINE_LOCAL_SOCKET
+			}
+		: {
+				host: env.PIPELINE_LOCAL_HOST,
+				port: env.PIPELINE_LOCAL_PORT
+			}
+)
 
 const ping = async () => {
 	try {
