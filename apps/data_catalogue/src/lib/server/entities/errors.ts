@@ -1,6 +1,7 @@
 import type { ArkFormErrors } from '$lib/db/validation'
 
 type UnauthorisedError = { reason: 'Unauthorised'; message?: string }
+type MissingConfigurationError = { reason: 'Missing Configuration'; message?: string }
 type UnauthenticatedError = { reason: 'Unauthenticated' }
 type MissingIdError = { reason: 'Missing ID'; message?: string }
 type InvalidDataError = {
@@ -19,6 +20,7 @@ export type ErrTypes =
 	| NotFoundError
 	| UnexpectedError
 	| MissingIdError
+	| MissingConfigurationError
 
 export type Result<T, E extends ErrTypes> = [E, null] | [null, T]
 
@@ -33,6 +35,14 @@ export const errFmt = (err: ErrTypes): [number, App.Error] => {
 	if (err.reason === 'Missing ID')
 		return [422, { message: err.message ?? `You need to provide an ID.`, id: '' }]
 	if (err.reason === 'Not Found') return [404, { message: err.message ?? `Not found`, id: '' }]
+	if (err.reason === 'Missing Configuration')
+		return [
+			500,
+			{
+				message: `There is no configuration enabled to perform this action.`,
+				id: 'missing-configuration'
+			}
+		]
 	if (err.reason === 'Unexpected')
 		return [500, { message: `This shouldn't have happened, please try again.`, id: '' }]
 	return [500, { message: `This shouldn't have happened, please try again.`, id: '' }]
