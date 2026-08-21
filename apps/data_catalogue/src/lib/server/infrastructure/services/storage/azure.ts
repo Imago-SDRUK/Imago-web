@@ -67,7 +67,6 @@ function getContainerSasUri({
 	// }
 
 	const sas_token = generateBlobSASQueryParameters(sas_options, shared_key_credential).toString()
-	console.log(`SAS token for blob container is: ${sas_token}`)
 
 	return `${client.url}${container_name}?${sas_token}`
 }
