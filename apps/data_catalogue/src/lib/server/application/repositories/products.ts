@@ -195,11 +195,12 @@ export type IProductsRepository = {
 	getProductRequestByData: ({
 		product_id
 	}: {
-		year: number
-		version: string
-		product_id: string
-		options: string[]
-		user_id: string
+		year?: number
+		version?: string
+		product_id?: string
+		options?: string[]
+		status?: ProductRequest['status']
+		user_id?: string
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ProductRequest[]]>
 	listProductRequests: ({
@@ -277,6 +278,21 @@ export type IProductsRepository = {
 		options: string[]
 		tx?: Transaction
 	}) => Promise<[ErrTypes, null] | [null, ProductResource]>
+	updateProductResource: ({
+		id
+	}: {
+		id: string
+		data: Partial<ProductResourceInsert>
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductResource]>
+	updateProductRequest: ({
+		id
+	}: {
+		id: string
+		data: Partial<ProductRequestInsert>
+		tx?: Transaction
+	}) => Promise<[ErrTypes, null] | [null, ProductRequest]>
+
 	deleteProductResource: ({
 		id
 	}: {
