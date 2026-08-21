@@ -8,7 +8,8 @@ import {
 	getTableColumns,
 	arrayContains,
 	arrayContained,
-	isNotNull
+	isNotNull,
+	desc
 } from 'drizzle-orm'
 import { db } from '$lib/db'
 import {
@@ -132,6 +133,7 @@ const listProducts: IProductsRepository['listProducts'] = async ({ tx, limit, of
 			.select()
 			.from(products)
 			.where(ids ? inArray(products.id, ids) : undefined)
+			.orderBy(desc(products.id))
 		return ok({ limit, offset, items: results, total: results.length })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
@@ -210,6 +212,7 @@ const listProductOptions: IProductsRepository['listProductOptions'] = async ({
 			.from(product_options)
 			.where(ids ? inArray(product_options.id, ids) : undefined)
 			.leftJoin(product_option_groups, eq(product_option_groups.id, product_options.group_id))
+			.orderBy(desc(product_options.id))
 		return ok({ limit, offset, items: results, total: results.length })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
@@ -388,6 +391,7 @@ const listProductOptionGroups: IProductsRepository['listProductOptionGroups'] = 
 			.select()
 			.from(product_option_groups)
 			.where(ids ? inArray(product_option_groups.id, ids) : undefined)
+			.orderBy(desc(product_option_groups.id))
 		return ok({ limit, offset, items: results, total: results.length })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
@@ -456,6 +460,7 @@ const getProductRequestByData: IProductsRepository['getProductRequestByData'] = 
 	version,
 	year,
 	user_id,
+	status,
 	options
 }) => {
 	try {
@@ -466,12 +471,13 @@ const getProductRequestByData: IProductsRepository['getProductRequestByData'] = 
 			.from(product_requests)
 			.where(
 				and(
-					eq(product_requests.product_id, product_id),
-					eq(product_requests.version, version),
-					eq(product_requests.year, year),
-					arrayContains(product_requests.options, options),
-					arrayContained(product_requests.options, options),
-					eq(product_requests.created_by, user_id)
+					product_id ? eq(product_requests.product_id, product_id) : undefined,
+					version ? eq(product_requests.version, version) : undefined,
+					year ? eq(product_requests.year, year) : undefined,
+					options ? arrayContains(product_requests.options, options) : undefined,
+					options ? arrayContained(product_requests.options, options) : undefined,
+					user_id ? eq(product_requests.created_by, user_id) : undefined,
+					status ? eq(product_requests.status, status) : undefined
 				)
 			)
 
@@ -480,6 +486,7 @@ const getProductRequestByData: IProductsRepository['getProductRequestByData'] = 
 		return err({ reason: 'Unexpected', error: _err })
 	}
 }
+
 const listProductRequests: IProductsRepository['listProductRequests'] = async ({
 	tx,
 	limit,
@@ -493,6 +500,7 @@ const listProductRequests: IProductsRepository['listProductRequests'] = async ({
 			.select()
 			.from(product_requests)
 			.where(ids ? inArray(product_options.id, ids) : undefined)
+			.orderBy(desc(product_requests.id))
 		return ok({ limit, offset, items: results, total: results.length })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
@@ -528,6 +536,7 @@ const listProductRequestsByUser: IProductsRepository['listProductRequestsByUser'
 			.where(eq(product_requests.created_by, user_id))
 			.leftJoin(products, eq(products.id, product_requests.product_id))
 			.leftJoin(product_options, sql`${product_options.id} = ANY(${product_requests.options})`)
+			.orderBy(desc(product_requests.id))
 			.groupBy(product_requests.id, products.name)
 		//
 		//sql`${options.id} = ANY(${records.options})`
@@ -557,6 +566,47 @@ const createProductResource: IProductsRepository['createProductResource'] = asyn
 	}
 }
 
+const updateProductRequest: IProductsRepository['updateProductRequest'] = async ({
+	tx,
+	id,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.update(product_requests)
+			.set(data)
+			.where(eq(product_requests.id, id))
+			.returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+const updateProductResource: IProductsRepository['updateProductResource'] = async ({
+	tx,
+	id,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.update(product_resources)
+			.set(data)
+			.where(eq(product_resources.id, id))
+			.returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 const listProductResources: IProductsRepository['listProductResources'] = async ({
 	tx,
 	limit,
@@ -570,6 +620,7 @@ const listProductResources: IProductsRepository['listProductResources'] = async 
 			.select()
 			.from(product_resources)
 			.where(ids ? inArray(product_options.id, ids) : undefined)
+			.orderBy(desc(product_resources.id))
 		return ok({ limit, offset, items: results, total: results.length })
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
@@ -659,7 +710,9 @@ export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
 	getProductRequestByData,
 	listProductRequests,
 	listProductRequestsByUser,
+	updateProductRequest,
 	createProductResource,
+	updateProductResource,
 	listProductResources,
 	getProductResource,
 	getProductResourceByData,
