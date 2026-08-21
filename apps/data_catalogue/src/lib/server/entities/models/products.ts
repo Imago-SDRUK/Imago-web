@@ -281,7 +281,7 @@ export const ProductResourceUpdateCompleteSchema = type({
 	status: "'error' | 'completed' | 'processing'",
 	filename: 'string',
 	path: 'string',
-	'metadata?': 'object'
+	'metadata?': 'string'
 })
 
 export const ProductPipelineSchema = type({
@@ -313,3 +313,5 @@ export type ProductRequestInsert = typeof product_requests.$inferInsert
 export type ProductResource = typeof product_resources.$inferSelect
 export type ProductResourceInsert = typeof product_resources.$inferInsert
 export type ProductPipeline = typeof ProductPipelineSchema.infer
+export type ProductResourceUpdateMessage = typeof ProductResourceUpdateMessageSchema.infer
+export type ProductResourceUpdateComplete = typeof ProductResourceUpdateCompleteSchema.infer
