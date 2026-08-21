@@ -490,7 +490,12 @@ export const productResourceCreateUseCase = async ({
 		{ key: 'IMAGO_DATA_SAS_URL', value: tiles_token },
 		{ key: 'IMAGO_GEOGRAPHIES_SAS_URL', value: geo_token },
 		{ key: 'IMAGO_OUTPUT_SAS_URL', value: products_token },
-		{ key: 'IMAGO_CALLBACK_URL', value: env.SITE_URL }
+		{
+			key: 'IMAGO_CALLBACK_URL',
+			value: env.SITE_URL.endsWith(`/`)
+				? `${env.SITE_URL}api/v1/products/resources/${product_resource.id}`
+				: `${env.SITE_URL}/api/v1/products/resources/${product_resource.id}`
+		}
 	]
 	console.log(environment_variables)
 	const [pipeline_errors] = await products_service.requestPipeline({
