@@ -342,8 +342,30 @@ export const productRequestCreateUseCase = async ({
 		})
 	}
 
+	// check existing product resources
+	const [product_resource_errors, product_resource] =
+		await products_repository.getProductResourceByData({
+			product_id: validated.product_id,
+			year: validated.year,
+			version: validated.version,
+			options: validated.options ?? [],
+			tx
+		})
+	// if its missing then do not return an error
+	if (product_resource_errors !== null && product_resource_errors.reason !== 'Not Found') {
+		return err(product_resource_errors)
+	}
+
 	const [errs_product, result] = await products_repository.createProductRequest({
-		data: validated,
+		data: {
+			...validated,
+			status:
+				product_resource?.status === 'completed'
+					? 'notified'
+					: product_resource?.status === 'error'
+						? 'error'
+						: 'requested'
+		},
 		tx
 	})
 

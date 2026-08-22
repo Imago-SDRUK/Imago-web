@@ -6,11 +6,13 @@ import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import {
 	product_option_groups,
 	product_options,
+	product_requests,
 	ProductResourceUpdateCompleteSchema,
 	ProductResourceUpdateMessageSchema,
 	products,
 	products_product_options,
 	type ProductInsert,
+	type ProductRequest,
 	type ProductResourceUpdateComplete,
 	type ProductResourceUpdateMessage,
 	type ProductsProductOptionsInsert
@@ -215,6 +217,7 @@ export const productOptionGroupUpdateUseCase = async ({
 	data: Partial<ProductInsert>
 	products_repository: IProductsRepository
 } & AppContext) => {
+	// HACK: permissions
 	const [errors, permission] = await authorisation_module.authorise({
 		namespace: 'Action',
 		object: 'products',
@@ -237,6 +240,57 @@ export const productOptionGroupUpdateUseCase = async ({
 		return err({ reason: 'Invalid Data', message: validated.summary, id: 'invalid-data' })
 	}
 	const [errs_product, result] = await products_repository.updateProductOptionGroup({
+		id,
+		data: validated,
+		tx
+	})
+	if (errs_product !== null) {
+		return err(errs_product)
+	}
+	log.trace({ returning: 'productUpdateUseCase' })
+	return ok(result)
+}
+
+export const productRequestUpdateUseCase = async ({
+	id,
+	data,
+	products_repository,
+	// identity_service,
+	// notifications_service,
+	session,
+	configuration,
+	authorisation_module,
+	tx
+}: {
+	id: string
+	data: Partial<ProductRequest>
+	products_repository: IProductsRepository
+	// identity_service: IIdentityService
+	// notifications_service: INotificationsService
+} & AppContext) => {
+	// HACK: permissions
+	const [errors, permission] = await authorisation_module.authorise({
+		namespace: 'Action',
+		object: 'products',
+		permits: 'create',
+		actor: session.identity.id,
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+	const schema = createUpdateSchema(product_requests)
+	const validated = schema({
+		...data,
+		updated_by: session.identity.id
+	})
+	if (validated instanceof type.errors) {
+		return err({ reason: 'Invalid Data', message: validated.summary, id: 'invalid-data' })
+	}
+	const [errs_product, result] = await products_repository.updateProductRequest({
 		id,
 		data: validated,
 		tx

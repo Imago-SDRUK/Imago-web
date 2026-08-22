@@ -1,3 +1,4 @@
+import { product_requests } from '$lib/db/schema'
 import type { AppContext } from '$lib/server/application/context'
 import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
@@ -6,6 +7,7 @@ import type { IProductResourcesResolver } from '$lib/server/application/resolver
 import type { IStorageResolver } from '$lib/server/application/resolvers/storage'
 import { err, ok } from '$lib/server/entities/errors'
 import { log } from '$lib/utils/server/logger'
+import { createSelectSchema, createUpdateSchema } from 'drizzle-arktype'
 
 export const productGetUseCase = async ({
 	id,
@@ -371,10 +373,10 @@ export const productResourceGetByDataUseCase = async ({
 	authorisation_module,
 	tx
 }: {
-	product_id: string
-	version: string
-	year: number
-	options: string[]
+	product_id?: string
+	version?: string
+	year?: number
+	options?: string[]
 	products_repository: IProductsRepository
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
@@ -390,6 +392,35 @@ export const productResourceGetByDataUseCase = async ({
 	}
 	if (!permission.allowed) {
 		return err({ reason: 'Unauthorised' })
+	}
+
+	if (!product_id) {
+		return err({
+			reason: 'Invalid Data',
+			message: `You need to provide a product id`,
+			id: 'missing-id'
+		})
+	}
+	if (!version) {
+		return err({
+			reason: 'Invalid Data',
+			message: `You need to provide a version`,
+			id: 'missing-version'
+		})
+	}
+	if (!year) {
+		return err({
+			reason: 'Invalid Data',
+			message: `You need to provide a year`,
+			id: 'missing-year'
+		})
+	}
+	if (!options) {
+		return err({
+			reason: 'Invalid Data',
+			message: `You need to provide options`,
+			id: 'missing-options'
+		})
 	}
 	const [errs_product, product] = await products_repository.getProductResourceByData({
 		product_id,
@@ -423,7 +454,7 @@ export const productResourceGetDownloadUrlUseCase = async ({
 	storage_resolver: IStorageResolver
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
-		// TODO: create Product namespace if required?
+		// HACK: create Product namespace if required?
 		namespace: 'Action',
 		object: 'products',
 		permits: 'create',
@@ -443,19 +474,19 @@ export const productResourceGetDownloadUrlUseCase = async ({
 			message: `Product storage is not configured`
 		})
 	}
-	// TODO: get request data
+	// get request data
 	const [product_request_errors, product_request] = await products_repository.getProductRequest({
 		id: product_request_id,
 		tx
 	})
 
-	if (product_request?.status !== 'notified') {
-		return err({
-			reason: 'Invalid Data',
-			message: `The requested resource is not ready yet`,
-			id: 'status-not-notified'
-		})
-	}
+	// if (product_request?.status !== 'notified') {
+	// 	return err({
+	// 		reason: 'Invalid Data',
+	// 		message: `The requested resource is not ready yet`,
+	// 		id: 'status-not-notified'
+	// 	})
+	// }
 
 	if (product_request_errors !== null) {
 		return err(product_request_errors)
@@ -482,16 +513,16 @@ export const productResourceGetDownloadUrlUseCase = async ({
 		})
 	}
 
-	if (!product_resource.filename) {
+	if (!product_resource.path) {
 		return err({
 			reason: 'Invalid Data',
-			message: `The requested resource does not contain a filename`,
+			message: `The requested resource does not contain a valid path`,
 			id: 'uncompleted-product-resource'
 		})
 	}
 
 	const [storage_service_error, storage_service] = await storage_resolver.resolve({
-		id: configuration.resources_storage ?? '',
+		id: configuration.products_storage ?? '',
 		storages_repository: storage_repository
 	})
 	if (storage_service_error !== null) {
@@ -499,7 +530,7 @@ export const productResourceGetDownloadUrlUseCase = async ({
 	}
 
 	const [errors_s, url] = await storage_service.getDownloadUrl({
-		filename: product_resource.filename
+		filename: product_resource.path
 	})
 	if (errors_s !== null) {
 		return err(errors_s)
@@ -515,7 +546,20 @@ export const productResourceGetDownloadUrlUseCase = async ({
 	if (d_errors !== null) {
 		log.error({ message: 'Error registering download' })
 	}
-	return ok(url)
+
+	if (product_request.status !== 'notified') {
+		const [product_request_update_errors] = await products_repository.updateProductRequest({
+			data: {
+				status: 'notified'
+			},
+			id: product_request.id
+		})
+		if (product_request_update_errors !== null) {
+			log.error({ message: 'Error updating product request' })
+		}
+	}
+
+	return ok({ url, filename: product_resource.filename })
 
 	// fail if status is not notified
 	// search product

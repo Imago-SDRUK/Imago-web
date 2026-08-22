@@ -16,11 +16,15 @@ import {
 	productRequestCreateUseCase,
 	productResourceCreateUseCase
 } from '$lib/server/application/use_cases/products/create'
-import { productResourceGetByDataUseCase } from '$lib/server/application/use_cases/products/get'
+import {
+	productRequestGetUseCase,
+	productResourceGetByDataUseCase
+} from '$lib/server/application/use_cases/products/get'
 import { log } from '$lib/utils/server/logger'
 import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 import { getStorageRepositoryModule } from '$lib/server/modules/storage'
 import { getProductResourcesResolver } from '$lib/server/application/resolvers/products'
+import { productRequestUpdateUseCase } from '$lib/server/application/use_cases/products/update'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -132,9 +136,12 @@ export const productRequestCreateController = async ({
 	if (!session) {
 		return err({ reason: 'Unauthenticated' })
 	}
+	// the tx rollback works by throwing an error
+	// in order to return a valid error we init the error and then assign the error before throwing the rollback
+	// all transactional fns must be wrapped in a trycatch block to be able to handle rollbacks
 	let rollback_error: ErrTypes | null = null
 	const tx_service = getTransactionModule()
-	// NOTE: to rollback the tx needs to throw an error, otherwhise the requests and products get created
+	// to rollback the tx needs to throw an error, otherwhise the requests and products get created
 	try {
 		const [errors, results] = await tx_service.startTransaction({
 			clb: async (tx) => {
@@ -149,12 +156,15 @@ export const productRequestCreateController = async ({
 							'productRequestCreateController - productResourceGetByDataUseCase; rolling back',
 						errors: product_request_errors
 					})
+					// assign the error
 					rollback_error = product_request_errors
+					// rollback throws an exception, do not catch it
 					tx.rollback()
+					// this return is here as typesafety, it won't actually tigger, thats why we assign the error first
 					return err(product_request_errors)
 				}
 
-				// TODO: evaluate request, check if product resource exists
+				// evaluate request, check if product resource exists
 				// if exists update request
 				const [product_resource_errors, product_resource] = await productResourceGetByDataUseCase({
 					product_id: product_request.product_id,
@@ -172,8 +182,10 @@ export const productRequestCreateController = async ({
 								'productRequestCreateController - productResourceGetByDataUseCase; rolling back',
 							errors: product_resource_errors
 						})
+						// assign the error
+						rollback_error = product_resource_errors
+						// rollback throws an exception, do not catch it
 						tx.rollback()
-						return err(product_resource_errors)
 					}
 				}
 
@@ -207,14 +219,6 @@ export const productRequestCreateController = async ({
 					resource = product_resource_create
 				}
 				log.trace(`created product resource`)
-				if (resource?.status === 'error') {
-					// TODO: return notification to user `There's been an issue with this request`, notify team
-					return err({
-						reason: 'Invalid Data',
-						message: `There's been an issue with your request`,
-						id: 'resource-error'
-					})
-				}
 				return ok({ request: product_request, status: resource.status, resource: resource.id })
 			}
 		})
