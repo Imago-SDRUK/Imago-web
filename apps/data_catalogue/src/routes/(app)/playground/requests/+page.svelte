@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { APP_STATE } from '$lib/globals/state.svelte.js'
 	import { productResourceGet } from '$lib/remotes/products/resources/read.remote.js'
 	import { notify } from '$lib/stores/notify'
 	import BaseTable from '$lib/ui/tables/base_table.svelte'
@@ -60,7 +61,14 @@
 			onopeneditor={async ({ row }) => {
 				try {
 					const result = await productResourceGet({ id: row.id })
-					console.log(row, result)
+					const a = document.createElement('a')
+					a.href = result.url
+					a.download = result.filename
+					document.body.appendChild(a)
+					a.click()
+					document.body.removeChild(a)
+					window.URL.revokeObjectURL(result.url)
+					APP_STATE.loading = false
 				} catch (_err) {
 					if ('body' in _err) {
 						notify.send({ message: _err.body.message })
