@@ -2,6 +2,7 @@ import { form, getRequestEvent } from '$app/server'
 import { errFmt } from '$lib/server/entities/errors'
 import { productRequestCreateController } from '$lib/server/interface/adapters/controllers/products/create'
 import { nonEmptyString } from '$lib/utils'
+import { log } from '$lib/utils/server/logger'
 import { error, invalid, redirect } from '@sveltejs/kit'
 import { type } from 'arktype'
 
@@ -28,15 +29,21 @@ export const createPlaygroundRequest = form(
 		})
 		if (errors !== null) {
 			if (errors.reason === 'Invalid Data' && errors.id === 'duplicate') {
-				redirect(307, '/playground/requests')
+				return {
+					message: 'You have already requested this data product.'
+				}
 			}
 			return invalid(errFmt(errors)[1])
 			// error(...errFmt(errors))
 		}
-		console.log(data)
-
+		log.trace(data)
+		if (data.status === 'completed') {
+			return {
+				message: 'Your request is ready to be downloaded'
+			}
+		}
 		return {
-			message: 'ok'
+			message: `Your request has been submitted`
 		}
 	}
 )

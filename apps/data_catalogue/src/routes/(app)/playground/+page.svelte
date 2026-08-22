@@ -3,6 +3,8 @@
 	import { notify } from '$lib/stores/notify.js'
 	import { BaseSection, Button, Input, Notice, Paragraph, Select, Subtitle } from '@imago/ui'
 	import { productGetOptions } from '$lib/remotes/products/read.remote.js'
+	import { goto } from '$app/navigation'
+	import { resolve } from '$app/paths'
 
 	let { data } = $props()
 	const products = $derived(data.products)
@@ -21,11 +23,11 @@
 				magnam totam placeat suscipit molestias.</Paragraph
 			>
 			<form
-				{...createPlaygroundRequest.enhance(async ({ submit }) => {
+				{...createPlaygroundRequest.enhance(async ({ submit, result }) => {
 					const valid = await submit()
 					if (valid) {
-						notify.send({ message: `Your request has been submitted` })
-						selected = ''
+						notify.send({ message: result?.message })
+						goto(resolve(`/playground/requests`))
 					}
 				})}
 			>
