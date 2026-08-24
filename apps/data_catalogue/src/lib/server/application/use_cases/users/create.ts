@@ -57,9 +57,9 @@ export const userServiceCreateUserApiKeysUseCase = async ({
 	// HACK: lets assume users authorised to read users are also allowed to read ckan users
 	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'users',
-		permits: 'read',
+		permits: 'manage',
 		configuration
 	})
 	if (errors) {

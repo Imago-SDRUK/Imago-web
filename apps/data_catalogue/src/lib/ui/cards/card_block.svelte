@@ -21,7 +21,7 @@
 		border: 1px solid var(--border-muted);
 		border-radius: var(--radius);
 		overflow: hidden;
-		background-color: var(--background-accent);
+		/* background-color: var(--background-accent); */
 	}
 	header {
 		padding: 1rem;

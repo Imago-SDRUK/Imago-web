@@ -1,6 +1,7 @@
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
 import {
+	applicationCheckPermissionUseCase,
 	applicationGetDatasetsPaginatedUseCase,
 	applicationGetGroupsUseCase,
 	applicationGetQuestionsUseCase,
@@ -13,6 +14,32 @@ import { getUserModule } from '$lib/server/modules/user'
 import { getIdentityModule } from '$lib/server/modules/identity'
 import { getGroupsRepositoryModule } from '$lib/server/modules/groups'
 import { getDatasetModule } from '$lib/server/modules/datasets'
+import type { Session } from '$lib/server/entities/models/identity'
+
+export const applicationCheckPermissionController = async ({
+	object,
+	permits,
+	configuration,
+	session
+}: {
+	object?: string
+	permits?: 'read' | 'manage'
+	session?: Session
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const [errors, res] = await applicationCheckPermissionUseCase({
+		object,
+		permits,
+		...getServerContext({ session, configuration })
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(res)
+}
 
 export const applicationGetQuestionsController = async ({
 	limit,

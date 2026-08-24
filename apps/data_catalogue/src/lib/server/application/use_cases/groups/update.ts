@@ -170,9 +170,9 @@ export const groupsSyncUseCase = async ({
 }) => {
 	const auth_module = getAuthorisationModule()
 	const [errors, permission] = await auth_module.authorise({
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'groups',
-		permits: 'edit',
+		permits: 'manage',
 		actor: session.identity.id
 	})
 	if (errors !== null) {
@@ -448,12 +448,12 @@ export const groupToggleAutoenrollUseCase = async ({
 		return err(questions_errors)
 	}
 	const permissions: PermissionRequest[] = [
-		{
-			namespace: 'Action',
-			object: 'answers',
-			relation: 'groups',
-			actor: group_r.id
-		},
+		// {
+		// 	namespace: 'Action',
+		// 	object: 'answers',
+		// 	relation: 'groups',
+		// 	actor: group_r.id
+		// },
 		...questions.map((question) => ({
 			namespace: 'Question' as const,
 			relation: 'viewers',

@@ -11,13 +11,15 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition'
 	import type { Snippet } from 'svelte'
-	import { Subtitle, Title } from '../text'
+	import { Title } from '../text'
 	let {
 		title,
+		header,
 		style,
 		children
 	}: {
 		title?: string
+		header?: Snippet
 		children?: Snippet
 		style?: 'base' | 'bleed' | 'break' | 'full-page' | 'slim' | 'large' | 'extra-large' | 'title'
 	} = $props()
@@ -27,7 +29,12 @@
 	{#if style === 'title'}
 		<header class="title">
 			<!-- <Subtitle weight={800}>{title}</Subtitle> -->
-			<Title>{title}</Title>
+			{#if title}
+				<Title>{title}</Title>
+			{/if}
+			{#if header}
+				{@render header()}
+			{/if}
 		</header>
 	{/if}
 	<div class="content">
@@ -89,19 +96,24 @@
 	}
 
 	section[data-style='title'] {
-		padding: 1rem 1rem 2rem 1rem;
+		padding: 0;
 		width: min(100% - 4rem, 1440px);
-		border: 1px solid var(--border);
+		border: 1px solid var(--border-muted);
 		border-radius: var(--radius);
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
 		grid-template-rows: minmax(0, max-content) minmax(0, 1fr);
 		gap: 1rem;
 	}
+
 	.title {
 		background-color: var(--background-muted);
-		padding: 0.25rem 1rem;
+		padding: 1rem;
 		border-radius: var(--radius);
+	}
+
+	section[data-style='title'] > .content {
+		padding: 0 1rem 1rem 1rem;
 	}
 
 	@media (min-width: 768px) {

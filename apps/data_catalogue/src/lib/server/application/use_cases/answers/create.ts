@@ -26,9 +26,9 @@ export const answerCreateUseCase = async ({
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'answers',
-		permits: 'create',
+		namespace: 'Application',
+		object: 'registration',
+		permits: 'manage',
 		configuration
 	})
 	if (errors) {
@@ -78,17 +78,11 @@ export const answersCreateUseCase = async ({
 	answers_repository: IAnswersRepository
 	question_repository: IQuestionsRepository
 } & AppContext) => {
-	const [errs, permission] = await authorisation_module.authorise({
-		actor: session.identity.id,
-		namespace: 'Action',
-		object: 'answers',
-		permits: 'create',
-		configuration
-	})
-	if (errs) {
-		return err(errs)
+	// NOTE: all authenticated users can create answers, maybe check if user has access to question they can answer to that specific question? or too overkill?
+	if (!session.verified) {
+		return err({ reason: 'Unauthorised' })
 	}
-	if (!permission.allowed) {
+	if (session.identity.id === 'anonymous') {
 		return err({ reason: 'Unauthorised' })
 	}
 

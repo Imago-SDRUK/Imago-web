@@ -17,9 +17,9 @@ export const groupCreateUseCase = async ({
 	groups_repository: IGroupsRepository
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'groups',
-		permits: 'create',
+		permits: 'manage',
 		actor: session.identity.id,
 		configuration
 	})

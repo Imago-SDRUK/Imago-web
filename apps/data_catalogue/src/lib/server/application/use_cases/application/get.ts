@@ -8,6 +8,29 @@ import type { User } from '$lib/server/entities/models/users'
 import type { IGroupsRepository } from '$lib/server/application/repositories/groups'
 import type { IDatasetService } from '$lib/server/application/services/dataset'
 
+export const applicationCheckPermissionUseCase = async ({
+	object,
+	permits,
+	configuration,
+	session,
+	authorisation_module
+}: {
+	object?: string
+	permits?: 'read' | 'manage'
+} & AppContext) => {
+	const [errors, permission] = await authorisation_module.authorise({
+		object,
+		permits,
+		actor: session.identity.id,
+		namespace: 'Application',
+		configuration
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(permission.allowed)
+}
+
 export const applicationGetQuestionsUseCase = async ({
 	limit = 50,
 	offset = 0,

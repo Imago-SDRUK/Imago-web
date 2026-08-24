@@ -20,9 +20,9 @@ export const userAddGroupUseCase = async ({
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'users',
-		permits: 'create',
+		permits: 'manage',
 		configuration
 	})
 	if (errors) {
@@ -71,9 +71,9 @@ export const userRemoveGroupUseCase = async ({
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'users',
-		permits: 'update',
+		permits: 'manage',
 		configuration
 	})
 	if (errors) {
@@ -156,30 +156,6 @@ export const userAutoEnrollUseCase = async ({
 	if (identity_token !== env.IDENTITY_TOKEN) {
 		return err({ reason: 'Unauthorised' })
 	}
-	// const [errs, permissions] = await authorisation_module.batchAuthorise({
-	// 	permissions: [
-	// 		{
-	// 			namespace: 'User',
-	// 			object: session.identity.id,
-	// 			permits: 'members',
-	// 			actor: session.identity.id
-	// 		},
-	// 		{
-	// 			namespace: 'Action',
-	// 			object: 'users',
-	// 			permits: 'create',
-	// 			actor: session.identity.id
-	// 		}
-	// 	]
-	// })
-	// if (errs) {
-	// 	return err(errs)
-	// }
-	// console.log(jstr(permissions))
-	// const permission = permissions.results.some((permission) => permission.allowed)
-	// if (!permission) {
-	// 	return err({ reason: 'Unauthorised' })
-	// }
 	const [errors, user] = await users_repository.getUser({ id: user_id })
 	if (errors !== null) {
 		return err(errors)

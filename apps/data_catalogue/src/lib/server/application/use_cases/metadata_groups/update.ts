@@ -16,9 +16,9 @@ export const metadataGroupUpdateUseCase = async ({
 	// groups_repository: IGroupsRepository
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'groups',
-		permits: 'update',
+		permits: 'manage',
 		actor: session.identity.id,
 		configuration
 	})

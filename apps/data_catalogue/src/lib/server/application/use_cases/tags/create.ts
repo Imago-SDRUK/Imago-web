@@ -18,9 +18,9 @@ export const tagCreateUseCase = async ({
 	tags_service: ITagsService
 } & AppContext) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'datasets',
-		permits: 'create',
+		permits: 'manage',
 		actor: session.identity.id,
 		configuration
 	})
@@ -81,9 +81,9 @@ export const vocabularyCreateUseCase = async ({
 	tags_service: ITagsService
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'datasets',
-		permits: 'create',
+		permits: 'manage',
 		actor: session.identity.id,
 		configuration
 	})

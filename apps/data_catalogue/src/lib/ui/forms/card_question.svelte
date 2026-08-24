@@ -8,6 +8,7 @@
 	import { handleEnhance } from '$lib/utils/forms'
 	import Facts from '../cards/facts.svelte'
 	import { questionUpdateSort } from '$lib/remotes/questions/update.remote'
+	import { questionDelete } from '$lib/remotes/questions/delete.remote'
 	let {
 		question = $bindable(),
 		questions,
@@ -82,8 +83,8 @@
 				{/snippet}
 			</ActionBar>
 			{#if open && allow_manage}
-				<form action="?/delete_question" method="post" use:enhance={handleEnhance()}>
-					<input type="text" hidden value={question.id} name="id" />
+				<form {...questionDelete}>
+					<input {...questionDelete.fields.id.as('hidden', question.id)} />
 					<Button>
 						<Icon icon={{ icon: 'trash', set: 'tabler' }}></Icon>
 					</Button>

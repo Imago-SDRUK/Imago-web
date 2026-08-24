@@ -7,19 +7,19 @@ import { err, ok } from '$lib/server/entities/errors'
 import type { Permission, Relationship } from '$lib/server/entities/models/permissions'
 import { jstr } from '@arturoguzman/art-ui'
 
-export const ketoWrite = new RelationshipApi(
+const ketoWrite = new RelationshipApi(
 	new Configuration({
 		basePath: env.PERMISSION_SERVER_WRITE
 	})
 )
 
-export const ketoRead = new RelationshipApi(
+const ketoRead = new RelationshipApi(
 	new Configuration({
 		basePath: env.PERMISSION_SERVER_READ
 	})
 )
 
-export const ketoCheck = new PermissionApi(
+const ketoCheck = new PermissionApi(
 	new Configuration({
 		basePath: env.PERMISSION_SERVER_READ
 	})

@@ -15,9 +15,9 @@ export const tagDeleteUseCase = async ({
 	tags_service: ITagsService
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
-		namespace: 'Action',
-		object: 'dataset',
-		permits: 'create',
+		namespace: 'Application',
+		object: 'datasets',
+		permits: 'manage',
 		actor: session.identity.id,
 		configuration
 	})

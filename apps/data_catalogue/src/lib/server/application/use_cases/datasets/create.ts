@@ -24,9 +24,9 @@ export const datasetCreateUseCase = async ({
 	log.trace({ message: `Create dataset request` })
 	//NOTE: this will only handle the metadata groups, as groups with 'datasets' are linked through permissions
 	const [errors, permission] = await authorisation_module.authorise({
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'datasets',
-		permits: 'create',
+		permits: 'manage',
 		actor: session.identity.id,
 		configuration
 	})

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
+	import { env } from '$env/dynamic/public'
 	import { notify } from '$lib/stores/notify'
-	import { BaseCard, Title, Paragraph, Input, Text, Button } from '@imago/ui'
+	import { BaseCard, Title, Paragraph, Input, Text, Button, Captcha } from '@imago/ui'
 	let {
 		title = 'Newsletter',
 		paragraph = 'Subscribe to the newsletter to keep updated on Imago news and data products.'
@@ -35,8 +36,11 @@
 			<Input label="Name">
 				<Text aria-label="name" name="name"></Text>
 			</Input>
-			<Input label="Email">
-				<Text aria-label="email" type="email" name="email"></Text>
+			<Input label="Email" required>
+				<Text required aria-label="email" type="email" name="email"></Text>
+			</Input>
+			<Input>
+				<Captcha sitekey={env.PUBLIC_CF_TURNSTILE_SITE_KEY}></Captcha>
 			</Input>
 			<div class="button-container">
 				<Button

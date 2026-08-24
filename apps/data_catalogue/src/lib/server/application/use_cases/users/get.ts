@@ -207,7 +207,7 @@ export const usersGetUseCase = async ({
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'users',
 		permits: 'read',
 		configuration
@@ -274,7 +274,7 @@ export const usersSearchUseCase = async ({
 }) => {
 	const [errors, permission] = await getAuthorisationModule().authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'users',
 		permits: 'read',
 		configuration
@@ -321,7 +321,7 @@ export const userServiceGetUserUseCase = async ({
 	// HACK: lets assume users authorised to read users are also allowed to read ckan users
 	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'users',
 		permits: 'read',
 		configuration
@@ -346,7 +346,7 @@ export const userServiceGetUsersUseCase = async ({
 	// HACK: lets assume users authorised to read users are also allowed to read ckan users
 	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'users',
 		permits: 'read',
 		configuration
@@ -373,7 +373,7 @@ export const userServiceGetUserApiKeysUseCase = async ({
 	// HACK: lets assume users authorised to read users are also allowed to read ckan users
 	const [errors, permission] = await authorisation_module.authorise({
 		actor: session.identity.id,
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'users',
 		permits: 'read',
 		configuration

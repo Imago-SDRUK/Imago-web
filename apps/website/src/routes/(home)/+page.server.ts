@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/private'
 import type { Page } from '$lib/types/directus/index.js'
 import { handleDirectusError } from '$lib/utils/directus.js'
 import { EMAIL_REGEX } from '$lib/utils/regex.js'
@@ -60,11 +61,25 @@ export const load = async ({ locals }) => {
 export const actions = {
 	newsletter: async ({ locals, request }) => {
 		const form = await request.formData()
+		console.log(form)
 		const name = form.get('name')
 		const email = form.get('email')
+		const token = form.get('cf-turnstile-response') as string
 		if (!email) return fail(400, { message: `You need to provide an email.` })
 		if (EMAIL_REGEX.test(String(email)) === false)
 			return fail(400, { message: `You need to provide a valid email.` })
+		const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams({
+				secret: env.CF_TURNSTILE_SECRET_KEY,
+				response: token
+			})
+		})
+		const captcha = (await response.json()) as { success: boolean }
+		if (!captcha.success) {
+			return fail(400, { message: `Please try again.` })
+		}
 		const formatted_name = name?.toString().split(' ')
 		await locals.directus
 			.request(

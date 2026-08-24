@@ -13,9 +13,9 @@ export const metadataGroupDeleteUseCase = async ({
 	group_service: IGroupsService
 } & AppContext) => {
 	const [errors, permission] = await authorisation_module.authorise({
-		namespace: 'Action',
+		namespace: 'Application',
 		object: 'groups',
-		permits: 'delete',
+		permits: 'manage',
 		actor: session.identity.id,
 		configuration
 	})

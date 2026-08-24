@@ -1,16 +1,7 @@
-import { env } from '$env/dynamic/private'
-import { log } from '$lib/utils/server/logger.js'
-import { SERVER_ERRORS } from '$lib/globals/server'
 import type { IdentityError, IdentityResponse, IdentitySession } from '$lib/utils/auth/types'
-import {
-	RelationshipApi,
-	Configuration,
-	PermissionApi,
-	type CheckPermissionRequest
-} from '@ory/client-fetch'
+import { log } from '$lib/utils/server/logger.js'
 import { error } from '@sveltejs/kit'
 import { DateTime } from 'luxon'
-import type { Session } from '$lib/server/entities/models/identity'
 
 export const handleOryResponse = async (response: Response) => {
 	const contentType = response.headers.get('content-type')
@@ -40,24 +31,6 @@ export const verifyOrySession = (session: IdentitySession) => {
 	return true
 }
 
-export const ketoWrite = new RelationshipApi(
-	new Configuration({
-		basePath: env.PERMISSION_SERVER_WRITE
-	})
-)
-
-export const ketoRead = new RelationshipApi(
-	new Configuration({
-		basePath: env.PERMISSION_SERVER_READ
-	})
-)
-
-export const ketoCheck = new PermissionApi(
-	new Configuration({
-		basePath: env.PERMISSION_SERVER_READ
-	})
-)
-
 export const checkPermission = async ({
 	namespace,
 	object,
@@ -83,84 +56,11 @@ export const checkPermission = async ({
 		method: 'GET'
 	})
 	const data = (await res.json()) as
-		| { allowed: boolean }
-		| { code: number; status: string; message: string }
+		{ allowed: boolean } | { code: number; status: string; message: string }
 	if ('allowed' in data) {
 		return data.allowed
 	}
 	return false
-}
-
-export const authorise = async ({
-	session,
-	namespace,
-	object,
-	relation,
-	subjectSetNamespace,
-	subjectSetObject,
-	subjectSetRelation,
-	action
-}: { session?: Session; action?: () => Promise<void> } & CheckPermissionRequest) => {
-	if (!session) {
-		if (action) {
-			action()
-		}
-		error(...SERVER_ERRORS[401])
-	}
-	log.trace({
-		message: `Evaluating`,
-		session,
-		namespace,
-		object,
-		relation,
-		subjectSetNamespace,
-		subjectSetObject,
-		subjectSetRelation
-	})
-	if (subjectSetNamespace) {
-		const permission = await ketoCheck
-			.checkPermission({
-				namespace,
-				object,
-				relation,
-				subjectSetNamespace,
-				subjectSetObject,
-				subjectSetRelation
-			})
-			.catch((err) => {
-				log.debug(err)
-				return {
-					allowed: false
-				}
-			})
-		if (!permission.allowed) {
-			if (action) {
-				action()
-			}
-			log.debug(permission)
-			error(...SERVER_ERRORS[401])
-		}
-	}
-	const permission = await ketoCheck
-		.checkPermission({
-			namespace,
-			object,
-			relation,
-			subjectId: session.identity.id
-		})
-		.catch((err) => {
-			log.debug(err)
-			return {
-				allowed: false
-			}
-		})
-	if (!permission.allowed) {
-		if (action) {
-			action()
-		}
-		log.debug(permission)
-		error(...SERVER_ERRORS[401])
-	}
 }
 
 export const handleKetoError = async (err: { response: Response }) => {

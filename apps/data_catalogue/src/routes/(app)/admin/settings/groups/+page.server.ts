@@ -9,20 +9,11 @@ import {
 	groupRemoveUserController,
 	groupUpdateController
 } from '$lib/server/interface/adapters/controllers/groups/update.js'
-import {
-	groupGetController,
-	groupGetUsersController
-} from '$lib/server/interface/adapters/controllers/groups/get.js'
 import { usersSearchController } from '$lib/server/interface/adapters/controllers/users/get.js'
-import type { Group } from '$lib/server/entities/models/groups.js'
-import {
-	permissionsCheckController,
-	permissionsGetController
-} from '$lib/server/interface/adapters/controllers/permissions/get.js'
-import type { Relationships } from '$lib/server/entities/models/permissions.js'
+import { permissionsCheckController } from '$lib/server/interface/adapters/controllers/permissions/get.js'
 import { applicationGetGroupsController } from '$lib/server/interface/adapters/controllers/application/get.js'
 
-export const load = async ({ locals, url }) => {
+export const load = async ({ locals }) => {
 	let allow_manage = false
 	const [check_errs, check] = await permissionsCheckController({
 		permissions: [{ namespace: 'Application', object: 'groups', permits: 'manage' }],
@@ -42,71 +33,10 @@ export const load = async ({ locals, url }) => {
 	if (errors !== null) {
 		error(500, { message: errors.reason, id: errors.reason })
 	}
-	const edit = url.searchParams.get('edit')
-	let group: Group | null = null
-	let group_users: { first_name: string; last_name: string; email: string; id: string }[] = []
-	let group_permissions_actions: Relationships | null = null
-	let group_permissions_settings: Relationships | null = null
-	// let existing: Relationships | null = null
-	if (edit) {
-		;[group, group_users, group_permissions_actions, group_permissions_settings] =
-			await Promise.all([
-				await groupGetController({
-					configuration: locals.configuration,
-					session: locals.session,
-					id: edit,
-					permissions: [{ namespace: 'Application', object: 'groups', permits: 'read' }]
-				}).then(([errors, users]) => {
-					if (errors !== null) {
-						error(500, { message: errors.reason, id: errors.reason })
-					}
-					return users
-				}),
-				await groupGetUsersController({
-					configuration: locals.configuration,
-					session: locals.session,
-					group_id: edit
-				}).then(([errors, users]) => {
-					if (errors !== null) {
-						error(500, { message: errors.reason, id: errors.reason })
-					}
-					return users
-				}),
-				await permissionsGetController({
-					configuration: locals.configuration,
-					session: locals.session,
-					data: {
-						namespace: 'Action',
-						actor: { namespace: 'Group', object: edit, relation: 'members' }
-					}
-				}).then(([errors, users]) => {
-					if (errors !== null) {
-						error(500, { message: errors.reason, id: errors.reason })
-					}
-					return users
-				}),
-				await permissionsGetController({
-					configuration: locals.configuration,
-					session: locals.session,
-					data: {
-						namespace: 'Application',
-						actor: { namespace: 'Group', object: edit, relation: 'members' }
-					}
-				}).then(([errors, users]) => {
-					if (errors !== null) {
-						error(500, { message: errors.reason, id: errors.reason })
-					}
-					return users
-				})
-			])
-	}
+
 	return {
 		allow_manage,
-		groups,
-		group_users,
-		group,
-		group_permissions_actions,
-		group_permissions_settings
+		groups
 	}
 }
 
@@ -180,25 +110,6 @@ export const actions = {
 			message: 'Group deleted'
 		}
 	},
-	add_user: async ({ locals, request }) => {
-		const form = await request.formData()
-		const payload = {
-			user_id: formGetStringOrUndefined({ form, field: 'user_id' }),
-			group_id: formGetStringOrUndefined({ form, field: 'group_id' })
-		}
-		const [errors] = await groupAddUserController({
-			configuration: locals.configuration,
-			session: locals.session,
-			data: payload
-		})
-		if (errors !== null) {
-			console.log(errors)
-			return fail(500, { message: errors.reason })
-		}
-		return {
-			message: `User successfully added`
-		}
-	},
 
 	add_all_users: async ({ locals, request }) => {
 		const form = await request.formData()
@@ -216,24 +127,7 @@ export const actions = {
 			message: `User successfully added`
 		}
 	},
-	remove_user: async ({ locals, request }) => {
-		const form = await request.formData()
-		const payload = {
-			user_id: formGetStringOrUndefined({ form, field: 'user_id' }),
-			group_id: formGetStringOrUndefined({ form, field: 'group_id' })
-		}
-		const [errors] = await groupRemoveUserController({
-			configuration: locals.configuration,
-			session: locals.session,
-			...payload
-		})
-		if (errors !== null) {
-			return fail(500, { message: errors.reason })
-		}
-		return {
-			message: `User successfully added`
-		}
-	},
+
 	search_users: async ({ locals, request }) => {
 		const form = await request.formData()
 		const identifier = formGetStringOrUndefined({ form, field: 'identifier' })
