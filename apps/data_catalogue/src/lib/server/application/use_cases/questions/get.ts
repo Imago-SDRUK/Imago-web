@@ -37,9 +37,9 @@ export const questionsGetUseCase = async ({
 	limit = 50,
 	offset = 0,
 	session,
-	questions_repository,
-	authorisation_module,
-	configuration
+	questions_repository
+	// authorisation_module,
+	// configuration
 }: {
 	limit?: number
 	offset?: number
@@ -47,33 +47,37 @@ export const questionsGetUseCase = async ({
 	session: App.Locals['session']
 	configuration: Configuration
 } & AppContext) => {
+	// make so questions can be read by any authenticated user, later on permissions for questions could be reinstated if necessary
+	if (session.identity.id === 'anonymous') {
+		return err({ reason: 'Unauthorised' })
+	}
 	const [errs, questions] = await questions_repository.getQuestions({ limit, offset })
 	if (errs !== null) {
 		return err(errs)
 	}
 
-	const allowed = await Promise.all(
-		questions.map((question) =>
-			authorisation_module
-				.authorise({
-					actor: session.identity.id,
-					namespace: 'Question',
-					object: question.id,
-					permits: 'read',
-					configuration
-				})
-				.then(([errors, allowed]) => {
-					console.log(`question ${question.id} is ${allowed?.allowed}`)
-					if (errors !== null) {
-						return null
-					}
-					if (allowed.allowed) {
-						return question.id
-					}
-					return null
-				})
-		)
-	)
-	const filtered = questions.filter((question) => allowed.find((id) => id === question.id))
-	return ok(filtered)
+	// const allowed = await Promise.all(
+	// 	questions.map((question) =>
+	// 		authorisation_module
+	// 			.authorise({
+	// 				actor: session.identity.id,
+	// 				namespace: 'Question',
+	// 				object: question.id,
+	// 				permits: 'read',
+	// 				configuration
+	// 			})
+	// 			.then(([errors, allowed]) => {
+	// 				console.log(`question ${question.id} is ${allowed?.allowed}`)
+	// 				if (errors !== null) {
+	// 					return null
+	// 				}
+	// 				if (allowed.allowed) {
+	// 					return question.id
+	// 				}
+	// 				return null
+	// 			})
+	// 	)
+	// )
+	// const filtered = questions.filter((question) => allowed.find((id) => id === question.id))
+	return ok(questions)
 }
