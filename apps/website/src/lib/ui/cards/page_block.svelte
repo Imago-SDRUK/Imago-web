@@ -1,68 +1,24 @@
 <script lang="ts" generics="T extends Block">
 	import type { Block } from '$lib/types/directus'
 	import Carousel from '../components/carousel.svelte'
-	import { Picture } from '@arturoguzman/art-ui'
 	import { Subtitle, Title, Paragraph, Button, Icon } from '@imago/ui'
 	type Action = {
 		label: string
 		href?: string
 		alternative?: boolean
+		enable_description?: boolean
 	}
 	let {
-		blocks_id
+		blocks_id,
+		enable_description
 	}: {
 		blocks_id: Block | string | null | T
+		enable_description?: boolean
 	} = $props()
 </script>
 
 {#if blocks_id && typeof blocks_id !== 'string'}
 	{@const block = blocks_id}
-	{#if block.style === 'general'}
-		<div class="block">
-			{#if block.media && block.media.length > 0}
-				<div class="left-col">
-					<Carousel media={block.media}></Carousel>
-				</div>
-			{/if}
-			<div class="right-col">
-				<div class="copy">
-					<div class="header">
-						{#if block.title}
-							<Title text={block.title}></Title>
-						{/if}
-						{#if block.subtitle}
-							<Subtitle text={block.subtitle}></Subtitle>
-						{/if}
-					</div>
-					{#if block.content}
-						<Paragraph>
-							{@html block.content}
-						</Paragraph>
-					{/if}
-				</div>
-
-				{#if block.actions}
-					{@const actions = block.actions as Action[]}
-					{#each actions as { href, label }}
-						<div class="actions">
-							<Button {href}>
-								{#snippet leftCol()}
-									{label}
-								{/snippet}
-								{#snippet rightCol()}
-									{#if href?.startsWith('/')}
-										<Icon icon={{ icon: 'arrow-right-01', set: 'hugeicons' }}></Icon>
-									{:else}
-										<Icon icon={{ icon: 'arrow-up-right-01', set: 'hugeicons' }}></Icon>
-									{/if}
-								{/snippet}
-							</Button>
-						</div>
-					{/each}
-				{/if}
-			</div>
-		</div>
-	{/if}
 	{#if block.style === 'title_and_image'}
 		<div class="card">
 			<div class="card-title">
@@ -72,15 +28,12 @@
 			</div>
 			<div class="card-content">
 				<div class="card-image">
-					{#if block.media}
-						{#each block.media as media}
-							<!-- {#if typeof media !== 'string' && typeof media !== 'number' && 'directus_files_id' in media} -->
-							{#if typeof media !== 'string' && typeof media !== 'number' && 'directus_files_id' in media}
-								{#if typeof media.directus_files_id !== 'string'}
-									<Picture fit="contain" image={media.directus_files_id}></Picture>
-								{/if}
-							{/if}
-						{/each}
+					{#if (block.media && block.media.length > 0) || (block.external_assets && block.external_assets.length > 0)}
+						<Carousel
+							{enable_description}
+							external_assets={block.external_assets}
+							media={block.media}
+						></Carousel>
 					{/if}
 				</div>
 			</div>
@@ -100,10 +53,89 @@
 			{/if}
 		</div>
 	{/if}
+	{#if block.style === 'general' || block.style === 'text_media' || block.style === 'media_text'}
+		{@const with_media =
+			(block.media && block.media.length > 0) ||
+			(block.external_assets && block.external_assets.length > 0)}
+		<div class="block" data-style={block.style} style:--columns={with_media ? '2' : '1'}>
+			{#if with_media}
+				<div class="left-col" data-style={block.style}>
+					<Carousel {enable_description} external_assets={block.external_assets} media={block.media}
+					></Carousel>
+				</div>
+			{/if}
+			<div class="right-col" data-style={block.style}>
+				<div class="copy">
+					<div class="header">
+						{#if block.title}
+							<Title text={block.title}></Title>
+						{/if}
+						{#if block.subtitle}
+							<Subtitle text={block.subtitle}></Subtitle>
+						{/if}
+					</div>
+					{#if block.content}
+						<Paragraph>
+							{@html block.content}
+						</Paragraph>
+					{/if}
+				</div>
+
+				{#if block.actions}
+					{@const actions = block.actions as Action[]}
+					{#each actions as { href, label }}
+						<div class="actions" data-style={block.style}>
+							<Button {href}>
+								{#snippet leftCol()}
+									{label}
+								{/snippet}
+								{#snippet rightCol()}
+									{#if href?.startsWith('/')}
+										<Icon icon={{ icon: 'arrow-right-01', set: 'hugeicons' }}></Icon>
+									{:else}
+										<Icon icon={{ icon: 'arrow-up-right-01', set: 'hugeicons' }}></Icon>
+									{/if}
+								{/snippet}
+							</Button>
+						</div>
+					{/each}
+				{/if}
+			</div>
+		</div>
+	{/if}
 {/if}
 
 <style>
 	.block {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.block[data-style='text_media'],
+	.block[data-style='media_text'] {
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-template-rows: var(--columns, minmax(0, 1fr));
+		gap: 2rem;
+		background-color: color-mix(in oklab, var(--background-muted) 90%, var(--secondary) 10%);
+		border-radius: var(--radius);
+		padding: 2rem;
+	}
+
+	.left-col {
+		/* grid-column: 1 /2; */
+		overflow: hidden;
+	}
+	.right-col {
+		/* grid-column: 2 /3; */
+		height: 100%;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr) minmax(0, max-content);
+		gap: 1rem;
+	}
+	.copy {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
@@ -114,18 +146,38 @@
 			display: grid;
 			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		}
-	}
-	.right-col {
-		height: 100%;
-		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: minmax(0, 1fr) minmax(0, max-content);
-		gap: 1rem;
+		.block[data-style='text_media'] {
+			grid-template-columns: repeat(var(--columns), 1fr);
+			grid-template-rows: 1fr;
+		}
+		.block[data-style='media_text'] {
+			grid-template-columns: repeat(var(--columns), 1fr);
+			grid-template-rows: 1fr;
+		}
+		.left-col[data-style='text_media'] {
+			grid-column: 2 / 3;
+			grid-row: 1 / 2;
+		}
+		.right-col[data-style='text_media'] {
+			grid-column: 1 / 2;
+			grid-row: 1 / 2;
+		}
+		.left-col[data-style='media_text'] {
+			grid-column: 1 / 2;
+			grid-row: 1 / 2;
+		}
+		.right-col[data-style='media_text'] {
+			grid-column: 2 /3;
+			grid-row: 1 / 2;
+		}
 	}
 	.actions {
 		display: flex;
 		gap: 0.5rem;
 		justify-content: flex-end;
+	}
+	.actions[data-style='text_media'] {
+		justify-content: flex-start;
 	}
 	.card {
 		display: grid;

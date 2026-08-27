@@ -58,7 +58,7 @@
 									{/if}
 									{#if block.type === 'image'}
 										{#if block.media}
-											<Carousel media={block.media}></Carousel>
+											<Carousel enable_description media={block.media}></Carousel>
 										{/if}
 									{/if}
 									{#if block.type === 'cta'}

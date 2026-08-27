@@ -1,8 +1,9 @@
 import type { Page } from '$lib/types/directus/index.js'
 import { readItems } from '@directus/sdk'
+import { error } from '@sveltejs/kit'
 
 export const load = async ({ locals, params }) => {
-	const page = locals.directus.request(
+	const page = await locals.directus.request(
 		readItems('pages', {
 			fields: [
 				'title',
@@ -20,9 +21,45 @@ export const load = async ({ locals, params }) => {
 								'description',
 								'design',
 								'columns',
-								{ left_column: [{ blocks_id: ['*', { media: [{ directus_files_id: ['*'] }] }] }] },
-								{ right_column: [{ blocks_id: ['*', { media: [{ directus_files_id: ['*'] }] }] }] },
-								{ content: [{ blocks_id: ['*', { media: [{ directus_files_id: ['*'] }] }] }] }
+								{
+									left_column: [
+										{
+											blocks_id: [
+												'*',
+												{
+													media: [{ directus_files_id: ['*'] }],
+													external_assets: [{ external_assets_id: ['*'] }]
+												}
+											]
+										}
+									]
+								},
+								{
+									right_column: [
+										{
+											blocks_id: [
+												'*',
+												{
+													media: [{ directus_files_id: ['*'] }],
+													external_assets: [{ external_assets_id: ['*'] }]
+												}
+											]
+										}
+									]
+								},
+								{
+									content: [
+										{
+											blocks_id: [
+												'*',
+												{
+													media: [{ directus_files_id: ['*'] }],
+													external_assets: [{ external_assets_id: ['*'] }]
+												}
+											]
+										}
+									]
+								}
 							]
 						}
 					]
@@ -44,7 +81,10 @@ export const load = async ({ locals, params }) => {
 			}
 		})
 	)
+	if (page.length === 0) {
+		return error(404, { message: 'Not found', id: 'not-found' })
+	}
 	return {
-		page_data: (await page) as Page[]
+		page_data: page as Page[]
 	}
 }

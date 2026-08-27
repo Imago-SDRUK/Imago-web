@@ -6,7 +6,7 @@
 	import { Paragraph, BaseCard, Title, Fact, Button, Icon } from '@imago/ui'
 	import Carousel from '../components/carousel.svelte'
 	let { article }: { article: Article } = $props()
-	const sections = getArticleSections(article)
+	const sections = $derived(getArticleSections(article))
 </script>
 
 <BaseCard rounded border shadow>
@@ -35,7 +35,7 @@
 					{#each medias as media}
 						{#if typeof media !== 'string' && typeof media !== 'number' && 'directus_files_id' in media}
 							<div class="image">
-								<Picture image={media.directus_files_id}></Picture>
+								<Picture fit="contain" image={media.directus_files_id}></Picture>
 							</div>
 						{/if}
 					{/each}
@@ -97,8 +97,24 @@
 		/* box-shadow: var(--glass); */
 		color: var(--theme-colour-text);
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: minmax(0, 400px) minmax(0, 1fr);
 		gap: 2rem;
+	}
+	.left-col {
+		height: 100%;
+	}
+	.image {
+		height: 100%;
+	}
+
+	.right-col {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		padding: 2rem;
+		justify-content: space-between;
+		/* width: 600px; */
 	}
 	.content {
 		display: flex;
@@ -106,31 +122,7 @@
 		align-items: flex-end;
 		/* padding: 0.5rem 1rem 1rem 1rem; */
 	}
-	.right-col {
-		display: flex;
-		flex-direction: column;
-		gap: 2rem;
-		padding: 2rem 2rem 2rem 0;
-		justify-content: space-between;
-	}
-	.image {
-		/* aspect-ratio: 1 / 1; */
-		height: 100%;
-		width: 100%;
-		object-fit: cover;
-		overflow: hidden;
-		display: flex;
-		position: relative;
-	}
-	img {
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: 100%;
-		width: 100%;
-		object-fit: cover;
-		overflow: hidden;
-	}
+
 	.title {
 		transform: translate(0, 0);
 		transition: all 0.3s ease-in-out;
@@ -138,10 +130,7 @@
 		flex-direction: column;
 		gap: 1.5rem;
 	}
-	.tags {
-		display: flex;
-		gap: 0.5rem;
-	}
+
 	.footer {
 		display: flex;
 		justify-content: space-between;
@@ -152,4 +141,24 @@
 	/* 	border: 1px solid var(--theme-colour-highlight); */
 	/* 	transform: translate(1rem, -1rem); */
 	/* } */
+	@media (min-width: 768px) {
+		.article-card {
+			grid-template-columns: minmax(0, 420px) minmax(0, max-content);
+			grid-template-rows: initial;
+		}
+		.left-col {
+			position: relative;
+			display: flex;
+			justify-content: center;
+			padding: initial;
+		}
+		.image {
+			height: 100%;
+			object-fit: contain;
+			position: absolute;
+		}
+		.right-col {
+			padding: 2rem 2rem 2rem 0;
+		}
+	}
 </style>

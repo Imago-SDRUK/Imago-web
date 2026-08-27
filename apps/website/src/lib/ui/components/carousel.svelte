@@ -1,46 +1,107 @@
 <script lang="ts" generics="T">
-	type Props = {
-		media:
+	type Asset = {
+		id: string
+		title: string | null
+		type: string | null
+		description: string
+		resource?: DirectusFile
+		url?: string
+		code?: string
+	}
+	import { getId, Picture } from '@arturoguzman/art-ui'
+	import LottiePlayer from '../players/lottie_player.svelte'
+	import type { BlocksExternalAsset, DirectusFile } from '$lib/types/directus'
+	import { Paragraph, Icon } from '@imago/ui'
+	let {
+		enable_description,
+		media = [],
+		external_assets = []
+	}: {
+		enable_description?: boolean
+		external_assets?: BlocksExternalAsset[] | null
+		media?:
 			| ({
 					directus_files_id: DirectusFile | DirectusFile['id'] | null
 			  } & T)[]
 			| null
-	}
-	import { getId, Picture } from '@arturoguzman/art-ui'
-	import LottiePlayer from '../players/lottie_player.svelte'
-	import type { DirectusFile } from '$lib/types/directus'
-	import { Paragraph, Icon } from '@imago/ui'
-	let { media }: Props = $props()
+	} = $props()
 	const id = getId()
+	const assets: Asset[] = $derived(
+		[
+			...(media?.map(({ directus_files_id }) => {
+				if (directus_files_id && typeof directus_files_id !== 'string') {
+					return {
+						id: directus_files_id.id,
+						title: directus_files_id.title,
+						type: directus_files_id.type,
+						description: directus_files_id.description ?? '',
+						resource: directus_files_id
+					}
+				}
+				return null
+			}) ?? []),
+			...(external_assets?.map(({ external_assets_id }) => {
+				if (external_assets_id && typeof external_assets_id !== 'string') {
+					return {
+						id: external_assets_id.id,
+						title: external_assets_id.title,
+						type: external_assets_id.type,
+						description: external_assets_id.description,
+						url: external_assets_id.url ?? undefined,
+						code: external_assets_id.code ?? undefined
+					}
+				}
+				return null
+			}) ?? [])
+		].filter((x) => x !== null)
+	)
 	let current = $state(0)
 </script>
 
-{#if media}
+{#if assets.length > 0}
 	<div class="carousel" id="carousel-{id}">
 		<div class="assets">
-			{#each media as { directus_files_id }, index}
-				{@const media = directus_files_id}
+			{#each assets as asset, index}
 				<div class="asset" id="carousel-{id}-{index}">
-					{#if media && typeof media !== 'string'}
-						{#if media.type?.startsWith('image/')}
-							<Picture image={media}></Picture>
-						{/if}
-						{#if media.type === 'application/json'}
-							<LottiePlayer src="/assets/{media.id}"></LottiePlayer>
-						{/if}
+					{#if asset.type?.startsWith('image/')}
+						<Picture image={asset.resource} alt={asset.description ?? asset.title}></Picture>
+					{/if}
+					{#if asset.type === 'application/json'}
+						<LottiePlayer src="/assets/{asset.id}"></LottiePlayer>
+					{/if}
+					{#if asset.type === 'youtube' && asset.url}
+						{@const video_id = new URL(asset.url).searchParams.get('v')}
+						<iframe
+							class="iframe"
+							data-style="youtube"
+							width="100%"
+							height="100%"
+							title={asset.title ?? 'YouTube video player'}
+							src="https://www.youtube-nocookie.com/embed/{video_id}?autoplay=0&rel=0"
+							frameborder="0"
+							allow="autoplay; picture-in-picture; clipboard-write"
+							allowfullscreen
+						></iframe>
+					{/if}
+					{#if asset.type === 'iframe' && asset.url}
+						<iframe height="400" width="100%" title={asset.title} src={asset.url}></iframe>
 					{/if}
 				</div>
 			{/each}
 		</div>
-		<div class="description">
-			{#if media[current] && typeof media !== 'string'}
-				{@const { directus_files_id } = media[current]}
-				{#if directus_files_id && typeof directus_files_id !== 'string' && directus_files_id.description}
-					<Paragraph size="sm" text={directus_files_id.description}></Paragraph>
+		{#if enable_description && (assets[current].title || assets[current].description)}
+			<div class="description">
+				{#if assets[current].title}
+					<Paragraph size="xs" align="left" weight={300}>{assets[current].title}</Paragraph>
 				{/if}
-			{/if}
-		</div>
-		{#if media.length > 1}
+				{#if assets[current].description}
+					<Paragraph size="xs" weight={200}>
+						{@html assets[current].description}
+					</Paragraph>
+				{/if}
+			</div>
+		{/if}
+		{#if assets.length > 1}
 			{#if current > 0}
 				<button
 					class="left-button"
@@ -54,7 +115,7 @@
 					<Icon icon={{ icon: 'arrow-left-01', set: 'hugeicons', size: 'lg' }}></Icon>
 				</button>
 			{/if}
-			{#if media.length - 1 > current}
+			{#if assets.length - 1 > current}
 				<button
 					onclick={() => {
 						current++
@@ -69,9 +130,8 @@
 			{/if}
 
 			<div class="carousel-nav-buttons">
-				{#each media as { directus_files_id }, index}
-					{@const media = directus_files_id}
-					{#if media && typeof media !== 'string'}
+				{#each assets as asset, index}
+					{#if asset.resource}
 						<button
 							class="circle-button"
 							data-active={current === index ? true : undefined}
@@ -157,6 +217,11 @@
 		color: var(--highlight);
 	}
 	.description {
-		text-align: right;
+		background-color: color-mix(in oklab, var(--background-muted) 20%, var(--background) 80%);
+		padding: 0 0.5rem;
+		/* text-align: right; */
+	}
+	.iframe[data-style='youtube'] {
+		aspect-ratio: 16 / 9;
 	}
 </style>

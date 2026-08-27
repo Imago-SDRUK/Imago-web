@@ -8,7 +8,11 @@ export const load = async ({ locals, params }: PageServerLoadEvent) => {
 			readItems('articles', {
 				filter:
 					env.NODE_ENV === 'development'
-						? {}
+						? {
+								slug: {
+									_eq: params.slug
+								}
+							}
 						: {
 								_and: [
 									{

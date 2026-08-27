@@ -27,6 +27,7 @@
 		flex-direction: column;
 		gap: 4rem;
 		min-height: calc(100lvh - 4rem);
+		padding: 0 0 2rem 0;
 	}
 	.cards {
 		display: flex;

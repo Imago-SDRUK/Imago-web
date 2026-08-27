@@ -4,7 +4,8 @@ export const ROUTES: (Route & { subpaths: Route[] })[] = [
 	{
 		label: 'Data',
 		href: 'https://data.imago.ac.uk',
-		subpaths: []
+		subpaths: [],
+		target: '_blank'
 	},
 	{
 		label: 'News',

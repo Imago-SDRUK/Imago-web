@@ -437,6 +437,14 @@ export interface Block {
   /**
    * No description.
    *
+   * Type in directus: alias
+   * Type in database: no column
+   */
+   external_assets: BlocksExternalAsset[] | null;
+
+  /**
+   * No description.
+   *
    * Type in directus: uuid
    * Type in database: uuid
    */
@@ -472,7 +480,7 @@ export interface Block {
    * Type in directus: string
    * Type in database: character varying
    */
-   style: 'general' | 'title_and_image' | 'title_only';
+   style: 'general' | 'title_and_image' | 'title_only' | 'text_media' | 'media_text';
 
   /**
    * No description.
@@ -505,6 +513,41 @@ export interface Block {
    * Type in database: uuid
    */
    user_updated: DirectusUser | DirectusUser["id"] | null;
+}
+
+export interface BlocksExternalAsset {
+
+  /**
+   * No description.
+   *
+   * Type in directus: uuid
+   * Type in database: uuid
+   */
+   blocks_id: Block | Block["id"] | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: uuid
+   * Type in database: uuid
+   */
+   external_assets_id: ExternalAsset | ExternalAsset["id"] | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: integer
+   * Type in database: integer
+   */
+   id: number;
+
+  /**
+   * No description.
+   *
+   * Type in directus: integer
+   * Type in database: integer
+   */
+   sort: number | null;
 }
 
 export interface BlocksFile {
@@ -3988,6 +4031,105 @@ export interface EventsFile {
    id: number;
 }
 
+export interface ExternalAsset {
+
+  /**
+   * No description.
+   *
+   * Type in directus: text
+   * Type in database: text
+   */
+   code: string | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: timestamp
+   * Type in database: timestamp with time zone
+   */
+   date_created: string | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: timestamp
+   * Type in database: timestamp with time zone
+   */
+   date_updated: string | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: text
+   * Type in database: text
+   */
+   description: string | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: uuid
+   * Type in database: uuid
+   */
+   id: string;
+
+  /**
+   * No description.
+   *
+   * Type in directus: integer
+   * Type in database: integer
+   */
+   sort: number | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: string
+   * Type in database: character varying
+   */
+   status: 'published' | 'draft' | 'archived';
+
+  /**
+   * No description.
+   *
+   * Type in directus: string
+   * Type in database: character varying
+   */
+   title: string | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: string
+   * Type in database: character varying
+   */
+   type: 'youtube' | 'iframe' | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: string
+   * Type in database: character varying
+   */
+   url: string | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: uuid
+   * Type in database: uuid
+   */
+   user_created: DirectusUser | DirectusUser["id"] | null;
+
+  /**
+   * No description.
+   *
+   * Type in directus: uuid
+   * Type in database: uuid
+   */
+   user_updated: DirectusUser | DirectusUser["id"] | null;
+}
+
 export interface MastodonFollower {
 
   /**
@@ -4731,6 +4873,7 @@ export type Collections = {
   articles_article_sections: ArticlesArticleSection[];
   articles_files: ArticlesFile[];
   blocks: Block[];
+  blocks_external_assets: BlocksExternalAsset[];
   blocks_files: BlocksFile[];
   careers: Career[];
   careers_files: CareersFile[];
@@ -4766,6 +4909,7 @@ export type Collections = {
   directus_versions: DirectusVersion[];
   events: Event[];
   events_files: EventsFile[];
+  external_assets: ExternalAsset[];
   mastodon_followers: MastodonFollower[];
   mastodon_replies: MastodonReply[];
   pages: Page[];

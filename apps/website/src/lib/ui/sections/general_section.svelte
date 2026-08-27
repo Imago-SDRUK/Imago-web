@@ -31,7 +31,7 @@
 		<div class="blocks">
 			{#each section.content ?? [] as { blocks_id }}
 				<div class="block-wrapper" style:--basis={getBasis(section.content?.length)}>
-					<PageBlock {blocks_id}></PageBlock>
+					<PageBlock enable_description {blocks_id}></PageBlock>
 				</div>
 			{/each}
 		</div>
@@ -54,8 +54,9 @@
 	}
 	.blocks {
 		display: flex;
-		gap: 1rem;
-		flex-wrap: wrap;
+		flex-direction: column;
+		gap: 2rem;
+		/* flex-wrap: wrap; */
 	}
 	.block-wrapper {
 		flex-basis: var(--basis, 45%);
