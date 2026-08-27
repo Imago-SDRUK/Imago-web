@@ -10,7 +10,6 @@ export const ROUTES: (Route & { subpaths: Route[] })[] = [
 		label: 'News',
 		href: '/news',
 		subpaths: [
-			{ label: 'Blog', href: '/news' },
 			{
 				label: 'Careers',
 				href: '/careers'
@@ -24,20 +23,14 @@ export const ROUTES: (Route & { subpaths: Route[] })[] = [
 		subpaths: [
 			{ label: 'Book of Imagery', href: 'https://boi.imago.ac.uk/', target: '_blank' },
 			{ label: 'State of Imagery', href: 'https://zenodo.org/records/18338437', target: '_blank' }
-
-			// {
-			// 	label: 'Resources',
-			// 	href: '/research/resources'
-			// },
-			// { label: 'Publications', href: '/research/publications' }
 		]
 	},
 	{
 		label: 'About',
 		href: '/about',
 		subpaths: [
-			// { label: 'Partners', href: '/about/partners' }
-			{ label: 'Team', href: '/about#team' }
+			{ label: 'Team', href: '/about#team' },
+			{ label: 'Partnerships', href: '/partnerships' }
 		]
 	}
 ]
