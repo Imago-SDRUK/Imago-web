@@ -1,5 +1,12 @@
 # data-catalogue
 
+## 3.0.39
+### Patch Changes
+
+- 5d49d7f: improve admin groups page consolidate permissions from actions to application
+  deprecate actions namespace (need to remove from keto) improve questions ui move
+  questions actions to remote funtions
+
 ## 3.0.38
 ### Patch Changes
 

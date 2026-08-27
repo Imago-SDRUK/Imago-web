@@ -1,5 +1,19 @@
 # @imago/ui
 
+## 1.0.30
+### Patch Changes
+
+- 5d49d7f: improve ui
+- 3cbf819: add new external resource collection
+  add new block types
+  add block styles
+  allow pass weight to paragraph
+  update types
+  carousel now takes external resources
+  modify layout to consider min height
+  fix news page req on dev
+  add external link arrow marker
+
 ## 1.0.29
 ### Patch Changes
 
