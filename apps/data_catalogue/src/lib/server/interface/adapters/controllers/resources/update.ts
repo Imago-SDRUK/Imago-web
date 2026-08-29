@@ -10,13 +10,14 @@ import {
 	resourceVersionUpdateFileUseCase,
 	resourceVersionUpdateUseCase
 } from '$lib/server/application/use_cases/resources/update'
-import { resourceVersionCreateUseCase } from '$lib/server/application/use_cases/resources/create'
-import { getStorageModule } from '$lib/server/modules/storage'
-import { err, ok } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
+import { resourceVersionCreateUseCase } from '$lib/server/application/use_cases/resources/create'
+import { err, ok } from '$lib/server/entities/errors'
 import { getServerContext } from '$lib/server/application/context'
 import { log } from '$lib/utils/server/logger'
 import { getResourceServiceModule } from '$lib/server/modules/resources_service'
+import { getStorageRepositoryModule } from '$lib/server/modules/storage'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -59,7 +60,8 @@ export const resourceAddVersionController = async ({
 	const [errors, res] = await resourceVersionCreateUseCase({
 		data,
 		resource_respository: getResourceRepositoryModule(),
-		storage_service: getStorageModule(),
+		storage_repository: getStorageRepositoryModule(),
+		storage_resolver: getStorageResolverModule(),
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
