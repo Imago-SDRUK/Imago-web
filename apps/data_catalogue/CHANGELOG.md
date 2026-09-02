@@ -1,5 +1,10 @@
 # data-catalogue
 
+## 3.0.40
+### Patch Changes
+
+- 6216364: fix: bug showing wrong preview for dataset
+
 ## 3.0.39
 ### Patch Changes
 
