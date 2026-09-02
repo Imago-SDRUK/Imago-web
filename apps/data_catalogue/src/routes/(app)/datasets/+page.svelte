@@ -95,6 +95,7 @@
 				{#if datasets.length === 0}
 					<Subtitle size="lg">There are no results for this search.</Subtitle>
 				{/if}
+				<!-- dataset preview fixed -->
 				{#each datasets as dataset(dataset)}
 					<CardProduct {dataset}></CardProduct>
 				{/each}
