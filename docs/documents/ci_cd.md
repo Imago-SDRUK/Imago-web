@@ -65,3 +65,8 @@ The build workflow is defined in `.github/workflows/build.yml`. This workflow is
 ## Turbo configuration
 
 Passthrough environment variables: `SENTRY_DSN`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`, `BRANCH`, `SENTRY_RELEASE`, `BUILDING`, `CI`.
+
+## Notes
+
+> [!IMPORTANT]
+> @imago/ui build will always fail, as it doesn't have a Dockerfile. This is intentional: it's not meant to have one and I never managed to get github actions to fail gracefully or skip the task.

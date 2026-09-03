@@ -95,22 +95,13 @@
 										active={page.url.pathname.startsWith(href) && href !== '/'}
 										style="anchor"
 										onpointerdown={() => toggleMenu(false)}
-										{href}
-										>{label}
-										{#if href.startsWith('http')}
-											<Icon icon={{ icon: 'arrow-up-right-01', set: 'hugeicons' }}></Icon>
-										{/if}</Button
+										{href}>{label}</Button
 									>
 								{/if}
 							{/snippet}
 							<div class="subpaths">
 								{#each subpaths as { href, label, target }}
-									<Button style="anchor" {href} {target}
-										>{label}
-										{#if href?.startsWith('http')}
-											<Icon icon={{ icon: 'arrow-up-right-01', set: 'hugeicons' }}></Icon>
-										{/if}
-									</Button>
+									<Button style="anchor" {href} {target}>{label}</Button>
 								{/each}
 							</div>
 						</Menu>
@@ -122,12 +113,8 @@
 										active={page.url.pathname.startsWith(href) && href !== '/'}
 										style="anchor"
 										onpointerdown={() => toggleMenu(false)}
-										{href}
-										>{label}
-										{#if href.startsWith('http')}
-											<Icon icon={{ icon: 'arrow-up-right-01', set: 'hugeicons' }}></Icon>
-										{/if}
-									</Button>
+										{href}>{label}</Button
+									>
 								{/if}
 							{/snippet}
 						</Menu>
@@ -201,13 +188,6 @@
 		width: min(100% - 2rem, 800px);
 		margin-inline: auto;
 		border: 1px solid var(--highlight);
-		display: flex;
-		align-items: center;
-		gap: 2rem;
-		overflow-y: hidden;
-		overflow-x: scroll;
-		flex-wrap: nowrap;
-		scrollbar-width: thin;
 	}
 	.button-link {
 		transition: all 0.3s ease-in-out;
@@ -219,17 +199,12 @@
 	.left-col {
 		display: flex;
 		gap: 2rem;
-		flex-shrink: 0;
 	}
 	.right-col {
 		display: flex;
 		gap: 1rem;
 		justify-content: flex-end;
 		align-items: center;
-		width: 100%;
-		overflow-y: hidden;
-		overflow-x: scroll;
-		flex-wrap: nowrap;
 	}
 	.routes {
 		position: fixed;
