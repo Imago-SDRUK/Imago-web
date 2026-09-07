@@ -1,5 +1,10 @@
 # @imago/ui
 
+## 1.0.31
+### Patch Changes
+
+- 76db8da: removed the two scroll lines showing in the navbar. restored the previous navbar. made the compact navbar a little wider
+
 ## 1.0.30
 ### Patch Changes
 
