@@ -21,6 +21,8 @@ allowBuilds:
   libpq: false
   canvas: false
   pg: false
+  cpu-features: true
+  ssh2: true
 
 # "pnpm": {
 # 		"onlyBuiltDependencies": [

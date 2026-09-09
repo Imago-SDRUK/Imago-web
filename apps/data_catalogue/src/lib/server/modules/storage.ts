@@ -1,9 +1,9 @@
 import { env } from '$env/dynamic/private'
-import { storageServiceInfrastructure } from '$lib/server/infrastructure/services/storage'
+import { storageRepositoryInfrastructure } from '$lib/server/infrastructure/repositories/storages'
 
-export const getStorageModule = () => {
+export const getStorageRepositoryModule = () => {
 	if (env.NODE_ENV === 'test') {
-		return storageServiceInfrastructure['test']
+		return storageRepositoryInfrastructure['test']
 	}
-	return storageServiceInfrastructure['azure']
+	return storageRepositoryInfrastructure['drizzle']
 }

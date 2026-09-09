@@ -26,4 +26,11 @@ export type IConfigurationRepository = {
 		config_id: string
 	}) => Promise<[ErrTypes, null] | [null, Configuration]>
 	getConfiguration: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, Configuration]>
+	updateConfiguration: ({
+		data,
+		id
+	}: {
+		data: ConfigurationRequest
+		id: string
+	}) => Promise<[ErrTypes, null] | [null, Configuration]>
 }

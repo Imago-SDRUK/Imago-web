@@ -10,7 +10,8 @@ import {
 	resourceVersionDeleteUseCase
 } from '$lib/server/application/use_cases/resources/delete'
 import { getDatastoreModule } from '$lib/server/modules/datastore'
-import { getStorageModule } from '$lib/server/modules/storage'
+import { getStorageRepositoryModule } from '$lib/server/modules/storage'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -46,7 +47,8 @@ export const resourceDeleteController = async ({
 		id: resource_id,
 		resource_respository: getResourceRepositoryModule(),
 		datastore_service: getDatastoreModule(),
-		storage_service: getStorageModule(),
+		storage_resolver: getStorageResolverModule(),
+		storage_repository: getStorageRepositoryModule(),
 		...getServerContext({ session, configuration })
 	})
 	if (errors !== null) {
@@ -71,7 +73,8 @@ export const resourceVersionDeleteController = async ({
 	const upload_url = await resourceVersionDeleteUseCase({
 		version_id,
 		resource_respository: getResourceRepositoryModule(),
-		storage_service: getStorageModule(),
+		storage_repository: getStorageRepositoryModule(),
+		storage_resolver: getStorageResolverModule(),
 		...getServerContext({ session, configuration })
 	})
 	return upload_url

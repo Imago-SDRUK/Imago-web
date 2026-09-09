@@ -1,0 +1,1 @@
+ALTER TABLE "product_resources" ADD COLUMN "pipeline_backend" text NOT NULL;

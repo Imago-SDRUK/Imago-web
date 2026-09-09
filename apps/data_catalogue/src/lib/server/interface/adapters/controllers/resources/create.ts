@@ -14,12 +14,12 @@ import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
 import { log } from '$lib/utils/server/logger'
 import { getTransactionModule } from '$lib/server/modules/transaction'
-import { getStorageModule } from '$lib/server/modules/storage'
 import { resourceServiceDeleteUseCase } from '$lib/server/application/use_cases/resources/delete'
 import { getDatastoreModule } from '$lib/server/modules/datastore'
-import { permissionsCreateUseCase } from '$lib/server/application/use_cases/permissions/create'
 import { permissionsDeleteUseCase } from '$lib/server/application/use_cases/permissions/delete'
-import { getAuthorisationModule } from '$lib/server/modules/authorisation'
+import { storageGetCredentialsAndTypeUseCase } from '$lib/server/application/use_cases/storages/get'
+import { getStorageRepositoryModule } from '$lib/server/modules/storage'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 
 // const presenter = ({ dataset }: { dataset: Dataset }) => dataset
 
@@ -83,6 +83,14 @@ export const resourceCreateControllerWithVersion = async ({
 	const tx_service = getTransactionModule()
 	const [errors, results] = await tx_service.startTransaction({
 		clb: async (tx) => {
+			const [storage_errors, storage_type] = await storageGetCredentialsAndTypeUseCase({
+				storages_repository: getStorageRepositoryModule(),
+				id: configuration.resources_storage,
+				...getServerContext({ session, configuration, tx })
+			})
+			if (storage_errors !== null) {
+				return err(storage_errors)
+			}
 			const [rs_errors, rs] = await resourceServiceCreateUseCase({
 				data,
 				resource_service: getResourceServiceModule(),
@@ -121,9 +129,12 @@ export const resourceCreateControllerWithVersion = async ({
 				return err(errors)
 			}
 			const [v_errors, version] = await resourceVersionPipelineCreateUseCase({
+				storage_credentials: storage_type.credentials,
 				resource_respository: getResourceRepositoryModule(),
 				data: { ...version_data, resource: res.id },
-				storage_service: getStorageModule(),
+				storage_repository: getStorageRepositoryModule(),
+				storage_resolver: getStorageResolverModule(),
+
 				...getServerContext({ session, configuration, tx })
 			})
 			if (v_errors !== null) {
