@@ -1,5 +1,10 @@
 # @imago/ui
 
+## 1.0.32
+### Patch Changes
+
+- 60a1805: navbar fixed
+
 ## 1.0.31
 ### Patch Changes
 
