@@ -1,5 +1,6 @@
 import { errFmt, type ErrTypes } from '$lib/server/entities/errors'
 import type { User, UserServiceApiToken } from '$lib/server/entities/models/users'
+import { storagesListController } from '$lib/server/interface/adapters/controllers/storages/get.js'
 import {
 	userGetController,
 	userServiceGetUserApiKeysController,
@@ -71,10 +72,21 @@ export const load = async ({ locals }) => {
 		error(...errFmt(api_keys.errors[0]))
 	}
 
+	const [storages_errors, storages] = await storagesListController({
+		configuration: locals.configuration,
+		session: locals.session,
+		limit: 50,
+		offset: 0
+	})
+	if (storages_errors !== null) {
+		error(...errFmt(storages_errors))
+	}
+
 	return {
 		api_keys: api_keys.data.flatMap((key) => key),
 		ckan_users: filtered_ckan_users,
 		superusers: data,
-		configuration: locals.configuration
+		configuration: locals.configuration,
+		storages
 	}
 }

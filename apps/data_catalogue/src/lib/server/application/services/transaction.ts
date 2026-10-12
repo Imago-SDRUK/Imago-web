@@ -1,5 +1,4 @@
 import type { Transaction } from '$lib/db'
-import type { ITransaction } from '$lib/server/entities/models/transaction'
 
 export type ITransactionService = {
 	startTransaction: <T>({

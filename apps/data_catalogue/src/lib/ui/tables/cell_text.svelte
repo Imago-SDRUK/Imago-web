@@ -21,7 +21,7 @@
 	{#if row[key] !== undefined && row[key] !== null}
 		<Paragraph size="sm"
 			>{key === 'status'
-				? statuses.find((status) => status.value === row[key])?.label
+				? (statuses.find((status) => status.value === row[key])?.label ?? row[key])
 				: String(row[key])}</Paragraph
 		>
 	{:else}

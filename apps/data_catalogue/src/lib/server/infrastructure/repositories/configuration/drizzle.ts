@@ -87,10 +87,30 @@ const getConfiguration: IConfigurationRepository['getConfiguration'] = async ({ 
 	}
 }
 
+const updateConfiguration: IConfigurationRepository['updateConfiguration'] = async ({
+	data,
+	id
+}) => {
+	try {
+		const config = await db
+			.update(configuration)
+			.set(data)
+			.where(eq(configuration.id, id))
+			.returning()
+		if (config[0]) {
+			return ok(config[0])
+		}
+		return err({ reason: 'Not Found', message: 'Configuration not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 export const configurationRepositoryInfrastructureDrizzle: IConfigurationRepository = {
 	addSuperUser,
 	removeSuperUser,
 	setAdminGroup,
 	initialiseConfiguration,
-	getConfiguration
+	getConfiguration,
+	updateConfiguration
 }

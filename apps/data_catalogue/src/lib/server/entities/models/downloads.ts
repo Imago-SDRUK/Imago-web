@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, index } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, timestamp, index, text } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 import { users } from './users'
 import { resource_versions, resources } from './resources'
@@ -6,13 +6,15 @@ import { resource_versions, resources } from './resources'
 export const downloads = pgTable(
 	'downloads',
 	{
-		resource: uuid()
-			.notNull()
-			.references(() => resources.id, { onDelete: 'cascade' }),
+		resource: uuid(),
+		// resource: uuid().references(() => resources.id, { onDelete: 'cascade' }),
 		version: uuid().references(() => resource_versions.id, { onDelete: 'set null' }),
 		user: uuid()
 			.notNull()
 			.references(() => users.id, { onDelete: 'cascade' }),
+		type: text('type', { enum: ['resource', 'product'] })
+			.default('resource')
+			.notNull(),
 		created_at: timestamp({
 			mode: 'date',
 			precision: 3,

@@ -9,8 +9,9 @@ import { err, ok } from '$lib/server/entities/errors'
 import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getServerContext } from '$lib/server/application/context'
 import { log } from '$lib/utils/server/logger'
-import { getStorageModule } from '$lib/server/modules/storage'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
+import { getStorageRepositoryModule } from '$lib/server/modules/storage'
+import { getStorageResolverModule } from '$lib/server/application/resolvers/storage'
 
 export const resourceGetController = async ({
 	session,
@@ -88,7 +89,8 @@ export const resourceVersionDownloadController = async ({
 		resource_id,
 		resource_repository: getResourceRepositoryModule(),
 		downloads_repository: getDownloadsModule(),
-		storage_service: getStorageModule(),
+		storage_repository: getStorageRepositoryModule(),
+		storage_resolver: getStorageResolverModule(),
 		...getServerContext({ session, configuration })
 	})
 	if (errors) {

@@ -1,11 +1,10 @@
-import { err, ok } from '$lib/server/entities/errors'
-import { questionUpdateSortUseCase } from '$lib/server/application/use_cases/questions/update'
-import { getQuestionsModule } from '$lib/server/modules/questions'
 import type { Configuration } from '$lib/server/entities/models/configuration'
+import { err, ok } from '$lib/server/entities/errors'
 import { getServerContext } from '$lib/server/application/context'
 import {
 	configurationAddSuperUserUseCase,
-	configurationRemoveSuperUserUseCase
+	configurationRemoveSuperUserUseCase,
+	configurationSetStorageUseCase
 } from '$lib/server/application/use_cases/configuration/update'
 import { getConfigurationModule } from '$lib/server/modules/configuration'
 
@@ -52,6 +51,29 @@ export const configurationRemoveSuperUserController = async ({
 	}
 	const [errors, answer] = await configurationRemoveSuperUserUseCase({
 		id,
+		configuration_repository: getConfigurationModule(),
+		...getServerContext({ session, configuration })
+	})
+	if (errors !== null) {
+		return err(errors)
+	}
+	return ok(answer)
+}
+
+export const configurationSetStorageController = async ({
+	data,
+	session,
+	configuration
+}: {
+	data: { kind: string; id: string }
+	session: App.Locals['session']
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+	const [errors, answer] = await configurationSetStorageUseCase({
+		data,
 		configuration_repository: getConfigurationModule(),
 		...getServerContext({ session, configuration })
 	})
