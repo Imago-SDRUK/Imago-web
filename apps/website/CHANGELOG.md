@@ -1,5 +1,10 @@
 # website
 
+## 2.0.51
+### Patch Changes
+
+- 60a1805: navbar fixed
+
 ## 2.0.50
 ### Patch Changes
 
