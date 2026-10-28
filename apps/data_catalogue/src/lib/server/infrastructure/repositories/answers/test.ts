@@ -88,10 +88,35 @@ const deleteAnswer: IAnswersRepository['deleteAnswer'] = async ({ id }) => {
 	return ok(null)
 }
 
+const getTotalNewsletterSignUps = async () => {
+    return ok(0)
+}
+
+const getNewsletterSignUpsByCountry = async () => {
+    return ok([])
+}
+
+const getNewsletterSignUpsByCategory = async () => {
+    return ok([])
+}
+
+const getNewsletterSignUpsWithDownloads = async () => {
+    return ok(0)
+}
+
+const getTopDownloadedResourcesByCategory = async () => {
+    return ok([])
+}
+
 export const answersRepositoryInfrastructureTest: IAnswersRepository = {
 	createAnswer,
 	deleteAnswer,
 	getAnswer,
 	updateAnswer,
-	createAnswers
+	createAnswers,
+	getTotalNewsletterSignUps,
+	getNewsletterSignUpsByCountry,
+	getNewsletterSignUpsByCategory,
+	getNewsletterSignUpsWithDownloads,
+	getTopDownloadedResourcesByCategory
 }
