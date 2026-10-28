@@ -3,7 +3,7 @@
 	import { BaseSection, Button, Title, type Routes } from '@imago/ui'
 
 	let { children, data } = $props()
-	const allowed_groups = ['settings', 'dashboard']
+	const allowed_groups = ['settings', 'dashboard', 'new_dashboard']
 </script>
 
 <BaseSection style="extra-large">

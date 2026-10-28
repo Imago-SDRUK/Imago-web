@@ -147,6 +147,53 @@ const getDate = (str: string) => {
 	}
 }
 
+//insights dashboard
+export const downloadsGetDashboardUseCase = async ({
+	downloads_repository,
+	authorisation_module,
+	session,
+	configuration
+}: {
+	downloads_repository: IDownloadsRepository
+	authorisation_module: IAuthorisationService
+} & AppContext) => {
+	const [permission_errors, permission] = await authorisation_module.authorise({
+		namespace: 'Application',
+		object: 'dashboard',
+		permits: 'read',
+		actor: session.identity.id,
+		configuration
+	})
+
+	if (permission_errors) {
+		return err(permission_errors)
+	}
+
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+
+	const [total_errors, totalDownloads] =
+		await downloads_repository.getTotalDownloads()
+
+	if (total_errors !== null) {
+		return err(total_errors)
+	}
+
+	const [top_errors, topDownloadedResources] =
+		await downloads_repository.getTopDownloadedResources()
+
+	if (top_errors !== null) {
+		return err(top_errors)
+	}
+
+	return ok({
+		totalDownloads,
+		topDownloadedResources
+	})
+}
+
+
 // const reduceAggregates = <T>(
 // 	acc: { errors: ErrTypes[]; data: T[] },
 // 	el: [ErrTypes, null] | [null, T]

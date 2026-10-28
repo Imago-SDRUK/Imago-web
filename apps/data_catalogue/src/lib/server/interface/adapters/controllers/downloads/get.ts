@@ -8,6 +8,7 @@ import { type Configuration } from '$lib/server/entities/models/configuration'
 import { getDatasetModule } from '$lib/server/modules/datasets'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
 import { getResourceRepositoryModule } from '$lib/server/modules/resources'
+import {downloadsGetDashboardUseCase} from '$lib/server/application/use_cases/downloads/get'
 import { DateTime } from 'luxon'
 
 export const donwloadsGetByDatasetController = async ({
@@ -58,6 +59,29 @@ export const downloadsGetAggregatesController = async ({
 		return err(errors)
 	}
 	data.sort((a, b) => b.downloads - a.downloads)
+	return ok(data)
+}
+
+export const downloadsGetDashboardController = async ({
+	session,
+	configuration
+}: {
+	session: App.Locals['session']
+	configuration: Configuration
+}) => {
+	if (!session) {
+		return err({ reason: 'Unauthenticated' })
+	}
+
+	const [errors, data] = await downloadsGetDashboardUseCase({
+		downloads_repository: getDownloadsModule(),
+		...getServerContext({ session, configuration })
+	})
+
+	if (errors !== null) {
+		return err(errors)
+	}
+
 	return ok(data)
 }
 

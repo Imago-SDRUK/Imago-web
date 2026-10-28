@@ -16,4 +16,11 @@ export type IDownloadsRepository = {
 	}: {
 		data: DownloadRequest
 	}) => Promise<[ErrTypes, null] | [null, Download]>
+
+	// Insights Dashboard
+	getTotalDownloads: () => Promise<[ErrTypes, null] | [null, number]>
+
+	getTopDownloadedResources: () => Promise<
+		[ErrTypes, null] | [null, { resource_title: string; download_count: number }[]]
+	>
 }
