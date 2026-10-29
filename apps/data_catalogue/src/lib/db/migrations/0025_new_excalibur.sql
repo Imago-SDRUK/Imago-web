@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "long_name" text DEFAULT 'long data product' NOT NULL;

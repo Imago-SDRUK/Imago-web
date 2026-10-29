@@ -65,6 +65,11 @@
 			cell: CellEditorCtx
 		},
 		{
+			id: 'long_name',
+			header: 'Long name',
+			cell: CellEditorCtx
+		},
+		{
 			id: 'value',
 			header: 'Value',
 			cell: CellText

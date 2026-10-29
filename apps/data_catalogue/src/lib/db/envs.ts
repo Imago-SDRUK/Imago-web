@@ -1,6 +1,9 @@
 import { type } from 'arktype'
 // import { log } from '$lib/utils/server/logger.js'
-import 'dotenv/config'
+import dotenv from 'dotenv'
+import { expand } from 'dotenv-expand'
+
+expand(dotenv.config({ quiet: true }))
 
 const Env = type({
 	NODE_ENV: 'string',
