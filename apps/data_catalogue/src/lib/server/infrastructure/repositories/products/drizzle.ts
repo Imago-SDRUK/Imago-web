@@ -51,6 +51,7 @@ const getProduct: IProductsRepository['getProduct'] = async ({ id, tx }) => {
 			.select({
 				id: products.id,
 				name: products.name,
+				long_name: products.long_name,
 				value: products.value,
 				versions: products.versions,
 				years: products.years,
@@ -246,7 +247,10 @@ const addOptionToProduct: IProductsRepository['addOptionToProduct'] = async ({ t
 		const product = await _db
 			.insert(products_product_options)
 			.values(data)
-			.onConflictDoNothing()
+			.onConflictDoUpdate({
+				target: [products_product_options.product_id, products_product_options.product_option_id],
+				set: { updated_by: data.updated_by }
+			})
 			.returning()
 		if (product.length === 1) {
 			return ok(product[0])

@@ -221,7 +221,7 @@
 						<Paragraph>There are no products</Paragraph>
 					</Notice>
 				{/if}
-			</div>
+			</div>``
 		{/snippet}
 		{#snippet rightCol()}
 			{#if product_update}
@@ -260,6 +260,14 @@
 								</Notice>
 							{/each}
 							<Text {...form.fields.name.as('text', product_update.name)}></Text>
+						</Input>
+						<Input label="Long name" required>
+							{#each form.fields.long_name.issues() as issue}
+								<Notice level="negative">
+									<Paragraph>{issue.message}</Paragraph>
+								</Notice>
+							{/each}
+							<Text {...form.fields.long_name.as('text', product_update.long_name)}></Text>
 						</Input>
 						<Input label="Versions" required>
 							<div
