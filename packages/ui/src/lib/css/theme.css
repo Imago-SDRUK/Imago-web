@@ -18,9 +18,10 @@
 	--quarternary: #ff8f42;
 	--quarternary-accent: color-mix(in oklab, var(--quarternary) 80%, white 20%);
 	--quarternary-muted: color-mix(in oklab, var(--quarternary) 80%, black 20%);
-	--quinary: #03cea3;
+	--quinary: rgb(3, 206, 163);
 	--quinary-accent: color-mix(in oklab, var(--quinary) 80%, white 20%);
 	--quinary-muted: color-mix(in oklab, var(--quinary) 80%, black 20%);
+	--quinary-selected: rgba(2, 206, 162, 0.4);
 	--text: #ffffff;
 	--text-accent: color-mix(in oklab, var(--text) 80%, white 20%);
 	--text-muted: color-mix(in oklab, var(--text) 80%, black 20%);

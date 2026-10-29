@@ -1,7 +1,16 @@
 <script lang="ts">
 	import { createPlaygroundRequest } from '$lib/remotes/playground/create.remote'
 	import { notify } from '$lib/stores/notify.js'
-	import { BaseSection, Button, Input, Notice, Paragraph, Select, Subtitle } from '@imago/ui'
+	import {
+		BaseSection,
+		Button,
+		Input,
+		Notice,
+		Paragraph,
+		Select,
+		Subtitle,
+		BaseCard
+	} from '@imago/ui'
 	import { productGetOptions } from '$lib/remotes/products/read.remote.js'
 	import { goto } from '$app/navigation'
 	import { resolve } from '$app/paths'
@@ -37,6 +46,23 @@
 					</Notice>
 				{/each}
 				<div class="inputs">
+
+					{#each products.items as product}
+						<BaseCard border rounded shadow border_size="thick" style="padded" hover="option">
+							<!-- add selected as class if product is selected -->
+							<div class="playground-card">
+								<div class="playground-card-header">
+									<h4 class="playground-card-eyebrow">{product.name}</h4>
+									<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
+								</div>
+								<Paragraph size="2xl" family="subtitle" weight={400}
+									><em>SPF</em> (Sun Probability Framework) aims to measure sunlight exposure across the
+									UK.</Paragraph
+								>
+							</div>
+						</BaseCard>
+					{/each}
+
 					<Input label="Data product">
 						{#snippet message()}
 							{#each createPlaygroundRequest.fields.data_product.issues() as issue}
@@ -125,6 +151,27 @@
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		padding: 2rem 0;
 		/* gap: 1rem; */
+	}
+	/* :global(.card:hover) {
+		border: 2px solid var(--border);
+		cursor: pointer;
+	} */
+	.playground-card {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	.playground-card-header {
+		display: flex;
+		flex-direction: column;
+	}
+	.playground-card-eyebrow {
+		font-size: clamp(0.75rem, 0.7rem + 0.5vw, 0.875rem);
+		font-family: var(--title);
+		font-weight: 400;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text);
 	}
 	.left {
 		display: flex;

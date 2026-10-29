@@ -4,11 +4,14 @@
 	type Props = {
 		children: Snippet
 		border?: boolean
+		border_size?: 'default' | 'thick'
 		rounded?: boolean
 		shadow?: boolean
 		style?: 'default' | 'padded' | 'even-padded'
 		size?: 'sm' | 'md' | 'lg' | 'base'
 		overflow?: boolean
+		hover?: 'default' | 'option'
+		selected?: boolean
 	}
 	let {
 		children,
@@ -17,7 +20,10 @@
 		rounded,
 		size = 'base',
 		shadow,
-		overflow
+		border_size = 'default',
+		hover = 'default',
+		overflow,
+		selected
 	}: Props = $props()
 </script>
 
@@ -25,10 +31,13 @@
 	class="card"
 	data-style={style}
 	data-size={size}
+	data-hover={hover}
 	data-overflow={overflow ? true : undefined}
+	data-border-size={border_size}
 	class:border
 	class:rounded
 	class:shadow
+	class:selected
 	in:fly|global={{ y: 40 }}
 >
 	{@render children()}
@@ -39,11 +48,21 @@
 		overflow: hidden;
 		transition: all var(--animation-time) ease-in-out;
 	}
+	.selected {
+		border: 2px solid var(--quarternary) !important;
+		background-color: var(--quinary-selected);
+	}
 	.border {
 		border: 1px solid var(--border-muted);
 	}
 	.border:hover {
 		border: 1px solid var(--border);
+	}
+	.border[data-border-size='thick'] {
+		border: 2px solid var(--border-accent);
+	}
+	.border[data-border-size='thick']:hover {
+		border: 2px solid;
 	}
 	.rounded {
 		border-radius: var(--radius);
@@ -75,5 +94,10 @@
 	}
 	.card[data-overflow] {
 		overflow: initial;
+	}
+	.card[data-hover='option']:hover {
+		cursor: pointer;
+		border-color:  var(--quarternary);
+		background-color: var(--secondary-muted);
 	}
 </style>

@@ -5,15 +5,19 @@
 		children,
 		text,
 		size = 'md',
+		weight = 300,
 		current_colour,
 		align = 'left',
-		style = 'base'
+		style = 'base',
+		family = 'paragraph'
 	}: {
 		text?: string
 		size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+		weight?: number
 		align?: 'left' | 'centre' | 'right'
 		children?: Snippet
 		current_colour?: boolean
+		family?: 'title' | 'paragraph' | 'subtitle' | 'accent'
 		style?: 'base' | 'label' | 'full-width'
 	} = $props()
 </script>
@@ -25,6 +29,8 @@
 		data-style={style}
 		data-current-colour={current_colour ? current_colour : undefined}
 		data-align={align ? align : undefined}
+		data-family={family}
+		style:--weight={weight}
 	>
 		{@render children()}
 	</span>
@@ -36,6 +42,8 @@
 		data-style={style}
 		data-current-colour={current_colour ? current_colour : undefined}
 		data-align={align ? align : undefined}
+		data-family={family}
+		style="--weight: {weight}"
 	>
 		{text}
 	</p>
@@ -43,9 +51,20 @@
 
 <style>
 	.paragraph {
-		font-family: var(--paragraph);
 		color: var(--text);
-		font-weight: 300;
+		font-weight: var(--weight);
+	}
+	.paragraph[data-family='title'] {
+		font-family: var(--title);
+	}
+	.paragraph[data-family='subtitle'] {
+		font-family: var(--subtitle);
+	}
+	.paragraph[data-family='accent'] {
+		font-family: var(--accent);
+	}
+	.paragraph[data-family='paragraph'] {
+		font-family: var(--paragraph);
 	}
 	:global(.paragraph *) {
 		color: var(--theme-colour-text);
