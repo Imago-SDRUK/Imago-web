@@ -9,7 +9,7 @@
 		current_colour,
 		align = 'left',
 		style = 'base',
-		weight = 200
+		family = 'paragraph'
 	}: {
 		text?: string
 		size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
@@ -30,6 +30,11 @@
 		data-style={style}
 		data-current-colour={current_colour ? current_colour : undefined}
 		data-align={align ? align : undefined}
+		data-family={family}
+		style:--weight={weight}
+	>
+		{@render children()}
+	</span>
 {/if}
 {#if text}
 	<p
@@ -38,7 +43,8 @@
 		data-style={style}
 		data-current-colour={current_colour ? current_colour : undefined}
 		data-align={align ? align : undefined}
-		style:--weight={weight}
+		data-family={family}
+		style="--weight: {weight}"
 	>
 		{text}
 	</p>
@@ -48,6 +54,18 @@
 	.paragraph {
 		color: var(--text);
 		font-weight: var(--weight);
+	}
+	.paragraph[data-family='title'] {
+		font-family: var(--title);
+	}
+	.paragraph[data-family='subtitle'] {
+		font-family: var(--subtitle);
+	}
+	.paragraph[data-family='accent'] {
+		font-family: var(--accent);
+	}
+	.paragraph[data-family='paragraph'] {
+		font-family: var(--paragraph);
 	}
 	:global(.paragraph *) {
 		color: var(--theme-colour-text);

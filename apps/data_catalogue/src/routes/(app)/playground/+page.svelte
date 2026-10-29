@@ -103,6 +103,23 @@
 					</label>
 				{/each}
 				<div class="inputs">
+
+					{#each products.items as product}
+						<BaseCard border rounded shadow border_size="thick" style="padded" hover="option">
+							<!-- add selected as class if product is selected -->
+							<div class="playground-card">
+								<div class="playground-card-header">
+									<h4 class="playground-card-eyebrow">{product.name}</h4>
+									<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
+								</div>
+								<Paragraph size="2xl" family="subtitle" weight={400}
+									><em>SPF</em> (Sun Probability Framework) aims to measure sunlight exposure across the
+									UK.</Paragraph
+								>
+							</div>
+						</BaseCard>
+					{/each}
+
 					<Input label="Data product">
 						{#snippet message()}
 							{#each createPlaygroundRequest.fields.data_product.issues() as issue}
