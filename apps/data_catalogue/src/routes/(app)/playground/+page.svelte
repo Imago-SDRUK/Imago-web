@@ -76,8 +76,7 @@
 											<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
 										</div>
 										<Paragraph size="2xl" family="subtitle" weight={400}
-											><em>SPF</em> (Sun Probability Framework) aims to measure sunlight exposure across
-											the UK.</Paragraph
+											>{product.description}</Paragraph
 										>
 									</div>
 								</BaseCard>
