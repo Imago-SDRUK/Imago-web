@@ -72,6 +72,35 @@
 			</Notice>
 		{/each}
 		<div class="left">
+<<<<<<< HEAD
+			<Subtitle size="lg" weight={500}>Playground</Subtitle>
+			<Paragraph
+				>Request a custom extract of a data product for the geography, year, version and format
+				you need. </Paragraph>
+				<Paragraph>
+				Processing happens in the background, we'll
+				email you as soon as your download is ready.</Paragraph
+			>
+			<form
+				{...createPlaygroundRequest.enhance(async ({ submit, result }) => {
+					if (submitting) return
+					submitting = true
+					try {
+						const valid = await submit()
+						if (valid) {
+							notify.send({ message: result?.message })
+							goto(resolve(`/playground/requests`))
+						}
+					} finally {
+						submitting = false
+					}
+				})}
+			>
+				{#each createPlaygroundRequest.fields.allIssues() as issue}
+					<Notice level="negative">
+						<Paragraph>{issue.message}</Paragraph>
+					</Notice>
+=======
 			<fieldset class="playground-card-fieldset">
 				<legend>Select a Data Product</legend>
 				{#each products.items as product}
@@ -83,8 +112,8 @@
 						{/each}
 					{/snippet}
 					<input type="radio" value={product.id} bind:group={selected} id={product.id} hidden />
-					<label for={product.id} onmouseenter={() => (hovering = product.id)} onmouseleave={() => (hovering = '')} onfocus={() => (hovering = product.id)} onblur={() => (hovering = '')} tabindex="0">
-						<CardButton
+					<label for={product.id}>
+						<BaseCard
 							border
 							rounded
 							shadow
@@ -93,9 +122,7 @@
 							hover="option"
 							selected={selected === product.id}
 						>
-							<div
-								class="playground-card"
-							>
+							<div class="playground-card">
 								<div class="playground-card-header">
 									<h4 class="playground-card-eyebrow">{product.name}</h4>
 									<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
@@ -104,44 +131,83 @@
 									>{product.description}</Paragraph
 								>
 							</div>
-						</CardButton>
+						</BaseCard>
 					</label>
+>>>>>>> 404ffb8 (implemented two-column layour)
 				{/each}
-				<div class="inputs">
-					<fieldset class="playground-card-fieldset">
-						<legend>Select a Data Product</legend>
-						{#each products.items as product}
+			</fieldset>
+			<Input label="Data product">
+				{#snippet message()}
+					{#each createPlaygroundRequest.fields.data_product.issues() as issue}
+						<Notice level="negative">
+							<Paragraph>{issue.message}</Paragraph>
+						</Notice>
+					{/each}
+				{/snippet}
+				<Select
+					options={products.items.map((product) => ({
+						label: product.name,
+						value: product.id
+					}))}
+					name="data_product"
+					bind:value={selected}
+				></Select>
+			</Input>
+		</div>
+		<div class="right">
+			{#if selected}
+				{#key selected}
+					{#if product?.years}
+						<Input label="Year">
 							{#snippet message()}
-								{#each createPlaygroundRequest.fields.data_product.issues() as issue}
+								{#each createPlaygroundRequest.fields.year.issues() as issue}
 									<Notice level="negative">
 										<Paragraph>{issue.message}</Paragraph>
 									</Notice>
 								{/each}
 							{/snippet}
-							<input type="radio" value={product.id} bind:group={selected} id={product.id} hidden />
-							<label for={product.id}>
-								<BaseCard
-									border
-									rounded
-									shadow
-									border_size="thick"
-									style="padded"
-									hover="option"
-									selected={selected === product.id}
-								>
-									<div class="playground-card">
-										<div class="playground-card-header">
-											<h4 class="playground-card-eyebrow">{product.name}</h4>
-											<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
-										</div>
-										<Paragraph size="2xl" family="subtitle" weight={400}
-											><em>SPF</em> (Sun Probability Framework) aims to measure sunlight exposure across
-											the UK.</Paragraph
-										>
-									</div>
-								</BaseCard>
-							</label>
+							<Select
+								options={product.years.map((year) => ({ label: year, value: year }))}
+								{...createPlaygroundRequest.fields.year.as('select')}
+							></Select>
+						</Input>
+					{/if}
+					{#if product?.versions}
+						<Input label="Version">
+							{#snippet message()}
+								{#each createPlaygroundRequest.fields.version.issues() as issue}
+									<Notice level="negative">
+										<Paragraph>{issue.message}</Paragraph>
+									</Notice>
+								{/each}
+							{/snippet}
+							<Select
+								options={product.versions.map((version) => ({ label: version, value: version }))}
+								{...createPlaygroundRequest.fields.version.as('select')}
+							></Select>
+						</Input>
+					{/if}
+					{#if selected !== ''}
+						{#each await productGetOptions({ id: selected }) as option_group, index}
+							<Input label={String(option_group.group)}>
+								{#snippet message()}
+									{#each createPlaygroundRequest.fields.options[index].issues() as issue}
+										<Notice level="negative">
+											<Paragraph>{issue.message}</Paragraph>
+										</Notice>
+									{/each}
+								{/snippet}
+								<Select
+									required={option_group.required}
+									{...createPlaygroundRequest.fields.options[index].as('select')}
+									options={option_group.options.map((option) => ({
+										label: option.name ?? '',
+										value: option.id ?? option.value ?? ''
+									}))}
+								></Select>
+							</Input>
 						{/each}
+<<<<<<< HEAD
 					</fieldset>
 					<Input label="Data product">
 						{#snippet message()}
@@ -226,6 +292,21 @@
 					</Button>
 				</div>
 			</form>
+=======
+					{/if}
+				{/key}
+			{:else}
+				<div class="waiting-notice-panel">
+					<Notice level="info">
+						<Paragraph>Select a data product to see its options</Paragraph>
+					</Notice>
+				</div>
+			{/if}
+>>>>>>> 404ffb8 (implemented two-column layour)
+		</div>
+
+		<div class="buttons">
+			<Button style="alt">Request</Button>
 		</div>
 		<div class="right">
 			{#if selected}
