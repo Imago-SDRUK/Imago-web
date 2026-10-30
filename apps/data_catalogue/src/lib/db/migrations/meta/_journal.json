@@ -183,6 +183,13 @@
       "when": 1793277190240,
       "tag": "0025_new_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793357911429,
+      "tag": "0026_mute_blacklash",
+      "breakpoints": true
     }
   ]
 }

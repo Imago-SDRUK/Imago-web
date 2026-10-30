@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "description" text DEFAULT 'a couple of sentences describing the data product' NOT NULL;
