@@ -55,13 +55,13 @@
 	.border {
 		border: 1px solid var(--border-muted);
 	}
-	.border:hover {
+	.border:hover:not(.selected) {
 		border: 1px solid var(--border);
 	}
 	.border[data-border-size='thick'] {
 		border: 2px solid var(--border-accent);
 	}
-	.border[data-border-size='thick']:hover {
+	.border[data-border-size='thick']:hover:not(.selected) {
 		border: 2px solid;
 	}
 	.rounded {
@@ -97,6 +97,8 @@
 	}
 	.card[data-hover='option']:hover {
 		cursor: pointer;
+	}
+	.card[data-hover='option']:hover:not(.selected) {
 		border-color:  var(--quarternary);
 		background-color: var(--secondary-muted);
 	}
