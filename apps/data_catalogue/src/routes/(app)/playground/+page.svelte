@@ -20,6 +20,9 @@
 
 	let selected = $state('')
 	const product = $derived(products.items.find((product) => product.id === selected))
+
+	$inspect(selected, 'selected')
+	$inspect(product, 'product')
 </script>
 
 <BaseSection>
@@ -46,23 +49,41 @@
 					</Notice>
 				{/each}
 				<div class="inputs">
-
-					{#each products.items as product}
-						<BaseCard border rounded shadow border_size="thick" style="padded" hover="option">
-							<!-- add selected as class if product is selected -->
-							<div class="playground-card">
-								<div class="playground-card-header">
-									<h4 class="playground-card-eyebrow">{product.name}</h4>
-									<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
-								</div>
-								<Paragraph size="2xl" family="subtitle" weight={400}
-									><em>SPF</em> (Sun Probability Framework) aims to measure sunlight exposure across the
-									UK.</Paragraph
+					<fieldset class="playground-card-fieldset">
+						<legend>Select a Data Product</legend>
+						{#each products.items as product}
+							{#snippet message()}
+								{#each createPlaygroundRequest.fields.data_product.issues() as issue}
+									<Notice level="negative">
+										<Paragraph>{issue.message}</Paragraph>
+									</Notice>
+								{/each}
+							{/snippet}
+							<input type="radio" value={product.id} bind:group={selected} id={product.id} hidden />
+							<label for={product.id}>
+								<BaseCard
+									border
+									rounded
+									shadow
+									border_size="thick"
+									style="padded"
+									hover="option"
+									selected={selected === product.id}
 								>
-							</div>
-						</BaseCard>
-					{/each}
-
+									<div class="playground-card">
+										<div class="playground-card-header">
+											<h4 class="playground-card-eyebrow">{product.name}</h4>
+											<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
+										</div>
+										<Paragraph size="2xl" family="subtitle" weight={400}
+											><em>SPF</em> (Sun Probability Framework) aims to measure sunlight exposure across
+											the UK.</Paragraph
+										>
+									</div>
+								</BaseCard>
+							</label>
+						{/each}
+					</fieldset>
 					<Input label="Data product">
 						{#snippet message()}
 							{#each createPlaygroundRequest.fields.data_product.issues() as issue}
@@ -156,6 +177,22 @@
 		border: 2px solid var(--border);
 		cursor: pointer;
 	} */
+	.playground-card-fieldset {
+		/* reset default fieldset styles */
+		border: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	.playground-card-fieldset legend {
+		font-size: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+		font-family: var(--subtitle);
+		font-weight: 400;
+		color: var(--text);
+		margin-bottom: 0.5rem;
+	}
 	.playground-card {
 		display: flex;
 		flex-direction: column;
