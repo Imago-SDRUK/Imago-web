@@ -26,150 +26,171 @@
 </script>
 
 <BaseSection>
-	<div class="playground-section">
+	<div class="form-header">
+		<Subtitle size="lg" weight={500}>Playground</Subtitle>
+		<Paragraph
+			>Lorem ipsum dolor sit amet consectetur adipisicing elit. Provident, totam maiores enim
+			aliquam accusantium tenetur illum eius consequatur ut ipsam quae porro fuga! Velit dolorem
+			magnam totam placeat suscipit molestias.</Paragraph
+		>
+	</div>
+	<form
+		class="playground-section"
+		{...createPlaygroundRequest.enhance(async ({ submit, result }) => {
+			const valid = await submit()
+			if (valid) {
+				notify.send({ message: result?.message })
+				goto(resolve(`/playground/requests`))
+			}
+		})}
+	>
+		{#each createPlaygroundRequest.fields.allIssues() as issue}
+			<Notice level="negative">
+				<Paragraph>{issue.message}</Paragraph>
+			</Notice>
+		{/each}
 		<div class="left">
-			<Subtitle size="lg" weight={500}>Playground</Subtitle>
-			<Paragraph
-				>Lorem ipsum dolor sit amet consectetur adipisicing elit. Provident, totam maiores enim
-				aliquam accusantium tenetur illum eius consequatur ut ipsam quae porro fuga! Velit dolorem
-				magnam totam placeat suscipit molestias.</Paragraph
-			>
-			<form
-				{...createPlaygroundRequest.enhance(async ({ submit, result }) => {
-					const valid = await submit()
-					if (valid) {
-						notify.send({ message: result?.message })
-						goto(resolve(`/playground/requests`))
-					}
-				})}
-			>
-				{#each createPlaygroundRequest.fields.allIssues() as issue}
-					<Notice level="negative">
-						<Paragraph>{issue.message}</Paragraph>
-					</Notice>
+			<fieldset class="playground-card-fieldset">
+				<legend>Select a Data Product</legend>
+				{#each products.items as product}
+					{#snippet message()}
+						{#each createPlaygroundRequest.fields.data_product.issues() as issue}
+							<Notice level="negative">
+								<Paragraph>{issue.message}</Paragraph>
+							</Notice>
+						{/each}
+					{/snippet}
+					<input type="radio" value={product.id} bind:group={selected} id={product.id} hidden />
+					<label for={product.id}>
+						<BaseCard
+							border
+							rounded
+							shadow
+							border_size="thick"
+							style="padded"
+							hover="option"
+							selected={selected === product.id}
+						>
+							<div class="playground-card">
+								<div class="playground-card-header">
+									<h4 class="playground-card-eyebrow">{product.name}</h4>
+									<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
+								</div>
+								<Paragraph size="2xl" family="subtitle" weight={400}
+									>{product.description}</Paragraph
+								>
+							</div>
+						</BaseCard>
+					</label>
 				{/each}
-				<div class="inputs">
-					<fieldset class="playground-card-fieldset">
-						<legend>Select a Data Product</legend>
-						{#each products.items as product}
+			</fieldset>
+			<Input label="Data product">
+				{#snippet message()}
+					{#each createPlaygroundRequest.fields.data_product.issues() as issue}
+						<Notice level="negative">
+							<Paragraph>{issue.message}</Paragraph>
+						</Notice>
+					{/each}
+				{/snippet}
+				<Select
+					options={products.items.map((product) => ({
+						label: product.name,
+						value: product.id
+					}))}
+					name="data_product"
+					bind:value={selected}
+				></Select>
+			</Input>
+		</div>
+		<div class="right">
+			{#if selected}
+				{#key selected}
+					{#if product?.years}
+						<Input label="Year">
 							{#snippet message()}
-								{#each createPlaygroundRequest.fields.data_product.issues() as issue}
+								{#each createPlaygroundRequest.fields.year.issues() as issue}
 									<Notice level="negative">
 										<Paragraph>{issue.message}</Paragraph>
 									</Notice>
 								{/each}
 							{/snippet}
-							<input type="radio" value={product.id} bind:group={selected} id={product.id} hidden />
-							<label for={product.id}>
-								<BaseCard
-									border
-									rounded
-									shadow
-									border_size="thick"
-									style="padded"
-									hover="option"
-									selected={selected === product.id}
-								>
-									<div class="playground-card">
-										<div class="playground-card-header">
-											<h4 class="playground-card-eyebrow">{product.name}</h4>
-											<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
-										</div>
-										<Paragraph size="2xl" family="subtitle" weight={400}
-											>{product.description}</Paragraph
-										>
-									</div>
-								</BaseCard>
-							</label>
+							<Select
+								options={product.years.map((year) => ({ label: year, value: year }))}
+								{...createPlaygroundRequest.fields.year.as('select')}
+							></Select>
+						</Input>
+					{/if}
+					{#if product?.versions}
+						<Input label="Version">
+							{#snippet message()}
+								{#each createPlaygroundRequest.fields.version.issues() as issue}
+									<Notice level="negative">
+										<Paragraph>{issue.message}</Paragraph>
+									</Notice>
+								{/each}
+							{/snippet}
+							<Select
+								options={product.versions.map((version) => ({ label: version, value: version }))}
+								{...createPlaygroundRequest.fields.version.as('select')}
+							></Select>
+						</Input>
+					{/if}
+					{#if selected !== ''}
+						{#each await productGetOptions({ id: selected }) as option_group, index}
+							<Input label={String(option_group.group)}>
+								{#snippet message()}
+									{#each createPlaygroundRequest.fields.options[index].issues() as issue}
+										<Notice level="negative">
+											<Paragraph>{issue.message}</Paragraph>
+										</Notice>
+									{/each}
+								{/snippet}
+								<Select
+									required={option_group.required}
+									{...createPlaygroundRequest.fields.options[index].as('select')}
+									options={option_group.options.map((option) => ({
+										label: option.name ?? '',
+										value: option.id ?? option.value ?? ''
+									}))}
+								></Select>
+							</Input>
 						{/each}
-					</fieldset>
-					<Input label="Data product">
-						{#snippet message()}
-							{#each createPlaygroundRequest.fields.data_product.issues() as issue}
-								<Notice level="negative">
-									<Paragraph>{issue.message}</Paragraph>
-								</Notice>
-							{/each}
-						{/snippet}
-						<Select
-							options={products.items.map((product) => ({
-								label: product.name,
-								value: product.id
-							}))}
-							name="data_product"
-							bind:value={selected}
-						></Select>
-					</Input>
-					{#key selected}
-						{#if product?.years}
-							<Input label="Year">
-								{#snippet message()}
-									{#each createPlaygroundRequest.fields.year.issues() as issue}
-										<Notice level="negative">
-											<Paragraph>{issue.message}</Paragraph>
-										</Notice>
-									{/each}
-								{/snippet}
-								<Select
-									options={product.years.map((year) => ({ label: year, value: year }))}
-									{...createPlaygroundRequest.fields.year.as('select')}
-								></Select>
-							</Input>
-						{/if}
-						{#if product?.versions}
-							<Input label="Version">
-								{#snippet message()}
-									{#each createPlaygroundRequest.fields.version.issues() as issue}
-										<Notice level="negative">
-											<Paragraph>{issue.message}</Paragraph>
-										</Notice>
-									{/each}
-								{/snippet}
-								<Select
-									options={product.versions.map((version) => ({ label: version, value: version }))}
-									{...createPlaygroundRequest.fields.version.as('select')}
-								></Select>
-							</Input>
-						{/if}
-						{#if selected !== ''}
-							{#each await productGetOptions({ id: selected }) as option_group, index}
-								<Input label={String(option_group.group)}>
-									{#snippet message()}
-										{#each createPlaygroundRequest.fields.options[index].issues() as issue}
-											<Notice level="negative">
-												<Paragraph>{issue.message}</Paragraph>
-											</Notice>
-										{/each}
-									{/snippet}
-									<Select
-										required={option_group.required}
-										{...createPlaygroundRequest.fields.options[index].as('select')}
-										options={option_group.options.map((option) => ({
-											label: option.name ?? '',
-											value: option.id ?? option.value ?? ''
-										}))}
-									></Select>
-								</Input>
-							{/each}
-						{/if}
-					{/key}
+					{/if}
+				{/key}
+			{:else}
+				<div class="waiting-notice-panel">
+					<Notice level="info">
+						<Paragraph>Select a data product to see its options</Paragraph>
+					</Notice>
 				</div>
-				<div class="buttons">
-					<Button style="alt">Request</Button>
-				</div>
-			</form>
+			{/if}
 		</div>
-		<div class="right">
+
+		<div class="buttons">
+			<Button style="alt">Request</Button>
+		</div>
+	</form>
+
+	<!-- <div class="right">
 			<img src="/images/terrain_3.svg" alt="" />
-		</div>
-	</div>
+		</div> -->
 </BaseSection>
 
 <style>
+	.form-header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-bottom: 2rem;
+	}
 	.playground-section {
 		display: grid;
+		grid-template-areas:
+			'left right'
+			'buttons buttons';
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		padding: 2rem 0;
+		grid-template-rows: auto auto auto;
+		padding: 2rem 1rem;
 		/* gap: 1rem; */
 	}
 	/* :global(.card:hover) {
@@ -210,13 +231,26 @@
 		color: var(--text);
 	}
 	.left {
+		grid-area: left;
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 		padding: 0 2rem;
 	}
 	.right {
-		border-left: 1px solid var(--border);
+		grid-area: right;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 0 2rem;
+	}
+	.waiting-notice-panel {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
 	}
 	img {
 		object-fit: cover;
@@ -231,12 +265,8 @@
 		padding: 2rem;
 		border-radius: var(--radius);
 	}
-	.inputs {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
 	.buttons {
+		grid-area: buttons;
 		display: flex;
 		gap: 0.5rem;
 	}
