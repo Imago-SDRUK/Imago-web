@@ -19,10 +19,10 @@
 	const products = $derived(data.products)
 
 	let selected = $state('')
+	let hovering = $state('')
 	const product = $derived(products.items.find((product) => product.id === selected))
 
-	$inspect(selected, 'selected')
-	$inspect(product, 'product')
+	$inspect('hovering', hovering)
 </script>
 
 <BaseSection>
@@ -69,9 +69,13 @@
 							border_size="thick"
 							style="padded"
 							hover="option"
+							mouseenter={() => (hovering = product.id)}
+							mouseleave={() => (hovering = '')}
 							selected={selected === product.id}
 						>
-							<div class="playground-card">
+							<div
+								class="playground-card"
+							>
 								<div class="playground-card-header">
 									<h4 class="playground-card-eyebrow">{product.name}</h4>
 									<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
