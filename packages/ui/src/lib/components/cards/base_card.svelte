@@ -12,6 +12,9 @@
 		overflow?: boolean
 		hover?: 'default' | 'option'
 		selected?: boolean
+		mouseenter?: () => void
+		mouseleave?: () => void
+		role?: string
 	}
 	let {
 		children,
@@ -23,7 +26,10 @@
 		border_size = 'default',
 		hover = 'default',
 		overflow,
-		selected
+		selected,
+		mouseenter,
+		mouseleave,
+		role
 	}: Props = $props()
 </script>
 
@@ -34,6 +40,11 @@
 	data-hover={hover}
 	data-overflow={overflow ? true : undefined}
 	data-border-size={border_size}
+	onmouseenter={mouseenter}
+	onmouseleave={mouseleave}
+	onfocus={mouseenter}
+	onblur={mouseleave}
+	role={role}
 	class:border
 	class:rounded
 	class:shadow

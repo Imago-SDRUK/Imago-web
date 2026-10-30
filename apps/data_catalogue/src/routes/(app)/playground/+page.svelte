@@ -23,6 +23,7 @@
 	const product = $derived(products.items.find((product) => product.id === selected))
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	let submitting = $state(false)
 
 	let selected_version = $state('')
@@ -45,6 +46,9 @@
 	$inspect(selected, 'selected')
 	$inspect(product, 'product')
 >>>>>>> 6c78fd6 (turned product cards into radio buttons)
+=======
+	$inspect('hovering', hovering)
+>>>>>>> 4355c8e (adds hovering behaviour)
 </script>
 
 <BaseSection>
@@ -120,9 +124,13 @@
 							border_size="thick"
 							style="padded"
 							hover="option"
+							mouseenter={() => (hovering = product.id)}
+							mouseleave={() => (hovering = '')}
 							selected={selected === product.id}
 						>
-							<div class="playground-card">
+							<div
+								class="playground-card"
+							>
 								<div class="playground-card-header">
 									<h4 class="playground-card-eyebrow">{product.name}</h4>
 									<Subtitle size="md" weight={600}>{product.long_name}</Subtitle>
