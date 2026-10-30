@@ -10,6 +10,7 @@ import { type } from 'arktype'
 export const productCreate = form(
 	type({
 		name: nonEmptyString,
+		long_name: nonEmptyString,
 		value: nonEmptyString,
 		versions: nonEmptyString.array(),
 		years: 'number[] > 0',
@@ -18,13 +19,14 @@ export const productCreate = form(
 		// years: 'number[] > 0',
 		// options: 'string[]'
 	}),
-	async ({ name, value, versions, years, options }) => {
+	async ({ name, long_name, value, versions, years, options }) => {
 		const { locals } = getRequestEvent()
 		const [product_errors, product] = await productCreateController({
 			session: locals.session,
 			configuration: locals.configuration,
 			data: {
 				name,
+				long_name,
 				value,
 				versions,
 				years

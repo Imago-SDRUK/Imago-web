@@ -656,6 +656,14 @@
 				{/each}
 				<Text {...productCreate.fields.name.as('text')}></Text>
 			</Input>
+			<Input label="Long name" required>
+				{#each productCreate.fields.long_name.issues() as issue}
+					<Notice level="negative">
+						<Paragraph>{issue.message}</Paragraph>
+					</Notice>
+				{/each}
+				<Text {...productCreate.fields.long_name.as('text')}></Text>
+			</Input>
 			<Input label="Value" required>
 				{#each productCreate.fields.value.issues() as issue}
 					<Notice level="negative">
