@@ -11,6 +11,7 @@ export const productCreate = form(
 	type({
 		name: nonEmptyString,
 		long_name: nonEmptyString,
+		description: nonEmptyString,
 		value: nonEmptyString,
 		versions: nonEmptyString.array(),
 		years: 'number[] > 0',
@@ -19,7 +20,7 @@ export const productCreate = form(
 		// years: 'number[] > 0',
 		// options: 'string[]'
 	}),
-	async ({ name, long_name, value, versions, years, options }) => {
+	async ({ name, long_name, description, value, versions, years, options }) => {
 		const { locals } = getRequestEvent()
 		const [product_errors, product] = await productCreateController({
 			session: locals.session,
@@ -27,6 +28,7 @@ export const productCreate = form(
 			data: {
 				name,
 				long_name,
+				description,
 				value,
 				versions,
 				years

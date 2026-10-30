@@ -14,11 +14,12 @@ export const productUpdate = form(
 		id: 'string',
 		'name?': 'string',
 		'long_name?': 'string',
+		'description?': 'string',
 		'versions?': 'string[]',
 		'years?': 'number[]',
 		'options?': 'string[]'
 	}),
-	async ({ id, name, long_name, versions, years, options }) => {
+	async ({ id, name, long_name, description, versions, years, options }) => {
 		const { locals } = getRequestEvent()
 		const [update_errors, product] = await productUpdateController({
 			session: locals.session,
@@ -26,6 +27,7 @@ export const productUpdate = form(
 			data: {
 				name,
 				long_name,
+				description,
 				versions,
 				years
 			},

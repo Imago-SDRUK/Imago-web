@@ -52,6 +52,7 @@ const getProduct: IProductsRepository['getProduct'] = async ({ id, tx }) => {
 				id: products.id,
 				name: products.name,
 				long_name: products.long_name,
+				description: products.description,
 				value: products.value,
 				versions: products.versions,
 				years: products.years,

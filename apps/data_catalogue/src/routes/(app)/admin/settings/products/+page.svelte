@@ -14,6 +14,7 @@
 		Icon,
 		Input,
 		Text,
+		Textarea,
 		Numerical,
 		handleSearchParams,
 		Select,
@@ -273,6 +274,15 @@
 								</Notice>
 							{/each}
 							<Text {...form.fields.long_name.as('text', product_update.long_name)}></Text>
+						</Input>
+						<Input label="Description" required>
+							{#each form.fields.description.issues() as issue}
+								<Notice level="negative">
+									<Paragraph>{issue.message}</Paragraph>
+								</Notice>
+							{/each}
+							{console.log({...form.fields.description.as('text', product_update.description)})}
+							<Textarea {...form.fields.description.as('text', product_update.description)}></Textarea>
 						</Input>
 						<Input label="Versions" required>
 							<div
@@ -676,6 +686,14 @@
 					</Notice>
 				{/each}
 				<Text {...productCreate.fields.value.as('text')}></Text>
+			</Input>
+			<Input label="Description" required>
+				{#each productCreate.fields.description.issues() as issue}
+					<Notice level="negative">
+						<Paragraph>{issue.message}</Paragraph>
+					</Notice>
+				{/each}
+				<Textarea {...productCreate.fields.description.as('text')}></Textarea>
 			</Input>
 
 			<Input label="Versions" required>
