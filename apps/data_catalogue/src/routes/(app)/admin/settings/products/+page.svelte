@@ -227,7 +227,7 @@
 						<Paragraph>There are no products</Paragraph>
 					</Notice>
 				{/if}
-			</div>``
+			</div>
 		{/snippet}
 		{#snippet rightCol()}
 			{#if product_update}
