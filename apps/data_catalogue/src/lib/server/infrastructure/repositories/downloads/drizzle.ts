@@ -1,3 +1,4 @@
+import { insightsDateFilter } from '../insights_date_filter'
 import { db } from '$lib/db'
 import { downloads, resources } from '$lib/db/schema'
 import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
@@ -54,14 +55,14 @@ const getDownloadsAggregate: IDownloadsRepository['getDownloadsAggregate'] = asy
 	}
 }
 
-
-const getTotalDownloads: IDownloadsRepository['getTotalDownloads'] = async () => {
+const getTotalDownloads: IDownloadsRepository['getTotalDownloads'] = async (dateRange = {}) => {
 	try {
 		const result = await db
 			.select({
 				count: count()
 			})
 			.from(downloads)
+			.where(insightsDateFilter(downloads.created_at, dateRange))
 
 		return ok(result[0].count)
 	} catch (_err) {
@@ -69,31 +70,27 @@ const getTotalDownloads: IDownloadsRepository['getTotalDownloads'] = async () =>
 	}
 }
 
-const getTopDownloadedResources: IDownloadsRepository['getTopDownloadedResources'] =
-	async () => {
-		try {
-			const result = await db
-				.select({
-					resource_title: resources.title,
-					download_count: count()
-				})
-				.from(downloads)
-				.innerJoin(
-				  resources,
-					eq(
-						resources.id,
-						downloads.resource
-					)
-				)
-				.groupBy(downloads.resource, resources.title)
-				.orderBy(desc(count()))
-				.limit(3)
+const getTopDownloadedResources: IDownloadsRepository['getTopDownloadedResources'] = async (
+	dateRange = {}
+) => {
+	try {
+		const result = await db
+			.select({
+				resource_title: resources.title,
+				download_count: count()
+			})
+			.from(downloads)
+			.where(insightsDateFilter(downloads.created_at, dateRange))
+			.innerJoin(resources, eq(resources.id, downloads.resource))
+			.groupBy(downloads.resource, resources.title)
+			.orderBy(desc(count()))
+			.limit(3)
 
-			return ok(result)
-		} catch (_err) {
-			return err({ reason: 'Unexpected', error: _err })
-		}
+		return ok(result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
+}
 
 export const downloadsRepositoryInfrastructureDrizzle: IDownloadsRepository = {
 	getDownloads,

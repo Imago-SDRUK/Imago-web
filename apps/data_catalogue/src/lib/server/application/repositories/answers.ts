@@ -1,3 +1,4 @@
+import type { InsightsDateRange } from '$lib/server/entities/models/insights'
 import type { Transaction } from '$lib/db'
 import type { ErrTypes } from '$lib/server/entities/errors'
 import type { Answer, AnswerRequest } from '$lib/server/entities/models/questions'
@@ -23,33 +24,20 @@ export type IAnswersRepository = {
 	}) => Promise<[ErrTypes, null] | [null, Answer]>
 	deleteAnswer: ({ id }: { id: string }) => Promise<[ErrTypes, null] | [null, null]>
 
+	getTotalNewsletterSignUps: (
+		dateRange?: InsightsDateRange
+	) => Promise<[ErrTypes, null] | [null, number]>
 
-getTotalNewsletterSignUps: () => Promise<
-    [ErrTypes, null] | [null, number]
->
-
-getNewsletterSignUpsByCountry: () => Promise<
-    [ErrTypes, null] | [null, { country: string; total: number }[]]
->
-
-getNewsletterSignUpsByCategory: () => Promise<
-    [ErrTypes, null] | [null, { category: string; total: number }[]]
->
-
-getNewsletterSignUpsWithDownloads: () => Promise<
-    [ErrTypes, null] | [null, number]
->
-
-getTopDownloadedResourcesByCategory: () => Promise<
-    [ErrTypes, null] | [
-        null,
-        {
-            category: string
-            resource_id: string
-            resource_title: string
-            download_count: number
-        }[]
-    ]
->
-
+	getTopDownloadedResourcesByCategory: (dateRange?: InsightsDateRange) => Promise<
+		| [ErrTypes, null]
+		| [
+				null,
+				{
+					category: string
+					resource_id: string
+					resource_title: string
+					download_count: number
+				}[]
+		  ]
+	>
 }

@@ -1,3 +1,4 @@
+import type { InsightsDateRange } from '$lib/server/entities/models/insights'
 import { getServerContext } from '$lib/server/application/context'
 import { answersGetInsightsUseCase } from '$lib/server/application/use_cases/answers/insights'
 import { err, ok } from '$lib/server/entities/errors'
@@ -5,9 +6,11 @@ import type { Configuration } from '$lib/server/entities/models/configuration'
 import { getAnswersModule } from '$lib/server/modules/answers'
 
 export const answersGetInsightsController = async ({
+	dateRange = {},
 	session,
 	configuration
 }: {
+	dateRange?: InsightsDateRange
 	session: App.Locals['session']
 	configuration: Configuration
 }) => {
@@ -17,6 +20,7 @@ export const answersGetInsightsController = async ({
 
 	try {
 		const [errors, data] = await answersGetInsightsUseCase({
+			dateRange,
 			answers_repository: getAnswersModule(),
 			...getServerContext({ session, configuration })
 		})
@@ -32,4 +36,3 @@ export const answersGetInsightsController = async ({
 		throw error
 	}
 }
-

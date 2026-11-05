@@ -1,3 +1,4 @@
+import { insightsDateFilter } from '../insights_date_filter'
 import { db } from '$lib/db'
 import { answers, downloads, resources } from '$lib/db/schema'
 import type { IAnswersRepository } from '$lib/server/application/repositories/answers'
@@ -5,17 +6,11 @@ import { err, ok } from '$lib/server/entities/errors'
 import { and, eq, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 
-const createAnswer: IAnswersRepository['createAnswer'] = async ({
-	data,
-	tx
-}) => {
+const createAnswer: IAnswersRepository['createAnswer'] = async ({ data, tx }) => {
 	try {
 		const _db = tx ?? db
 
-		const answer = await _db
-			.insert(answers)
-			.values(data)
-			.returning()
+		const answer = await _db.insert(answers).values(data).returning()
 
 		return ok(answer[0])
 	} catch (_err) {
@@ -23,14 +18,9 @@ const createAnswer: IAnswersRepository['createAnswer'] = async ({
 	}
 }
 
-const createAnswers: IAnswersRepository['createAnswers'] = async ({
-	data
-}) => {
+const createAnswers: IAnswersRepository['createAnswers'] = async ({ data }) => {
 	try {
-		const answer = await db
-			.insert(answers)
-			.values(data)
-			.returning()
+		const answer = await db.insert(answers).values(data).returning()
 
 		return ok(answer)
 	} catch (_err) {
@@ -38,16 +28,9 @@ const createAnswers: IAnswersRepository['createAnswers'] = async ({
 	}
 }
 
-const updateAnswer: IAnswersRepository['updateAnswer'] = async ({
-	id,
-	data
-}) => {
+const updateAnswer: IAnswersRepository['updateAnswer'] = async ({ id, data }) => {
 	try {
-		const answer = await db
-			.update(answers)
-			.set(data)
-			.where(eq(answers.id, id))
-			.returning()
+		const answer = await db.update(answers).set(data).where(eq(answers.id, id)).returning()
 
 		return ok(answer[0])
 	} catch (_err) {
@@ -57,10 +40,7 @@ const updateAnswer: IAnswersRepository['updateAnswer'] = async ({
 
 const getAnswer: IAnswersRepository['getAnswer'] = async ({ id }) => {
 	try {
-		const answer = await db
-			.select()
-			.from(answers)
-			.where(eq(answers.id, id))
+		const answer = await db.select().from(answers).where(eq(answers.id, id))
 
 		return ok(answer[0])
 	} catch (_err) {
@@ -68,13 +48,9 @@ const getAnswer: IAnswersRepository['getAnswer'] = async ({ id }) => {
 	}
 }
 
-const deleteAnswer: IAnswersRepository['deleteAnswer'] = async ({
-	id
-}) => {
+const deleteAnswer: IAnswersRepository['deleteAnswer'] = async ({ id }) => {
 	try {
-		await db
-			.delete(answers)
-			.where(eq(answers.id, id))
+		await db.delete(answers).where(eq(answers.id, id))
 
 		return ok(null)
 	} catch (_err) {
@@ -84,195 +60,45 @@ const deleteAnswer: IAnswersRepository['deleteAnswer'] = async ({
 
 // Aliases for answers table
 
-const newsletterAnswers = alias(answers, 'newsletter')
-const countryAnswers = alias(answers, 'country')
 const categoryAnswers = alias(answers, 'category')
 
-// Total number of sign ups
+// Total number of newsletter opt-ins
 
-const getTotalNewsletterSignUps: IAnswersRepository['getTotalNewsletterSignUps'] =
-	async () => {
-		try {
-			const result = await db
-				.select({
-					total: sql<number>`
+const getTotalNewsletterSignUps: IAnswersRepository['getTotalNewsletterSignUps'] = async (
+	dateRange = {}
+) => {
+	try {
+		const result = await db
+			.select({
+				total: sql<number>`
 						cast(
 							count(distinct ${answers.created_by})
 							as int
 						)
 					`.as('total')
-				})
-				.from(answers)
-				.where(
-					and(
-						eq(
-							answers.question_reference,
-							'I’d like to receive updates about news, activities, events, and new data products released by Imago.'
-						),
-						eq(answers.answer, 'on')
-					)
-				)
-
-			return ok(result[0]?.total ?? 0)
-		} catch (_err) {
-			return err({ reason: 'Unexpected', error: _err })
-		}
-	}
-
-// Newsletter sign-ups by country
-
-const getNewsletterSignUpsByCountry: IAnswersRepository['getNewsletterSignUpsByCountry'] =
-	async () => {
-		try {
-			const result = await db
-				.select({
-					country: countryAnswers.answer,
-					total: sql<number>`
-						cast(
-							count(distinct ${newsletterAnswers.created_by})
-							as int
-						)
-					`.as('total')
-				})
-				.from(newsletterAnswers)
-				.innerJoin(
-					countryAnswers,
+			})
+			.from(answers)
+			.where(
+				and(
 					eq(
-						countryAnswers.created_by,
-						newsletterAnswers.created_by
-					)
+						answers.question_reference,
+						'I’d like to receive updates about news, activities, events, and new data products released by Imago.'
+					),
+					eq(answers.answer, 'on'),
+					insightsDateFilter(answers.created_at, dateRange)
 				)
-				.where(
-					and(
-						eq(
-							newsletterAnswers.question_reference,
-							'I’d like to receive updates about news, activities, events, and new data products released by Imago.'
-						),
-						eq(newsletterAnswers.answer, 'on'),
-						eq(
-							countryAnswers.question_reference,
-							'Country of organisation'
-						)
-					)
-				)
-				.groupBy(countryAnswers.answer)
-				.orderBy(
-					sql`
-						count(
-							distinct ${newsletterAnswers.created_by}
-						) desc
-					`
-				)
-
-			return ok(
-				result.map((row) => ({
-					country: row.country ?? '',
-					total: row.total
-				}))
 			)
-		} catch (_err) {
-			return err({ reason: 'Unexpected', error: _err })
-		}
+
+		return ok(result[0]?.total ?? 0)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
 	}
-
-// Newsletter sign-ups by category
-
-const getNewsletterSignUpsByCategory: IAnswersRepository['getNewsletterSignUpsByCategory'] =
-	async () => {
-		try {
-			const result = await db
-				.select({
-					category: categoryAnswers.answer,
-					total: sql<number>`
-						cast(
-							count(distinct ${newsletterAnswers.created_by})
-							as int
-						)
-					`.as('total')
-				})
-				.from(newsletterAnswers)
-				.innerJoin(
-					categoryAnswers,
-					eq(
-						categoryAnswers.created_by,
-						newsletterAnswers.created_by
-					)
-				)
-				.where(
-					and(
-						eq(
-							newsletterAnswers.question_reference,
-							'I’d like to receive updates about news, activities, events, and new data products released by Imago.'
-						),
-						eq(newsletterAnswers.answer, 'on'),
-						eq(
-							categoryAnswers.question_reference,
-							'Which category best describe you?'
-						)
-					)
-				)
-				.groupBy(categoryAnswers.answer)
-				.orderBy(
-					sql`
-						count(
-							distinct ${newsletterAnswers.created_by}
-						) desc
-					`
-				)
-
-			return ok(
-				result.map((row) => ({
-					category: row.category ?? '',
-					total: row.total
-				}))
-			)
-		} catch (_err) {
-			return err({ reason: 'Unexpected', error: _err })
-		}
-	}
-
-// Newsletter sign-ups who downloaded at least one dataset
-
-const getNewsletterSignUpsWithDownloads: IAnswersRepository['getNewsletterSignUpsWithDownloads'] =
-	async () => {
-		try {
-			const result = await db
-				.select({
-					total: sql<number>`
-						cast(
-							count(distinct ${answers.created_by})
-							as int
-						)
-					`.as('total')
-				})
-				.from(answers)
-				.innerJoin(
-					downloads,
-					eq(
-						answers.created_by,
-						downloads.user
-					)
-				)
-				.where(
-					and(
-						eq(
-							answers.question_reference,
-							'I’d like to receive updates about news, activities, events, and new data products released by Imago.'
-						),
-						eq(answers.answer, 'on')
-					)
-				)
-
-			return ok(result[0]?.total ?? 0)
-		} catch (_err) {
-			return err({ reason: 'Unexpected', error: _err })
-		}
-	}
+}
 
 // Top downloaded dataset by category
 
 const getTopDownloadedResourcesByCategory: IAnswersRepository['getTopDownloadedResourcesByCategory'] =
-	async () => {
+	async (dateRange = {}) => {
 		try {
 			const ranked = db
 				.select({
@@ -290,31 +116,15 @@ const getTopDownloadedResourcesByCategory: IAnswersRepository['getTopDownloadedR
 					`.as('rank')
 				})
 				.from(downloads)
-				.innerJoin(
-					categoryAnswers,
-					eq(
-						categoryAnswers.created_by,
-						downloads.user
-					)
-				)
-				.innerJoin(
-					resources,
-					eq(
-						resources.id,
-						downloads.resource
-					)
-				)
+				.innerJoin(categoryAnswers, eq(categoryAnswers.created_by, downloads.user))
+				.innerJoin(resources, eq(resources.id, downloads.resource))
 				.where(
-					eq(
-						categoryAnswers.question_reference,
-						'Which category best describe you?'
+					and(
+						eq(categoryAnswers.question_reference, 'Which category best describe you?'),
+						insightsDateFilter(downloads.created_at, dateRange)
 					)
 				)
-				.groupBy(
-					categoryAnswers.answer,
-					resources.id,
-					resources.title
-				)
+				.groupBy(categoryAnswers.answer, resources.id, resources.title)
 				.as('ranked')
 
 			const result = await db
@@ -348,8 +158,5 @@ export const answersRepositoryInfrastructureDrizzle: IAnswersRepository = {
 	getAnswer,
 	updateAnswer,
 	getTotalNewsletterSignUps,
-	getNewsletterSignUpsByCountry,
-	getNewsletterSignUpsByCategory,
-	getNewsletterSignUpsWithDownloads,
 	getTopDownloadedResourcesByCategory
 }

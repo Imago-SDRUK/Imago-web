@@ -1,3 +1,4 @@
+import type { InsightsDateRange } from '$lib/server/entities/models/insights'
 import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { IDatasetService } from '$lib/server/application/services/dataset'
@@ -149,11 +150,13 @@ const getDate = (str: string) => {
 
 //insights dashboard
 export const downloadsGetDashboardUseCase = async ({
+	dateRange = {},
 	downloads_repository,
 	authorisation_module,
 	session,
 	configuration
 }: {
+	dateRange?: InsightsDateRange
 	downloads_repository: IDownloadsRepository
 	authorisation_module: IAuthorisationService
 } & AppContext) => {
@@ -173,15 +176,14 @@ export const downloadsGetDashboardUseCase = async ({
 		return err({ reason: 'Unauthorised' })
 	}
 
-	const [total_errors, totalDownloads] =
-		await downloads_repository.getTotalDownloads()
+	const [total_errors, totalDownloads] = await downloads_repository.getTotalDownloads(dateRange)
 
 	if (total_errors !== null) {
 		return err(total_errors)
 	}
 
 	const [top_errors, topDownloadedResources] =
-		await downloads_repository.getTopDownloadedResources()
+		await downloads_repository.getTopDownloadedResources(dateRange)
 
 	if (top_errors !== null) {
 		return err(top_errors)
@@ -192,7 +194,6 @@ export const downloadsGetDashboardUseCase = async ({
 		topDownloadedResources
 	})
 }
-
 
 // const reduceAggregates = <T>(
 // 	acc: { errors: ErrTypes[]; data: T[] },

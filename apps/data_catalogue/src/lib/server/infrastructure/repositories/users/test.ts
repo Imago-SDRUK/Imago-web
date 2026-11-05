@@ -72,7 +72,16 @@ const removeUserGroup: IUsersRepository['removeUserGroup'] = async ({ data }) =>
 	})
 }
 
+const getTotalUsers: IUsersRepository['getTotalUsers'] = async () => ok(0)
+const getUsersWithDownloads: IUsersRepository['getUsersWithDownloads'] = async () => ok(0)
+const getUsersByCountry: IUsersRepository['getUsersByCountry'] = async () => ok([])
+const getUsersByCategory: IUsersRepository['getUsersByCategory'] = async () => ok([])
+
 export const userRepositoryInfrastructureTest: IUsersRepository = {
+	getTotalUsers,
+	getUsersWithDownloads,
+	getUsersByCountry,
+	getUsersByCategory,
 	createUser,
 	getUser,
 	getUsers,
