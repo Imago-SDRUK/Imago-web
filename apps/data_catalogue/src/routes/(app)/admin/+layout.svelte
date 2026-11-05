@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import { BaseSection, Button, Title, type Routes } from '@imago/ui'
+	import { BaseSection, Button, Title } from '@imago/ui'
 
 	let { children, data } = $props()
-	const allowed_groups = ['settings', 'dashboard']
+	const allowed_groups = ['settings', 'dashboard', 'new_dashboard']
+	const isRouteActive = (href?: string) =>
+		!!href && (page.url.pathname === href || page.url.pathname.startsWith(`${href}/`))
 </script>
 
 <BaseSection style="extra-large">
@@ -18,16 +20,14 @@
 			<!-- 	> -->
 			<!-- {/each} -->
 			{#each data.routes.filter( (x) => allowed_groups.includes(x.label.toLowerCase()) ) as { label, href, subpaths }}
-				<Button style="nav" active={page.url.pathname.startsWith(href)} line_clamp {href}
-					>{label}</Button
-				>
-				{#if page.url.pathname.startsWith(href)}
+				{@const groupActive =
+					isRouteActive(href) || subpaths.some((route) => isRouteActive(route.href))}
+				<Button style="nav" active={groupActive} line_clamp {href}>{label}</Button>
+				{#if groupActive}
 					{#if subpaths && subpaths.length > 0}
 						<div class="subpaths">
 							{#each subpaths as { label, href }}
-								<Button style="nav" active={page.url.pathname.startsWith(href)} line_clamp {href}
-									>{label}</Button
-								>
+								<Button style="nav" active={isRouteActive(href)} line_clamp {href}>{label}</Button>
 							{/each}
 						</div>
 					{/if}
