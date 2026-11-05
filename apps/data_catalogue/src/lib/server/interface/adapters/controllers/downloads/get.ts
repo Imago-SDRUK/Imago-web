@@ -1,3 +1,4 @@
+import type { InsightsDateRange } from '$lib/server/entities/models/insights'
 import { getServerContext } from '$lib/server/application/context'
 import {
 	dowloadsGetAggregatesUseCase,
@@ -8,7 +9,7 @@ import { type Configuration } from '$lib/server/entities/models/configuration'
 import { getDatasetModule } from '$lib/server/modules/datasets'
 import { getDownloadsModule } from '$lib/server/modules/downloads'
 import { getResourceRepositoryModule } from '$lib/server/modules/resources'
-import {downloadsGetDashboardUseCase} from '$lib/server/application/use_cases/downloads/get'
+import { downloadsGetDashboardUseCase } from '$lib/server/application/use_cases/downloads/get'
 import { DateTime } from 'luxon'
 
 export const donwloadsGetByDatasetController = async ({
@@ -63,9 +64,11 @@ export const downloadsGetAggregatesController = async ({
 }
 
 export const downloadsGetDashboardController = async ({
+	dateRange = {},
 	session,
 	configuration
 }: {
+	dateRange?: InsightsDateRange
 	session: App.Locals['session']
 	configuration: Configuration
 }) => {
@@ -74,6 +77,7 @@ export const downloadsGetDashboardController = async ({
 	}
 
 	const [errors, data] = await downloadsGetDashboardUseCase({
+		dateRange,
 		downloads_repository: getDownloadsModule(),
 		...getServerContext({ session, configuration })
 	})

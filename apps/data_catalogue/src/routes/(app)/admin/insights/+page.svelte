@@ -1,7 +1,14 @@
 <script lang="ts">
-	import { Title } from '@imago/ui'
+	import { page } from '$app/state'
+	import { untrack } from 'svelte'
 
 	let { data } = $props()
+	let from = $state(untrack(() => data.filters.from))
+	let to = $state(untrack(() => data.filters.to))
+	$effect(() => {
+		from = data.filters.from
+		to = data.filters.to
+	})
 
 	const countryNames = new Intl.DisplayNames(['en'], {
 		type: 'region'
@@ -22,15 +29,15 @@
 		'#64748B'
 	]
 
-	const categoryTotal =
-		data.insights?.signUpsByCategory?.reduce(
-			(sum: number, category: { category: string; total: number }) =>
-				sum + category.total,
+	const categoryTotal = $derived(
+		data.userInsights?.usersByCategory?.reduce(
+			(sum: number, category: { category: string; total: number }) => sum + category.total,
 			0
 		) ?? 0
+	)
 
 	const getCategoryPieStyle = () => {
-		const categories = data.insights?.signUpsByCategory ?? []
+		const categories = data.userInsights?.usersByCategory ?? []
 
 		if (!categoryTotal) {
 			return ''
@@ -54,17 +61,37 @@
 	}
 
 	const getCategoryName = (category: string) => {
-		return category
-			.replace(/_/g, '-')
-			.replace(/^./, (letter) => letter.toUpperCase())
+		return category.replace(/_/g, '-').replace(/^./, (letter) => letter.toUpperCase())
 	}
 </script>
 
 <div class="page">
-<Title>
-	<span class="page-title">Data Catalogue Engagement Insights</span>
-</Title>
-
+	<h1 class="page-title">Data Catalogue Engagement Insights</h1>
+	<br/>
+	<form class="date-filter" method="GET" action={page.url.pathname}>
+		<label
+			>From<input
+				aria-label="From date"
+				type="date"
+				name="from"
+				bind:value={from}
+				max={to || undefined}
+			/></label
+		>
+		<label
+			>To<input
+				aria-label="To date"
+				type="date"
+				name="to"
+				bind:value={to}
+				min={from || undefined}
+			/></label
+		>
+		<div class="filter-actions">
+			<button type="submit">Apply</button>
+			<a class="reset-filter" href={page.url.pathname}>Reset</a>
+		</div>
+	</form>
 
 	<!-- Main metrics -->
 	<div class="metrics">
@@ -74,15 +101,20 @@
 		</div>
 
 		<div class="metric-card">
-			<p class="metric-label">Total sign-ups</p>
-			<p class="metric-value">{data.insights?.totalSignUps ?? 0}</p>
+			<p class="metric-label">Total users</p>
+			<p class="metric-value">{data.userInsights?.totalUsers ?? 0}</p>
 		</div>
 
 		<div class="metric-card">
-			<p class="metric-label">Sign-ups who downloaded a dataset</p>
+			<p class="metric-label">Users who downloaded a dataset</p>
 			<p class="metric-value">
-				{data.insights?.signUpsWithDownloads ?? 0}
+				{data.userInsights?.usersWithDownloads ?? 0}
 			</p>
+		</div>
+
+		<div class="metric-card">
+			<p class="metric-label">Newsletter sign-ups</p>
+			<p class="metric-value">{data.insights?.totalNewsletterSignUps ?? 0}</p>
 		</div>
 	</div>
 
@@ -109,20 +141,20 @@
 		</div>
 	</section>
 
-	<!-- Sign-ups by country and category -->
+	<!-- Users by country and category -->
 	<section class="section">
 		<div class="grid">
-			<!-- Sign-ups by country -->
+			<!-- Users by country -->
 			<div class="card country-card">
-				<h2>Sign-ups by country</h2>
+				<h2>Users by country</h2>
 
 				<div class="table country-table country-scroll">
 					<div class="table-header">
 						<span>Country</span>
-						<span>Sign-ups</span>
+						<span>Users</span>
 					</div>
 
-					{#each data.insights?.signUpsByCountry ?? [] as country}
+					{#each data.userInsights?.usersByCountry ?? [] as country}
 						<div class="table-row">
 							<span>
 								{getCountryName(country.country)}
@@ -136,16 +168,13 @@
 				</div>
 			</div>
 
-			<!-- Sign-ups by category -->
+			<!-- Users by category -->
 			<div class="card category-card">
-				<h2>Sign-ups by category</h2>
+				<h2>Users by category</h2>
 
 				<div class="category-chart">
 					{#if categoryTotal > 0}
-						<div
-							class="pie-chart"
-							style={`background: ${getCategoryPieStyle()}`}
-						>
+						<div class="pie-chart" style={`background: ${getCategoryPieStyle()}`}>
 							<div class="pie-centre"></div>
 						</div>
 					{:else}
@@ -155,7 +184,7 @@
 
 				<!-- Category key -->
 				<div class="category-legend">
-					{#each data.insights?.signUpsByCategory ?? [] as category, index}
+					{#each data.userInsights?.usersByCategory ?? [] as category, index}
 						<div class="legend-item">
 							<span
 								class="legend-colour"
@@ -168,11 +197,7 @@
 
 							<span class="legend-value">
 								{category.total}
-								({categoryTotal
-									? Math.round(
-											(category.total / categoryTotal) * 100
-										)
-									: 0}%)
+								({categoryTotal ? Math.round((category.total / categoryTotal) * 100) : 0}%)
 							</span>
 						</div>
 					{/each}
@@ -214,7 +239,99 @@
 </div>
 
 <style>
+	.page-title {
+		margin: 0 0 1.25rem;
+		font-size: clamp(1.25rem, 2vw, 1.6rem);
+		font-weight: 600;
+		line-height: 1.3;
+		color: white;
+	}
+	.date-filter {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 1rem;
+		padding: 1.25rem;
+		border: 1px solid #e2e2e2;
+		border-radius: 10px;
+		background: #f8fafc;
+	}
+	.filter-heading {
+		display: grid;
+		gap: 0.35rem;
+		margin-right: auto;
+		align-self: center;
+	}
+	.filter-heading span,
+	.filter-note {
+		font-size: 0.8rem;
+		color: #666;
+	}
+	.date-filter label {
+		display: grid;
+		gap: 0.4rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+	.date-filter input {
+		min-height: 42px;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #cbd5e1;
+		border-radius: 6px;
+		font: inherit;
+		background: white;
+		color: inherit;
+	}
+	.filter-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-left: auto;
+	}
+	.date-filter button {
+		min-height: 42px;
+		padding: 0.5rem 1rem;
+		border: 1px solid #334155;
+		border-radius: 6px;
+		background: #334155;
+		color: white;
+		font: inherit;
+		cursor: pointer;
+	}
+	.reset-filter {
+		display: inline-flex;
+		align-items: center;
+		min-height: 42px;
+		justify-content: center;
+		padding: 0.5rem 1rem;
+		border: 1px solid #f09553;
+		border-radius: 6px;
+		background: #f09553;
+		color: #1f2937;
+		font: inherit;
+		text-decoration: none;
+	}
+	.reset-filter:hover {
+		background: #e88a44;
+		border-color: #e88a44;
+	}
+	.filter-note {
+		flex-basis: 100%;
+		margin: 0;
+		line-height: 1.5;
+	}
+	.date-filter :is(input, button, a):focus-visible {
+		outline: 2px solid #4f46e5;
+		outline-offset: 3px;
+	}
+
 	.page {
+		font-family:
+			system-ui,
+			-apple-system,
+			BlinkMacSystemFont,
+			'Segoe UI',
+			sans-serif;
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: 0 2rem 2rem;
@@ -228,7 +345,7 @@
 
 	.metrics {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 1.5rem;
 		margin-top: 1.25rem;
 	}
@@ -238,8 +355,8 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		min-height: 150px;
-		padding: 1.5rem;
+		min-height: 140px;
+		padding: 1.25rem;
 		border: 1px solid #e2e2e2;
 		border-radius: 10px;
 		background: white;
@@ -436,8 +553,32 @@
 		overflow-wrap: anywhere;
 	}
 
+	@media (max-width: 1100px) {
+		.metrics {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
 	@media (max-width: 768px) {
+		.filter-heading {
+			width: 100%;
+		}
+		.date-filter label {
+			flex: 1;
+			min-width: 130px;
+		}
+		.date-filter input {
+			width: 100%;
+			box-sizing: border-box;
+		}
+
 		.page {
+			font-family:
+				system-ui,
+				-apple-system,
+				BlinkMacSystemFont,
+				'Segoe UI',
+				sans-serif;
 			padding: 0 1rem 1rem;
 		}
 
@@ -478,6 +619,5 @@
 		.category-legend {
 			grid-template-columns: 1fr;
 		}
-
 	}
 </style>

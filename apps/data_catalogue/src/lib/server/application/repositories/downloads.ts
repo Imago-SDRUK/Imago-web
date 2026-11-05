@@ -1,3 +1,4 @@
+import type { InsightsDateRange } from '$lib/server/entities/models/insights'
 import type { ErrTypes } from '$lib/server/entities/errors'
 import type { Download, DownloadRequest } from '$lib/server/entities/models/downloads'
 
@@ -18,9 +19,9 @@ export type IDownloadsRepository = {
 	}) => Promise<[ErrTypes, null] | [null, Download]>
 
 	// Insights Dashboard
-	getTotalDownloads: () => Promise<[ErrTypes, null] | [null, number]>
+	getTotalDownloads: (dateRange?: InsightsDateRange) => Promise<[ErrTypes, null] | [null, number]>
 
-	getTopDownloadedResources: () => Promise<
-		[ErrTypes, null] | [null, { resource_title: string; download_count: number }[]]
-	>
+	getTopDownloadedResources: (
+		dateRange?: InsightsDateRange
+	) => Promise<[ErrTypes, null] | [null, { resource_title: string; download_count: number }[]]>
 }
