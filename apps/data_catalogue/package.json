@@ -21,6 +21,9 @@
 		"db:seed": "",
 		"db:push": "drizzle-kit push"
 	},
+	"dependencies": {
+		"dockerode": "^5.0.1"
+	},
 	"devDependencies": {
 		"@arturoguzman/art-ui": "^2.9.1",
 		"@azure/arm-containerinstance": "^9.1.0",
@@ -52,7 +55,6 @@
 		"@vitest/browser-playwright": "^4.1.10",
 		"arktype": "^2.2.3",
 		"d3": "^7.9.0",
-		"dockerode": "^5.0.1",
 		"dompurify": "^3.4.13",
 		"dotenv": "^17.4.2",
 		"drizzle-arktype": "^0.1.3",
