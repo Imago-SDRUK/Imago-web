@@ -24,6 +24,22 @@
 
 	$inspect('hovering', hovering)
 	$inspect('selected', selected)
+	let selected_version = $state('')
+	$effect(() => {
+		selected
+		selected_version = ''
+	})
+
+	
+	const year_options = $derived(
+		selected_version === '1.0' ? (product?.years ?? []).filter((year) => year === 2024) : (product?.years ?? [])
+	)
+
+	const option_group_display_order = ['Geographies', 'Format']
+	function option_group_rank(name: string) {
+		const index = option_group_display_order.indexOf(name)
+		return index === -1 ? option_group_display_order.length : index
+	}
 </script>
 
 <BaseSection>
@@ -86,24 +102,83 @@
 						</CardButton>
 					</label>
 				{/each}
-			</fieldset>
-			<Input label="Data product">
-				{#snippet message()}
-					{#each createPlaygroundRequest.fields.data_product.issues() as issue}
-						<Notice level="negative">
-							<Paragraph>{issue.message}</Paragraph>
-						</Notice>
-					{/each}
-				{/snippet}
-				<Select
-					options={products.items.map((product) => ({
-						label: product.name,
-						value: product.id
-					}))}
-					name="data_product"
-					bind:value={selected}
-				></Select>
-			</Input>
+				<div class="inputs">
+					<Input label="Data product">
+						{#snippet message()}
+							{#each createPlaygroundRequest.fields.data_product.issues() as issue}
+								<Notice level="negative">
+									<Paragraph>{issue.message}</Paragraph>
+								</Notice>
+							{/each}
+						{/snippet}
+						<Select
+							options={products.items.map((product) => ({
+								label: product.name,
+								value: product.id
+							}))}
+							name="data_product"
+							bind:value={selected}
+						></Select>
+					</Input>
+					{#key selected}
+						{#if product?.versions}
+							<Input label="Version">
+								{#snippet message()}
+									{#each createPlaygroundRequest.fields.version.issues() as issue}
+										<Notice level="negative">
+											<Paragraph>{issue.message}</Paragraph>
+										</Notice>
+									{/each}
+								{/snippet}
+								<Select
+									options={product.versions.map((version) => ({ label: version, value: version }))}
+									name="version"
+									bind:value={selected_version}
+								></Select>
+							</Input>
+						{/if}
+						{#if product?.years}
+							<Input label="Year">
+								{#snippet message()}
+									{#each createPlaygroundRequest.fields.year.issues() as issue}
+										<Notice level="negative">
+											<Paragraph>{issue.message}</Paragraph>
+										</Notice>
+									{/each}
+								{/snippet}
+								<Select
+									options={year_options.map((year) => ({ label: year, value: year }))}
+									{...createPlaygroundRequest.fields.year.as('select')}
+								></Select>
+							</Input>
+						{/if}
+						{#if selected !== ''}
+							{#each [...(await productGetOptions({ id: selected }))].sort((a, b) => option_group_rank(String(a.group)) - option_group_rank(String(b.group))) as option_group, index}
+								<Input label={String(option_group.group)}>
+									{#snippet message()}
+										{#each createPlaygroundRequest.fields.options[index].issues() as issue}
+											<Notice level="negative">
+												<Paragraph>{issue.message}</Paragraph>
+											</Notice>
+										{/each}
+									{/snippet}
+									<Select
+										required={option_group.required}
+										{...createPlaygroundRequest.fields.options[index].as('select')}
+										options={option_group.options.map((option) => ({
+											label: option.name ?? '',
+											value: option.id ?? option.value ?? ''
+										}))}
+									></Select>
+								</Input>
+							{/each}
+						{/if}
+					{/key}
+				</div>
+				<div class="buttons">
+					<Button style="alt">Request</Button>
+				</div>
+			</form>
 		</div>
 		<div class="right">
 			{#if selected}

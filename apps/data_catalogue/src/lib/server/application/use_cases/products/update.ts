@@ -345,17 +345,43 @@ export const productResourceUpdateMessageUseCase = async ({
 	if (Array.isArray(messages_json)) {
 		messages = messages_json
 	}
+	const new_status = data.status === 'fatal' || data.status === 'error' ? 'error' : 'processing'
 	const [errs_product, result] = await products_repository.updateProductResource({
 		id,
 		data: {
 			messages: [...messages, data],
-			status: data.status === 'fatal' || data.status === 'error' ? 'error' : 'processing'
+			status: new_status
 		},
 		tx
 	})
 	if (errs_product !== null) {
 		return err(errs_product)
 	}
+
+	if (new_status === 'error') {
+		const [product_requests_errors, product_requests] = await products_repository.getProductRequestByData({
+			product_id: product_resource.product_id,
+			options: product_resource.options,
+			status: 'requested',
+			version: product_resource.version,
+			year: product_resource.year,
+			tx
+		})
+		if (product_requests_errors !== null) {
+			log.error({ message: `Error finding product requests to mark as errored` })
+		} else {
+			await Promise.all(
+				product_requests.map(({ id: request_id }) =>
+					products_repository.updateProductRequest({
+						id: request_id,
+						tx,
+						data: { status: 'error' }
+					})
+				)
+			)
+		}
+	}
+
 	log.trace({ returning: 'productUpdateUseCase' })
 	return ok(result)
 }
@@ -458,6 +484,19 @@ export const productResourceUpdateCompleteUseCase = async ({
 		)
 	)
 	log.trace(users)
+
+	// resource itself is done, so mark all requests as notified, even if we can't email the users
+	// TODO: that might need ot be changed later on
+	await Promise.all(
+		product_requests.map(({ id: request_id }) =>
+			products_repository.updateProductRequest({
+				id: request_id,
+				tx,
+				data: { status: 'notified' }
+			})
+		)
+	)
+
 	log.trace({ message: `notifying users` })
 	const notifications = await Promise.all(
 		users.map((user) =>
@@ -467,16 +506,9 @@ export const productResourceUpdateCompleteUseCase = async ({
 					subject: `Request completed, here's the resource`,
 					to: user.email
 				})
-				.then(([errors, data]) => {
+				.then(([errors]) => {
 					if (errors !== null) {
 						return err(errors)
-					}
-					if (data.success) {
-						products_repository.updateProductRequest({
-							id: user.product_request_id,
-							tx,
-							data: { status: 'notified' }
-						})
 					}
 					return ok(null)
 				})

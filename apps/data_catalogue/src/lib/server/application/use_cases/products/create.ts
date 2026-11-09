@@ -244,6 +244,15 @@ export const productRequestCreateUseCase = async ({
 			id: 'invalid-version'
 		})
 	}
+
+	// Hardcoded check for version 1.0 and year 2024, as this is the only valid combination for now
+	if (String(data.version) === '1.0' && Number(data.year) !== 2024) {
+		return err({
+			reason: 'Invalid Data',
+			message: `Version 1.0 is only available for year 2024.`,
+			id: 'invalid-year-version-combination'
+		})
+	}
 	const [product_options_errors, product_options] = await products_repository.getProductOptions({
 		id: product.id
 	})

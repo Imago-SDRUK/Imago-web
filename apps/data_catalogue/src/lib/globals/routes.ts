@@ -22,11 +22,11 @@ export const ROUTES: Routes = [
 		subpaths: []
 	},
 
-	{
-		label: 'Playground',
-		href: '/playground',
-		subpaths: []
-	}
+	// {
+	// 	label: 'Playground',
+	// 	href: '/playground',
+	// 	subpaths: []
+	// }
 	// {
 	// 	label: 'Topics',
 	// 	href: '/topics',
