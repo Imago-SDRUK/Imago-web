@@ -48,7 +48,11 @@
 >>>>>>> 6c78fd6 (turned product cards into radio buttons)
 =======
 	$inspect('hovering', hovering)
+<<<<<<< HEAD
 >>>>>>> 4355c8e (adds hovering behaviour)
+=======
+	$inspect('selected', selected)
+>>>>>>> a7d7a4a (moved card radio button to separate component, returned base_card to original form)
 </script>
 
 <BaseSection>
@@ -116,16 +120,14 @@
 						{/each}
 					{/snippet}
 					<input type="radio" value={product.id} bind:group={selected} id={product.id} hidden />
-					<label for={product.id}>
-						<BaseCard
+					<label for={product.id} onmouseenter={() => (hovering = product.id)} onmouseleave={() => (hovering = '')} onfocus={() => (hovering = product.id)} onblur={() => (hovering = '')} tabindex="0">
+						<CardButton
 							border
 							rounded
 							shadow
 							border_size="thick"
 							style="padded"
 							hover="option"
-							mouseenter={() => (hovering = product.id)}
-							mouseleave={() => (hovering = '')}
 							selected={selected === product.id}
 						>
 							<div
@@ -139,7 +141,7 @@
 									>{product.description}</Paragraph
 								>
 							</div>
-						</BaseCard>
+						</CardButton>
 					</label>
 >>>>>>> 404ffb8 (implemented two-column layour)
 				{/each}

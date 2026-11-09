@@ -4,17 +4,11 @@
 	type Props = {
 		children: Snippet
 		border?: boolean
-		border_size?: 'default' | 'thick'
 		rounded?: boolean
 		shadow?: boolean
 		style?: 'default' | 'padded' | 'even-padded'
 		size?: 'sm' | 'md' | 'lg' | 'base'
 		overflow?: boolean
-		hover?: 'default' | 'option'
-		selected?: boolean
-		mouseenter?: () => void
-		mouseleave?: () => void
-		role?: string
 	}
 	let {
 		children,
@@ -23,13 +17,7 @@
 		rounded,
 		size = 'base',
 		shadow,
-		border_size = 'default',
-		hover = 'default',
 		overflow,
-		selected,
-		mouseenter,
-		mouseleave,
-		role
 	}: Props = $props()
 </script>
 
@@ -37,18 +25,10 @@
 	class="card"
 	data-style={style}
 	data-size={size}
-	data-hover={hover}
 	data-overflow={overflow ? true : undefined}
-	data-border-size={border_size}
-	onmouseenter={mouseenter}
-	onmouseleave={mouseleave}
-	onfocus={mouseenter}
-	onblur={mouseleave}
-	role={role}
 	class:border
 	class:rounded
 	class:shadow
-	class:selected
 	in:fly|global={{ y: 40 }}
 >
 	{@render children()}
@@ -58,10 +38,6 @@
 	.card {
 		overflow: hidden;
 		transition: all var(--animation-time) ease-in-out;
-	}
-	.selected {
-		border: 2px solid var(--quarternary) !important;
-		background-color: var(--quinary-selected);
 	}
 	.border {
 		border: 1px solid var(--border-muted);
