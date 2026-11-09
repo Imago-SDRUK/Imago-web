@@ -29,10 +29,16 @@ import { log } from '$lib/utils/server/logger'
 // 	// 	// log.debug(`PIPELINE_AZURE_CLIENT_ID is not defined, defaulting to default azure credentials`)
 // 	// }
 
-const client = new ContainerInstanceManagementClient(
-	new DefaultAzureCredential(),
-	env.PIPELINE_AZURE_SUBSCRIPTION_ID
-)
+let _client: ContainerInstanceManagementClient | null = null
+const getClient = () => {
+	if (!_client) {
+		_client = new ContainerInstanceManagementClient(
+			new DefaultAzureCredential(),
+			env.PIPELINE_AZURE_SUBSCRIPTION_ID
+		)
+	}
+	return _client
+}
 
 const requestPipeline: IProductsService['requestPipeline'] = async ({ data }) => {
 	try {
@@ -71,7 +77,7 @@ const requestPipeline: IProductsService['requestPipeline'] = async ({ data }) =>
 			// 	}
 			// ]
 		}
-		const res = await client.containerGroups.beginCreateOrUpdateAndWait(
+		const res = await getClient().containerGroups.beginCreateOrUpdateAndWait(
 			env.PIPELINE_AZURE_RESOURCE_GROUP,
 			`${env.PIPELINE_AZURE_CONTAINER_GROUP}-${data.id}`,
 			configuration
@@ -91,7 +97,7 @@ const requestPipeline: IProductsService['requestPipeline'] = async ({ data }) =>
 
 export const getPipeline: IProductsService['getPipeline'] = async ({ id }) => {
 	try {
-		const res = await client.containerGroups.get(
+		const res = await getClient().containerGroups.get(
 			env.PIPELINE_AZURE_RESOURCE_GROUP,
 			`${env.PIPELINE_AZURE_CONTAINER_GROUP}-${id}`
 		)
@@ -114,7 +120,7 @@ export const deletePipeline: IProductsService['deletePipeline'] = async ({ id })
 		/**
 		 * Check if the container group exists, if it thows an err it will be caught and return false
 		 **/
-		const res = await client.containerGroups.beginDelete(
+		const res = await getClient().containerGroups.beginDelete(
 			env.PIPELINE_AZURE_RESOURCE_GROUP,
 			`${env.PIPELINE_AZURE_CONTAINER_GROUP}-${id}`
 		)

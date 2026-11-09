@@ -11,6 +11,23 @@
 
 	let selected = $state('')
 	const product = $derived(products.items.find((product) => product.id === selected))
+
+	let selected_version = $state('')
+	$effect(() => {
+		selected
+		selected_version = ''
+	})
+
+	
+	const year_options = $derived(
+		selected_version === '1.0' ? (product?.years ?? []).filter((year) => year === 2024) : (product?.years ?? [])
+	)
+
+	const option_group_display_order = ['Geographies', 'Format']
+	function option_group_rank(name: string) {
+		const index = option_group_display_order.indexOf(name)
+		return index === -1 ? option_group_display_order.length : index
+	}
 </script>
 
 <BaseSection>
@@ -55,21 +72,6 @@
 						></Select>
 					</Input>
 					{#key selected}
-						{#if product?.years}
-							<Input label="Year">
-								{#snippet message()}
-									{#each createPlaygroundRequest.fields.year.issues() as issue}
-										<Notice level="negative">
-											<Paragraph>{issue.message}</Paragraph>
-										</Notice>
-									{/each}
-								{/snippet}
-								<Select
-									options={product.years.map((year) => ({ label: year, value: year }))}
-									{...createPlaygroundRequest.fields.year.as('select')}
-								></Select>
-							</Input>
-						{/if}
 						{#if product?.versions}
 							<Input label="Version">
 								{#snippet message()}
@@ -81,12 +83,28 @@
 								{/snippet}
 								<Select
 									options={product.versions.map((version) => ({ label: version, value: version }))}
-									{...createPlaygroundRequest.fields.version.as('select')}
+									name="version"
+									bind:value={selected_version}
+								></Select>
+							</Input>
+						{/if}
+						{#if product?.years}
+							<Input label="Year">
+								{#snippet message()}
+									{#each createPlaygroundRequest.fields.year.issues() as issue}
+										<Notice level="negative">
+											<Paragraph>{issue.message}</Paragraph>
+										</Notice>
+									{/each}
+								{/snippet}
+								<Select
+									options={year_options.map((year) => ({ label: year, value: year }))}
+									{...createPlaygroundRequest.fields.year.as('select')}
 								></Select>
 							</Input>
 						{/if}
 						{#if selected !== ''}
-							{#each await productGetOptions({ id: selected }) as option_group, index}
+							{#each [...(await productGetOptions({ id: selected }))].sort((a, b) => option_group_rank(String(a.group)) - option_group_rank(String(b.group))) as option_group, index}
 								<Input label={String(option_group.group)}>
 									{#snippet message()}
 										{#each createPlaygroundRequest.fields.options[index].issues() as issue}
