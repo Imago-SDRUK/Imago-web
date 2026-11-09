@@ -12,7 +12,9 @@ const config = {
 		}
 	},
 	kit: {
-		adapter: adapter(),
+		adapter: adapter({
+			external: ['ssh2']
+		}),
 		experimental: {
 			instrumentation: { server: true },
 			tracing: { server: true },
