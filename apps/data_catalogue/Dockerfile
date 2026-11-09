@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:24-slim AS base
 ENV NODE_ENV=production
 ENV TURBO_TELEMETRY_DISABLED=1
 ENV BUILDING=true
@@ -8,12 +8,11 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
 
 RUN corepack enable
-RUN apk add --no-cache libc6-compat && \
-  corepack enable && \
+RUN corepack enable && \
   pnpm add -g turbo
 
 FROM base AS builder
-RUN apk add --no-cache openssl
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY . .
 RUN turbo prune data_catalogue --docker
@@ -23,7 +22,7 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
@@ -46,7 +45,7 @@ RUN --mount=type=secret,id=TURBO_API \
   export BRANCH=$(cat /run/secrets/BRANCH) && \
   export SENTRY_RELEASE=$(cat /run/secrets/SENTRY_RELEASE) && \
   export SENTRY_LOG_LEVEL=debug && \
-  pnpm build 
+  pnpm build
 
 # RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store pnpm prune --prod --no-optional
 # RUN rm -rf ./**/*/src
@@ -55,8 +54,13 @@ RUN --mount=type=secret,id=TURBO_API \
 FROM base AS sveltekit
 WORKDIR /app/apps/data_catalogue/
 
+# installed as root, before dropping to non-root 'svelte' user, as apt-get needs root
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && \
+  curl -sL https://aka.ms/InstallAzureCLIDeb | bash && \
+  rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 svelte
+RUN adduser --system --uid 1001 --home /home/svelte --ingroup nodejs svelte
 USER svelte
 
 COPY --chown=svelte:nodejs --from=installer /app/node_modules /app/node_modules
