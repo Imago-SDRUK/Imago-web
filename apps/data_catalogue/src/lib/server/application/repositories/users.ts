@@ -1,8 +1,19 @@
+import type { InsightsDateRange } from '$lib/server/entities/models/insights'
 import type { ErrTypes } from '$lib/server/entities/errors'
 import type { UsersGroups, UsersGroupsRequest } from '$lib/server/entities/models/groups'
 import type { User, UserRequest } from '$lib/server/entities/models/users'
 
 export type IUsersRepository = {
+	getTotalUsers: (dateRange?: InsightsDateRange) => Promise<[ErrTypes, null] | [null, number]>
+	getUsersWithDownloads: (
+		dateRange?: InsightsDateRange
+	) => Promise<[ErrTypes, null] | [null, number]>
+	getUsersByCountry: (
+		dateRange?: InsightsDateRange
+	) => Promise<[ErrTypes, null] | [null, { country: string; total: number }[]]>
+	getUsersByCategory: (
+		dateRange?: InsightsDateRange
+	) => Promise<[ErrTypes, null] | [null, { category: string; total: number }[]]>
 	updateUser: ({
 		data,
 		id

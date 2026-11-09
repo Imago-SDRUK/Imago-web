@@ -30,9 +30,21 @@ const getDownloadsCount: IDownloadsRepository['getDownloadsCount'] = async () =>
 	return ok(0)
 }
 
+//Insights Dashboard
+const getTotalDownloads: IDownloadsRepository['getTotalDownloads'] = async () => {
+	return ok(0)
+}
+
+const getTopDownloadedResources: IDownloadsRepository['getTopDownloadedResources'] =
+	async () => {
+		return ok([])
+	}
+
 export const downloadsRepositoryInfrastructureTest: IDownloadsRepository = {
 	registerDownload,
 	getDownloads,
 	getDownloadsAggregate,
-	getDownloadsCount
+	getDownloadsCount,
+	getTotalDownloads,
+	getTopDownloadedResources
 }

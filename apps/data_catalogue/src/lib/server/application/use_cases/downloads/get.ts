@@ -1,3 +1,4 @@
+import type { InsightsDateRange } from '$lib/server/entities/models/insights'
 import type { IDownloadsRepository } from '$lib/server/application/repositories/downloads'
 import { err, ok, type ErrTypes } from '$lib/server/entities/errors'
 import type { IDatasetService } from '$lib/server/application/services/dataset'
@@ -145,6 +146,53 @@ const getDate = (str: string) => {
 	} catch {
 		return DateTime.now().toJSDate()
 	}
+}
+
+//insights dashboard
+export const downloadsGetDashboardUseCase = async ({
+	dateRange = {},
+	downloads_repository,
+	authorisation_module,
+	session,
+	configuration
+}: {
+	dateRange?: InsightsDateRange
+	downloads_repository: IDownloadsRepository
+	authorisation_module: IAuthorisationService
+} & AppContext) => {
+	const [permission_errors, permission] = await authorisation_module.authorise({
+		namespace: 'Application',
+		object: 'dashboard',
+		permits: 'read',
+		actor: session.identity.id,
+		configuration
+	})
+
+	if (permission_errors) {
+		return err(permission_errors)
+	}
+
+	if (!permission.allowed) {
+		return err({ reason: 'Unauthorised' })
+	}
+
+	const [total_errors, totalDownloads] = await downloads_repository.getTotalDownloads(dateRange)
+
+	if (total_errors !== null) {
+		return err(total_errors)
+	}
+
+	const [top_errors, topDownloadedResources] =
+		await downloads_repository.getTopDownloadedResources(dateRange)
+
+	if (top_errors !== null) {
+		return err(top_errors)
+	}
+
+	return ok({
+		totalDownloads,
+		topDownloadedResources
+	})
 }
 
 // const reduceAggregates = <T>(

@@ -1,9 +1,10 @@
+import { insightsDateFilter } from '../insights_date_filter'
 import type { IUsersRepository } from '$lib/server/application/repositories/users'
 import { db } from '$lib/db'
 import { users, type UserRequest } from '$lib/server/entities/models/users'
 import { log } from '$lib/utils/server/logger'
-import { and, count, desc, eq, inArray, sql } from 'drizzle-orm'
-import { groups, users_groups } from '$lib/db/schema'
+import { and, count, countDistinct, desc, eq, inArray, sql } from 'drizzle-orm'
+import { answers, downloads, groups, users_groups } from '$lib/db/schema'
 import { err, ok } from '$lib/server/entities/errors'
 
 const createUser: IUsersRepository['createUser'] = async ({ data }: { data: UserRequest }) => {
@@ -121,7 +122,76 @@ const removeUserGroup: IUsersRepository['removeUserGroup'] = async ({ data }) =>
 	}
 }
 
+const getTotalUsers: IUsersRepository['getTotalUsers'] = async (dateRange = {}) => {
+	try {
+		const result = await db
+			.select({ total: count() })
+			.from(users)
+			.where(insightsDateFilter(users.created_at, dateRange))
+		return ok(result[0]?.total ?? 0)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getUsersWithDownloads: IUsersRepository['getUsersWithDownloads'] = async (dateRange = {}) => {
+	try {
+		const result = await db
+			.select({ total: countDistinct(users.id) })
+			.from(users)
+			.innerJoin(downloads, eq(users.id, downloads.user))
+			.where(insightsDateFilter(users.created_at, dateRange))
+		return ok(result[0]?.total ?? 0)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getUsersByCountry: IUsersRepository['getUsersByCountry'] = async (dateRange = {}) => {
+	try {
+		const result = await db
+			.select({ country: answers.answer, total: countDistinct(users.id) })
+			.from(users)
+			.innerJoin(answers, eq(users.id, answers.created_by))
+			.where(
+				and(
+					eq(answers.question_reference, 'Country of organisation'),
+					insightsDateFilter(users.created_at, dateRange)
+				)
+			)
+			.groupBy(answers.answer)
+			.orderBy(desc(countDistinct(users.id)))
+		return ok(result.map((row) => ({ country: row.country ?? '', total: row.total })))
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getUsersByCategory: IUsersRepository['getUsersByCategory'] = async (dateRange = {}) => {
+	try {
+		const result = await db
+			.select({ category: answers.answer, total: countDistinct(users.id) })
+			.from(users)
+			.innerJoin(answers, eq(users.id, answers.created_by))
+			.where(
+				and(
+					eq(answers.question_reference, 'Which category best describe you?'),
+					insightsDateFilter(users.created_at, dateRange)
+				)
+			)
+			.groupBy(answers.answer)
+			.orderBy(desc(countDistinct(users.id)))
+		return ok(result.map((row) => ({ category: row.category ?? '', total: row.total })))
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
 export const userRepositoryInfrastructureDrizzle: IUsersRepository = {
+	getTotalUsers,
+	getUsersWithDownloads,
+	getUsersByCountry,
+	getUsersByCategory,
 	createUser,
 	getUser,
 	getUsers,
