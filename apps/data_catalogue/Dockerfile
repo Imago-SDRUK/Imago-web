@@ -59,9 +59,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 svelte
 USER svelte
 
-# NOTE: Uncomment this if you add a dependency, as this only works with devDependencies only
-# COPY --chown=svelte:nodejs --from=installer /app/node_modules /app/node_modules
-# COPY --chown=svelte:nodejs --from=installer /app/apps/data_catalogue/node_modules ./node_modules
+COPY --chown=svelte:nodejs --from=installer /app/node_modules /app/node_modules
+COPY --chown=svelte:nodejs --from=installer /app/apps/data_catalogue/node_modules ./node_modules
 
 COPY --chown=svelte:nodejs --from=installer /app/apps/data_catalogue/build ./build
 COPY --chown=svelte:nodejs --from=builder /app/apps/data_catalogue/src/lib/db/migrations ./migrations

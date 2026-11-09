@@ -4,6 +4,9 @@ import { sentrySvelteKit } from '@sentry/sveltekit'
 import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
+	ssr: {
+		external: ['ssh2']
+	},
 	plugins: [
 		sentrySvelteKit({
 			org: process.env.SENTRY_ORG,
