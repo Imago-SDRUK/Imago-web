@@ -9,7 +9,7 @@
 		Paragraph,
 		Select,
 		Subtitle,
-		BaseCard
+		CardButton,
 	} from '@imago/ui'
 	import { productGetOptions } from '$lib/remotes/products/read.remote.js'
 	import { goto } from '$app/navigation'
@@ -23,6 +23,7 @@
 	const product = $derived(products.items.find((product) => product.id === selected))
 
 	$inspect('hovering', hovering)
+	$inspect('selected', selected)
 </script>
 
 <BaseSection>
@@ -61,16 +62,14 @@
 						{/each}
 					{/snippet}
 					<input type="radio" value={product.id} bind:group={selected} id={product.id} hidden />
-					<label for={product.id}>
-						<BaseCard
+					<label for={product.id} onmouseenter={() => (hovering = product.id)} onmouseleave={() => (hovering = '')} onfocus={() => (hovering = product.id)} onblur={() => (hovering = '')} tabindex="0">
+						<CardButton
 							border
 							rounded
 							shadow
 							border_size="thick"
 							style="padded"
 							hover="option"
-							mouseenter={() => (hovering = product.id)}
-							mouseleave={() => (hovering = '')}
 							selected={selected === product.id}
 						>
 							<div
@@ -84,7 +83,7 @@
 									>{product.description}</Paragraph
 								>
 							</div>
-						</BaseCard>
+						</CardButton>
 					</label>
 				{/each}
 			</fieldset>
