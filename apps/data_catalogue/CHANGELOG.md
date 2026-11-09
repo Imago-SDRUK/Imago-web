@@ -1,5 +1,20 @@
 # data-catalogue
 
+## 3.1.0
+### Minor Changes
+
+- 1d39518: Add product (playground) functionality to the website.
+  Add product, product options, product option groups, product request, product resource.
+  Add products controllers, use cases, repositories, services and resolvers.
+  Add handle user requests, duplicated requests and existing resources.
+  Add playground page, form and requests table.
+  Add admin product, product resources and product requests pages.
+  Add product pipelines.
+  Refactor storage from env variables configuration to dynamic storages.
+  Add storage configuration for different domains.
+  Add docker and aci integration.
+- 8aa7cd1: new dashboard to track insights for admin purposes added
+
 ## 3.0.41
 ### Patch Changes
 
