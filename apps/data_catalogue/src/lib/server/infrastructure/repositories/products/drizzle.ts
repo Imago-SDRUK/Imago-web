@@ -1,0 +1,721 @@
+import type { IProductsRepository } from '$lib/server/application/repositories/products'
+import { err, ok } from '$lib/server/entities/errors'
+import {
+	and,
+	eq,
+	inArray,
+	sql,
+	getTableColumns,
+	arrayContains,
+	arrayContained,
+	isNotNull,
+	desc
+} from 'drizzle-orm'
+import { db } from '$lib/db'
+import {
+	product_option_groups,
+	product_options,
+	product_requests,
+	product_resources,
+	products,
+	products_product_options
+} from '$lib/db/schema'
+import type { ProductOption } from '$lib/server/entities/models/products'
+
+const createProduct: IProductsRepository['createProduct'] = async ({ data, tx }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.insert(products).values(data).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+const deleteProduct: IProductsRepository['deleteProduct'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		await _db.delete(products).where(eq(products.id, id))
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProduct: IProductsRepository['getProduct'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.select({
+				id: products.id,
+				name: products.name,
+				value: products.value,
+				versions: products.versions,
+				years: products.years,
+				created_by: products.created_by,
+				updated_by: products.updated_by,
+				created_at: products.created_at,
+				updated_at: products.updated_at,
+				options: sql<ProductOption[]>`
+      coalesce(
+        json_agg(
+          distinct jsonb_build_object(
+            'id', ${product_options.id},
+            'name', ${product_options.name},
+            'value', ${product_options.value},
+            'group_id', ${product_options.group_id}
+          )
+        ) filter (where ${product_options.id} is not null),
+        '[]'::json
+      )
+    `.as('options')
+			})
+			.from(products)
+			.leftJoin(products_product_options, eq(products.id, products_product_options.product_id))
+			.leftJoin(product_options, eq(products_product_options.product_option_id, product_options.id))
+			.groupBy(products.id)
+			.where(eq(products.id, id))
+		if (product.length === 1) {
+			const res = product[0]
+			return ok(res)
+		}
+		return err({ reason: 'Not Found', message: 'Product not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductOptions: IProductsRepository['getProductOptions'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		/**
+		 * NOTE: casting values to avoid [this bug](https://github.com/drizzle-team/drizzle-orm/issues/2157#issuecomment-2616032771)
+		 **/
+		const result = await _db
+			.select({
+				group_id: sql<string>`${product_option_groups.id}`,
+				group: sql<string>`${product_option_groups.name}`,
+				required: sql<boolean>`${product_option_groups.required}`,
+				multiple: sql<boolean>`${product_option_groups.multiple}`,
+				min_selection: sql<number>`${product_option_groups.min_selection}`,
+				max_selection: sql<number>`${product_option_groups.max_selection}`,
+				options: sql<ProductOption[]>`
+      coalesce(
+        json_agg(
+          distinct jsonb_build_object(
+            'id', ${product_options.id},
+            'name', ${product_options.name},
+            'value', ${product_options.value}
+          )
+        ) filter (where ${product_options.id} is not null),
+        '[]'::json
+      )
+    `.as('options')
+			})
+			.from(products_product_options)
+			.where(eq(products_product_options.product_id, id))
+			.leftJoin(product_options, eq(product_options.id, products_product_options.product_option_id))
+			.leftJoin(product_option_groups, eq(product_options.group_id, product_option_groups.id))
+			.groupBy(product_option_groups.id)
+		return ok(result)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProducts: IProductsRepository['listProducts'] = async ({ tx, limit, offset, ids }) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(products)
+			.where(ids ? inArray(products.id, ids) : undefined)
+			.orderBy(desc(products.id))
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const updateProduct: IProductsRepository['updateProduct'] = async ({ tx, id, data }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.update(products).set(data).where(eq(products.id, id)).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const createProductOption: IProductsRepository['createProductOption'] = async ({ data, tx }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.insert(product_options).values(data).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+const deleteProductOption: IProductsRepository['deleteProductOption'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		await _db.delete(product_options).where(eq(product_options.id, id))
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductOption: IProductsRepository['getProductOption'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.select({
+				...getTableColumns(product_options),
+				group: product_option_groups.name
+			})
+			.from(product_options)
+			.where(eq(product_options.id, id))
+			.leftJoin(product_option_groups, eq(product_option_groups.id, product_options.group_id))
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProductOptions: IProductsRepository['listProductOptions'] = async ({
+	tx,
+	limit,
+	offset,
+	ids
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select({
+				...getTableColumns(product_options),
+				group: product_option_groups.name
+			})
+			.from(product_options)
+			.where(ids ? inArray(product_options.id, ids) : undefined)
+			.leftJoin(product_option_groups, eq(product_option_groups.id, product_options.group_id))
+			.orderBy(desc(product_options.id))
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const updateProductOption: IProductsRepository['updateProductOption'] = async ({
+	tx,
+	id,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.update(product_options)
+			.set(data)
+			.where(eq(product_options.id, id))
+			.returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const addOptionToProduct: IProductsRepository['addOptionToProduct'] = async ({ tx, data }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.insert(products_product_options)
+			.values(data)
+			.onConflictDoNothing()
+			.returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Relationship not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const removeOptionToProduct: IProductsRepository['removeOptionToProduct'] = async ({
+	tx,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		await _db
+			.delete(products_product_options)
+			.where(
+				and(
+					eq(products_product_options.product_id, data.product_id),
+					eq(products_product_options.product_option_id, data.product_option_id)
+				)
+			)
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const createProductOptionGroup: IProductsRepository['createProductOptionGroup'] = async ({
+	tx,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.insert(product_option_groups).values(data).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option group not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const deleteProductOptionGroup: IProductsRepository['deleteProductOptionGroup'] = async ({
+	tx,
+	id
+}) => {
+	try {
+		const _db = tx ?? db
+		await _db.delete(product_option_groups).where(eq(product_option_groups.id, id))
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductOptionGroup: IProductsRepository['getProductOptionGroup'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.select()
+			.from(product_option_groups)
+			.where(eq(product_option_groups.id, id))
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option group not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductOptionsByGroup: IProductsRepository['getProductOptionsByGroup'] = async ({
+	id,
+	tx
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.select({
+				...getTableColumns(product_option_groups),
+				options: sql<ProductOption[]>`
+      coalesce(
+        json_agg(
+          distinct jsonb_build_object(
+            'id', ${product_options.id},
+            'name', ${product_options.name},
+            'value', ${product_options.value},
+            'group_id', ${product_options.group_id}
+          )
+        ) filter (where ${product_options.id} is not null),
+        '[]'::json
+      )
+    `.as('options')
+			})
+			.from(product_option_groups)
+			.leftJoin(product_options, eq(product_option_groups.id, product_options.group_id))
+			.groupBy(product_option_groups.id)
+			.where(eq(product_option_groups.id, id))
+		return ok(product)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductOptionsWithGroup: IProductsRepository['getProductOptionsWithGroup'] = async ({
+	ids,
+	tx
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.select({
+				option: product_options,
+				group: product_option_groups
+			})
+			.from(product_options)
+			.leftJoin(product_option_groups, eq(product_option_groups.id, product_options.group_id))
+			.where(
+				and(isNotNull(product_options.group_id), ids ? inArray(product_options.id, ids) : undefined)
+			)
+		return ok(product)
+	} catch (_err) {
+		console.log(_err)
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProductOptionGroups: IProductsRepository['listProductOptionGroups'] = async ({
+	tx,
+	limit,
+	offset,
+	ids
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_option_groups)
+			.where(ids ? inArray(product_option_groups.id, ids) : undefined)
+			.orderBy(desc(product_option_groups.id))
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const updateProductOptionGroup: IProductsRepository['updateProductOptionGroup'] = async ({
+	tx,
+	id,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.update(product_option_groups)
+			.set(data)
+			.where(eq(product_option_groups.id, id))
+			.returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product option group not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const createProductRequest: IProductsRepository['createProductRequest'] = async ({ tx, data }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.insert(product_requests).values(data).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product request not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const deleteProductRequest: IProductsRepository['deleteProductRequest'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		await _db.delete(product_requests).where(eq(product_requests.id, id))
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+const getProductRequest: IProductsRepository['getProductRequest'] = async ({ tx, id }) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.select().from(product_requests).where(eq(product_requests.id, id))
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product request option not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductRequestByData: IProductsRepository['getProductRequestByData'] = async ({
+	tx,
+	product_id,
+	version,
+	year,
+	user_id,
+	status,
+	options
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_requests)
+			.where(
+				and(
+					product_id ? eq(product_requests.product_id, product_id) : undefined,
+					version ? eq(product_requests.version, version) : undefined,
+					year ? eq(product_requests.year, year) : undefined,
+					options ? arrayContains(product_requests.options, options) : undefined,
+					options ? arrayContained(product_requests.options, options) : undefined,
+					user_id ? eq(product_requests.created_by, user_id) : undefined,
+					status ? eq(product_requests.status, status) : undefined
+				)
+			)
+
+		return ok(results)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProductRequests: IProductsRepository['listProductRequests'] = async ({
+	tx,
+	limit,
+	offset,
+	ids
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_requests)
+			.where(ids ? inArray(product_options.id, ids) : undefined)
+			.orderBy(desc(product_requests.id))
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProductRequestsByUser: IProductsRepository['listProductRequestsByUser'] = async ({
+	tx,
+	limit,
+	offset,
+	user_id
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select({
+				id: product_requests.id,
+				product: products.name,
+				version: product_requests.version,
+				year: product_requests.year,
+				status: product_requests.status,
+				created_at: product_requests.created_at,
+				updated_at: product_requests.updated_at,
+				options: sql<string[]>`
+      COALESCE(
+        array_agg(${product_options.name}) FILTER (WHERE ${product_options.name} IS NOT NULL),
+        ARRAY[]::text[]
+      )
+    `.as('options')
+			})
+			.from(product_requests)
+			.where(eq(product_requests.created_by, user_id))
+			.leftJoin(products, eq(products.id, product_requests.product_id))
+			.leftJoin(product_options, sql`${product_options.id} = ANY(${product_requests.options})`)
+			.orderBy(desc(product_requests.id))
+			.groupBy(product_requests.id, products.name)
+		//
+		//sql`${options.id} = ANY(${records.options})`
+		//
+		//
+		//
+		//
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const createProductResource: IProductsRepository['createProductResource'] = async ({
+	tx,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db.insert(product_resources).values(data).returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product resource not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const updateProductRequest: IProductsRepository['updateProductRequest'] = async ({
+	tx,
+	id,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.update(product_requests)
+			.set(data)
+			.where(eq(product_requests.id, id))
+			.returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+const updateProductResource: IProductsRepository['updateProductResource'] = async ({
+	tx,
+	id,
+	data
+}) => {
+	try {
+		const _db = tx ?? db
+		const product = await _db
+			.update(product_resources)
+			.set(data)
+			.where(eq(product_resources.id, id))
+			.returning()
+		if (product.length === 1) {
+			return ok(product[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const listProductResources: IProductsRepository['listProductResources'] = async ({
+	tx,
+	limit,
+	offset,
+	ids
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_resources)
+			.where(ids ? inArray(product_options.id, ids) : undefined)
+			.orderBy(desc(product_resources.id))
+		return ok({ limit, offset, items: results, total: results.length })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductResource: IProductsRepository['getProductResource'] = async ({ tx, id }) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db.select().from(product_resources).where(eq(product_resources.id, id))
+
+		if (results.length === 1) {
+			return ok(results[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product resource not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const getProductResourceByData: IProductsRepository['getProductResourceByData'] = async ({
+	tx,
+	product_id,
+	version,
+	year,
+	options
+}) => {
+	try {
+		const _db = tx ?? db
+		// TODO: add pagination
+		const results = await _db
+			.select()
+			.from(product_resources)
+			.where(
+				and(
+					eq(product_resources.product_id, product_id),
+					eq(product_resources.version, version),
+					eq(product_resources.year, year),
+					arrayContains(product_resources.options, options),
+					arrayContained(product_resources.options, options)
+				)
+			)
+
+		if (results.length === 1) {
+			return ok(results[0])
+		}
+		return err({ reason: 'Not Found', message: 'Product resource not found' })
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+const deleteProductResource: IProductsRepository['deleteProductResource'] = async ({ id, tx }) => {
+	try {
+		const _db = tx ?? db
+		await _db.delete(product_resources).where(eq(product_resources.id, id))
+		return ok(null)
+	} catch (_err) {
+		return err({ reason: 'Unexpected', error: _err })
+	}
+}
+
+export const drizzleIProductsRepositoryInfrastructure: IProductsRepository = {
+	createProduct,
+	deleteProduct,
+	getProduct,
+	getProductOptions,
+	listProducts,
+	updateProduct,
+	createProductOption,
+	deleteProductOption,
+	getProductOption,
+	listProductOptions,
+	updateProductOption,
+	addOptionToProduct,
+	removeOptionToProduct,
+	createProductOptionGroup,
+	deleteProductOptionGroup,
+	getProductOptionGroup,
+	listProductOptionGroups,
+	updateProductOptionGroup,
+	getProductOptionsByGroup,
+	getProductOptionsWithGroup,
+	createProductRequest,
+	getProductRequest,
+	getProductRequestByData,
+	listProductRequests,
+	listProductRequestsByUser,
+	updateProductRequest,
+	createProductResource,
+	updateProductResource,
+	listProductResources,
+	getProductResource,
+	getProductResourceByData,
+	deleteProductResource,
+	deleteProductRequest
+}

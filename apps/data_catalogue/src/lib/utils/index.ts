@@ -1,4 +1,5 @@
 import type { LinkPagination } from '$lib/types/ory/kratos'
+import { type } from 'arktype'
 
 export function removeKey<T>(obj: T, key: keyof T) {
 	const { [key]: _, ...rest } = obj
@@ -43,3 +44,9 @@ export function sleep(ms: number) {
 }
 
 export const loadKey = (key: string) => Buffer.from(key, 'base64').toString().trim()
+
+export const nonEmptyString = type('string')
+	.pipe((s) => s.trim())
+	.narrow((s, ctx) =>
+		s === '' ? ctx.reject({ expected: 'a value (was missing)', actual: '' }) : true
+	)

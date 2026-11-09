@@ -20,7 +20,13 @@ export const ROUTES: Routes = [
 		label: 'Datasets',
 		href: '/datasets',
 		subpaths: []
-	}
+	},
+
+	// {
+	// 	label: 'Playground',
+	// 	href: '/playground',
+	// 	subpaths: []
+	// }
 	// {
 	// 	label: 'Topics',
 	// 	href: '/topics',
