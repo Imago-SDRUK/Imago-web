@@ -12,6 +12,8 @@
 	let selected = $state('')
 	const product = $derived(products.items.find((product) => product.id === selected))
 
+	let submitting = $state(false)
+
 	let selected_version = $state('')
 	$effect(() => {
 		selected
@@ -41,10 +43,16 @@
 			>
 			<form
 				{...createPlaygroundRequest.enhance(async ({ submit, result }) => {
-					const valid = await submit()
-					if (valid) {
-						notify.send({ message: result?.message })
-						goto(resolve(`/playground/requests`))
+					if (submitting) return
+					submitting = true
+					try {
+						const valid = await submit()
+						if (valid) {
+							notify.send({ message: result?.message })
+							goto(resolve(`/playground/requests`))
+						}
+					} finally {
+						submitting = false
 					}
 				})}
 			>
@@ -127,7 +135,14 @@
 					{/key}
 				</div>
 				<div class="buttons">
-					<Button style="alt">Request</Button>
+					<Button style="alt" type="submit" disabled={submitting}>
+						{#if submitting}
+							<span class="spinner" aria-hidden="true"></span>
+							Requesting...
+						{:else}
+							Request
+						{/if}
+					</Button>
 				</div>
 			</form>
 		</div>
@@ -174,5 +189,19 @@
 	.buttons {
 		display: flex;
 		gap: 0.5rem;
+	}
+	.spinner {
+		width: 0.9rem;
+		height: 0.9rem;
+		border: 2px solid currentColor;
+		border-right-color: transparent;
+		border-radius: 50%;
+		display: inline-block;
+		animation: spin 0.6s linear infinite;
+	}
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>
