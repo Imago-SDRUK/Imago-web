@@ -39,7 +39,12 @@ const sendNotification: INotificationsService['sendNotification'] = async ({
 			bcc: env.NOTIFICATIONS_SMTP_BCC ?? undefined,
 			subject: subject,
 			html: message,
+			// plain-text fallback for clients that don't render html - strip tags
+			// and collapse the whitespace left behind by the template's indentation
 			text: message
+				.replace(/<[^>]*>/g, ' ')
+				.replace(/\s+/g, ' ')
+				.trim()
 		}
 		const [email_error] = await transporter
 			.sendMail(options)

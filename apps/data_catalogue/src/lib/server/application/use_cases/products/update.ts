@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/private'
 import type { AppContext } from '$lib/server/application/context'
 import type { IProductsRepository } from '$lib/server/application/repositories/products'
 import type { IIdentityService } from '$lib/server/application/services/identity'
@@ -498,11 +499,28 @@ export const productResourceUpdateCompleteUseCase = async ({
 	)
 
 	log.trace({ message: `notifying users` })
+	const requests_url = `${env.SITE_URL}${env.SITE_URL?.endsWith('/') ? '' : '/'}playground/requests`
 	const notifications = await Promise.all(
 		users.map((user) =>
 			notifications_service
 				.sendNotification({
-					message: `All done for product ${product_resource.id}, cheers ${user.first_name} ${user.last_name}`,
+					message: `
+						<div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+							<p>Hi ${user.first_name},</p>
+							<p>Your product request has finished processing and is ready to download.</p>
+							<p>
+								<a
+									href="${requests_url}"
+									style="display: inline-block; padding: 0.6rem 1.25rem; background-color: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 999px;"
+								>
+									View your requests
+								</a>
+							</p>
+							<p style="color: #666; font-size: 0.85rem;">
+								If the button doesn't work, copy and paste this link: ${requests_url}
+							</p>
+						</div>
+					`,
 					subject: `Request completed, here's the resource`,
 					to: user.email
 				})

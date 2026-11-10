@@ -37,9 +37,11 @@
 		<div class="left">
 			<Subtitle size="lg" weight={500}>Playground</Subtitle>
 			<Paragraph
-				>Lorem ipsum dolor sit amet consectetur adipisicing elit. Provident, totam maiores enim
-				aliquam accusantium tenetur illum eius consequatur ut ipsam quae porro fuga! Velit dolorem
-				magnam totam placeat suscipit molestias.</Paragraph
+				>Request a custom extract of a data product for the geography, year, version and format
+				you need. </Paragraph>
+				<Paragraph>
+				Processing happens in the background, we'll
+				email you as soon as your download is ready.</Paragraph
 			>
 			<form
 				{...createPlaygroundRequest.enhance(async ({ submit, result }) => {
