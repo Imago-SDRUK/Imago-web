@@ -77,18 +77,23 @@ const requestPipeline: IProductsService['requestPipeline'] = async ({ data }) =>
 			// 	}
 			// ]
 		}
-		const res = await getClient().containerGroups.beginCreateOrUpdateAndWait(
+
+		// it was .AndWait before this which blocks the whole HTTP request
+		// which stopped the callback from being sent to the IMAGO_CALLBACK_URL (?)
+		// the container has its own call back so this was not needed to begin with (?)
+		// who knows (not me)
+		await getClient().containerGroups.beginCreateOrUpdate(
 			env.PIPELINE_AZURE_RESOURCE_GROUP,
 			`${env.PIPELINE_AZURE_CONTAINER_GROUP}-${data.id}`,
 			configuration
 		)
 		return ok({
-			active: res.provisioningState,
-			fqdn: res.ipAddress?.fqdn ?? null,
-			instance_events: JSON.stringify(res.instanceView?.events) ?? null,
-			instance_state: res.instanceView?.state ?? null,
-			location: res.location ?? null,
-			ip: res.ipAddress?.ip ?? null
+			active: 'Creating',
+			fqdn: null,
+			instance_events: null,
+			instance_state: null,
+			location: env.PIPELINE_AZURE_LOCATION ?? null,
+			ip: null
 		})
 	} catch (_err) {
 		return err({ reason: 'Unexpected', error: _err })
