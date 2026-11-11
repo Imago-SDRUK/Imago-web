@@ -21,38 +21,10 @@
 	let selected = $state('')
 	let hovering = $state('')
 	const product = $derived(products.items.find((product) => product.id === selected))
+	const hoveringProduct = $derived(products.items.find((product) => product.id === hovering))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-	let submitting = $state(false)
-
-	let selected_version = $state('')
-	$effect(() => {
-		selected
-		selected_version = ''
-	})
-
-	
-	const year_options = $derived(
-		selected_version === '1.0' ? (product?.years ?? []).filter((year) => year === 2024) : (product?.years ?? [])
-	)
-
-	const option_group_display_order = ['Geographies', 'Format']
-	function option_group_rank(name: string) {
-		const index = option_group_display_order.indexOf(name)
-		return index === -1 ? option_group_display_order.length : index
-	}
-=======
-	$inspect(selected, 'selected')
-	$inspect(product, 'product')
->>>>>>> 6c78fd6 (turned product cards into radio buttons)
-=======
 	$inspect('hovering', hovering)
-<<<<<<< HEAD
->>>>>>> 4355c8e (adds hovering behaviour)
-=======
 	$inspect('selected', selected)
->>>>>>> a7d7a4a (moved card radio button to separate component, returned base_card to original form)
 </script>
 
 <BaseSection>
@@ -80,35 +52,6 @@
 			</Notice>
 		{/each}
 		<div class="left">
-<<<<<<< HEAD
-			<Subtitle size="lg" weight={500}>Playground</Subtitle>
-			<Paragraph
-				>Request a custom extract of a data product for the geography, year, version and format
-				you need. </Paragraph>
-				<Paragraph>
-				Processing happens in the background, we'll
-				email you as soon as your download is ready.</Paragraph
-			>
-			<form
-				{...createPlaygroundRequest.enhance(async ({ submit, result }) => {
-					if (submitting) return
-					submitting = true
-					try {
-						const valid = await submit()
-						if (valid) {
-							notify.send({ message: result?.message })
-							goto(resolve(`/playground/requests`))
-						}
-					} finally {
-						submitting = false
-					}
-				})}
-			>
-				{#each createPlaygroundRequest.fields.allIssues() as issue}
-					<Notice level="negative">
-						<Paragraph>{issue.message}</Paragraph>
-					</Notice>
-=======
 			<fieldset class="playground-card-fieldset">
 				<legend>Select a Data Product</legend>
 				{#each products.items as product}
@@ -143,7 +86,6 @@
 							</div>
 						</CardButton>
 					</label>
->>>>>>> 404ffb8 (implemented two-column layour)
 				{/each}
 			</fieldset>
 			<Input label="Data product">
@@ -165,7 +107,7 @@
 			</Input>
 		</div>
 		<div class="right">
-			{#if selected}
+			{#if selected && !hovering || hovering === selected}
 				{#key selected}
 					{#if product?.years}
 						<Input label="Year">
@@ -217,161 +159,19 @@
 								></Select>
 							</Input>
 						{/each}
-<<<<<<< HEAD
-					</fieldset>
-					<Input label="Data product">
-						{#snippet message()}
-							{#each createPlaygroundRequest.fields.data_product.issues() as issue}
-								<Notice level="negative">
-									<Paragraph>{issue.message}</Paragraph>
-								</Notice>
-							{/each}
-						{/snippet}
-						<Select
-							options={products.items.map((product) => ({
-								label: product.name,
-								value: product.id
-							}))}
-							name="data_product"
-							bind:value={selected}
-						></Select>
-					</Input>
-					{#key selected}
-						{#if product?.versions}
-							<Input label="Version">
-								{#snippet message()}
-									{#each createPlaygroundRequest.fields.version.issues() as issue}
-										<Notice level="negative">
-											<Paragraph>{issue.message}</Paragraph>
-										</Notice>
-									{/each}
-								{/snippet}
-								<Select
-									options={product.versions.map((version) => ({ label: version, value: version }))}
-									name="version"
-									bind:value={selected_version}
-								></Select>
-							</Input>
-						{/if}
-						{#if product?.years}
-							<Input label="Year">
-								{#snippet message()}
-									{#each createPlaygroundRequest.fields.year.issues() as issue}
-										<Notice level="negative">
-											<Paragraph>{issue.message}</Paragraph>
-										</Notice>
-									{/each}
-								{/snippet}
-								<Select
-									options={year_options.map((year) => ({ label: year, value: year }))}
-									{...createPlaygroundRequest.fields.year.as('select')}
-								></Select>
-							</Input>
-						{/if}
-						{#if selected !== ''}
-							{#each [...(await productGetOptions({ id: selected }))].sort((a, b) => option_group_rank(String(a.group)) - option_group_rank(String(b.group))) as option_group, index}
-								<Input label={String(option_group.group)}>
-									{#snippet message()}
-										{#each createPlaygroundRequest.fields.options[index].issues() as issue}
-											<Notice level="negative">
-												<Paragraph>{issue.message}</Paragraph>
-											</Notice>
-										{/each}
-									{/snippet}
-									<Select
-										required={option_group.required}
-										{...createPlaygroundRequest.fields.options[index].as('select')}
-										options={option_group.options.map((option) => ({
-											label: option.name ?? '',
-											value: option.id ?? option.value ?? ''
-										}))}
-									></Select>
-								</Input>
-							{/each}
-						{/if}
-					{/key}
-				</div>
-				<div class="buttons">
-					<Button style="alt" type="submit" disabled={submitting}>
-						{#if submitting}
-							<span class="spinner" aria-hidden="true"></span>
-							Requesting...
-						{:else}
-							Request
-						{/if}
-					</Button>
-				</div>
-			</form>
-=======
 					{/if}
 				{/key}
-			{:else}
-				<div class="waiting-notice-panel">
-					<Notice level="info">
-						<Paragraph>Select a data product to see its options</Paragraph>
-					</Notice>
-				</div>
-			{/if}
->>>>>>> 404ffb8 (implemented two-column layour)
-		</div>
-
-		<div class="buttons">
-			<Button style="alt">Request</Button>
-		</div>
-		<div class="right">
-			{#if selected}
-				{#key selected}
-					{#if product?.years}
-						<Input label="Year">
-							{#snippet message()}
-								{#each createPlaygroundRequest.fields.year.issues() as issue}
-									<Notice level="negative">
-										<Paragraph>{issue.message}</Paragraph>
-									</Notice>
-								{/each}
-							{/snippet}
-							<Select
-								options={product.years.map((year) => ({ label: year, value: year }))}
-								{...createPlaygroundRequest.fields.year.as('select')}
-							></Select>
-						</Input>
-					{/if}
-					{#if product?.versions}
-						<Input label="Version">
-							{#snippet message()}
-								{#each createPlaygroundRequest.fields.version.issues() as issue}
-									<Notice level="negative">
-										<Paragraph>{issue.message}</Paragraph>
-									</Notice>
-								{/each}
-							{/snippet}
-							<Select
-								options={product.versions.map((version) => ({ label: version, value: version }))}
-								{...createPlaygroundRequest.fields.version.as('select')}
-							></Select>
-						</Input>
-					{/if}
-					{#if selected !== ''}
-						{#each await productGetOptions({ id: selected }) as option_group, index}
-							<Input label={String(option_group.group)}>
-								{#snippet message()}
-									{#each createPlaygroundRequest.fields.options[index].issues() as issue}
-										<Notice level="negative">
-											<Paragraph>{issue.message}</Paragraph>
-										</Notice>
-									{/each}
-								{/snippet}
-								<Select
-									required={option_group.required}
-									{...createPlaygroundRequest.fields.options[index].as('select')}
-									options={option_group.options.map((option) => ({
-										label: option.name ?? '',
-										value: option.id ?? option.value ?? ''
-									}))}
-								></Select>
-							</Input>
-						{/each}
-					{/if}
+			{:else if hovering && hovering !== selected}
+				{#key hovering}
+					<Paragraph size="lg" weight={500}>Hovering over {hoveringProduct?.name}</Paragraph>
+					<Subtitle size="2xl">{hoveringProduct?.long_name}</Subtitle>
+					<Paragraph size="2xl" family="subtitle" weight={400}>{hoveringProduct?.description}</Paragraph>
+					<Paragraph size="lg" weight={400}><strong>Years:</strong> {hoveringProduct?.years?.join(', ')}</Paragraph>
+					<Paragraph size="lg" weight={400}><strong>Versions:</strong> {hoveringProduct?.versions?.join(', ')}</Paragraph>
+					{#each await productGetOptions({ id: hovering }) as option_group}
+						<Paragraph size="lg" weight={400}><strong>{option_group.group}</strong>: {option_group?.options?.map((option) => option.name ?? '').join(', ')}</Paragraph>
+					{/each}
+					
 				{/key}
 			{:else}
 				<div class="waiting-notice-panel">
@@ -485,19 +285,5 @@
 		grid-area: buttons;
 		display: flex;
 		gap: 0.5rem;
-	}
-	.spinner {
-		width: 0.9rem;
-		height: 0.9rem;
-		border: 2px solid currentColor;
-		border-right-color: transparent;
-		border-radius: 50%;
-		display: inline-block;
-		animation: spin 0.6s linear infinite;
-	}
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
 	}
 </style>
